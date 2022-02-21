@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<testmodule title= "E2E" version="1.0"><description> E2E</description>
+<capltestcase name="TESTCASE_27933" title="TESTCASE_27933 CRC by sender FR"/>
+<capltestcase name="TESTCASE_27919" title="TESTCASE_27919 CRC by sender CAN/CANFD"/>
+<capltestcase name="TESTCASE_27935" title="TESTCASE_27935 Counter by sender FR"/>
+<capltestcase name="TESTCASE_27921" title="TESTCASE_27921 Counter by sender CAN/CANFD"/>
+<capltestcase name="TESTCASE_27937" title="TESTCASE_27937 Counter by sender FR– short recovery"/>
+<capltestcase name="TESTCASE_27922" title="TESTCASE_27922 Counter by sender CAN/CANFD– short recovery"/>
+<capltestcase name="TESTCASE_27938" title="TESTCASE_27938 CRC by receiver FR"/>
+<capltestcase name="TESTCASE_27940" title="TESTCASE_27940 Counter by receiver FR"/>
+<capltestcase name="TESTCASE_256812" title="TESTCASE_256812 E2E Confirmed DTC by CRC on FR"/>
+<capltestcase name="TESTCASE_256813" title="TESTCASE_256813 E2E Confirmed DTC by Counter on FR"/>
+<capltestcase name="TESTCASE_256437" title="TESTCASE_256437 E2E DTC TRC – ElPowerLevel on FR"/>
+<capltestcase name="TESTCASE_256438" title="TESTCASE_256438 E2E DTC TRC – Voltage on FR"/>
+<capltestcase name="TESTCASE_256439" title="TESTCASE_256439 E2E DTC TRC – Car Mode on FR"/>
+<capltestcase name="TESTCASE_256440" title="TESTCASE_256440 E2E DTC TRC – Car Mode Transition on FR"/>
+<capltestcase name="TESTCASE_256445" title="TESTCASE_256445 E2E DTC TRC – Usage Mode Transition on FR"/>
+</testmodule>

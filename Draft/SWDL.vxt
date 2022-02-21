@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<testmodule title= "SWDL" version="1.0"><description> SWDL</description>
+<capltestcase name="TESTCASE_1111" title="TESTCASE_1111 undefined"/>
+<capltestcase name="TESTCASE_5727" title="TESTCASE_5727 DiagnosticSessionControl (0x10) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5728" title="TESTCASE_5728 DiagnosticSessionControl (0x10) - Functional Addressing"/>
+<capltestcase name="TESTCASE_5729" title="TESTCASE_5729 ECUReset (0x11) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5730" title="TESTCASE_5730 ECUReset (0x11) - Functional Addressing"/>
+<capltestcase name="TESTCASE_5731" title="TESTCASE_5731 ReadDataByIdentifier (0x22) WriteDataByIdentifier (0x2E) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5732" title="TESTCASE_5732 ReadDataByIdentifier (0x22) WriteDataByIdentifier (0x2E) - Functional Addressing"/>
+<capltestcase name="TESTCASE_5733" title="TESTCASE_5733 SecurityAccess (0x27) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5734" title="TESTCASE_5734 SecurityAccess (0x27) - Functional Addressing"/>
+<capltestcase name="TESTCASE_5735" title="TESTCASE_5735 RoutineControl (0x31) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5737" title="TESTCASE_5737 TransferData (0x36) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5738" title="TESTCASE_5738 TransferData (0x36) - Functional Addressing"/>
+<capltestcase name="TESTCASE_5739" title="TESTCASE_5739 RequestTransferExit (0x37) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5740" title="TESTCASE_5740 RequestTransferExit (0x37) - Functional Addressing"/>
+<capltestcase name="TESTCASE_5741" title="TESTCASE_5741 TesterPresent (0x3E) - Physical Addressing"/>
+<capltestcase name="TESTCASE_5742" title="TESTCASE_5742 TesterPresent (0x3E) - Functional Addressing"/>
+<capltestcase name="TESTCASE_5743" title="TESTCASE_5743 File Download Full Sequence Test - Physical Addressing"/>
+<capltestcase name="TESTCASE_5744" title="TESTCASE_5744 File Download Minimum Sequence Test - Physical Addressing"/>
+<capltestcase name="TESTCASE_5745" title="TESTCASE_5745 File Download Duplicate Block Sequence Counter - Physical Addressing"/>
+<capltestcase name="TESTCASE_5746" title="TESTCASE_5746 File Download Abortion After Memory Erase - Physical Addressing"/>
+<capltestcase name="TESTCASE_5747" title="TESTCASE_5747 File Download Abortion With Minimum Data - Physical Addressing"/>
+<capltestcase name="TESTCASE_5758" title="TESTCASE_5758 File Download Abortion With Maximum Data - Physical Addressing"/>
+<capltestcase name="TESTCASE_5749" title="TESTCASE_5749 File Download And Memory Erase Attempt Without SBL Test - Physical Addressing"/>
+<capltestcase name="TESTCASE_5750" title="TESTCASE_5750 File Download with Check Complete And Compatible - Physical Addressing"/>
+<capltestcase name="TESTCASE_5751" title="TESTCASE_5751 File Download Full Sequence Test using Queued Diagnostic Requests - Physical Addressing"/>
+<capltestcase name="TESTCASE_5759" title="TESTCASE_5759 File Download with decreased TransferData message length - Physical Addressing"/>
+<capltestcase name="TESTCASE_5752" title="TESTCASE_5752 File Download Full Sequence Test using All Slots - Physical Addressing"/>
+<capltestcase name="TESTCASE_52539" title="TESTCASE_52539 File Download With Invalid Signature Test - Physical Addressing"/>
+<capltestcase name="TESTCASE_8831" title="TESTCASE_8831 Complete and Compatible - Incompatible"/>
+<capltestcase name="TESTCASE_8832" title="TESTCASE_8832 ECU stuck in programming session - incompatible"/>
+<capltestcase name="TESTCASE_8833" title="TESTCASE_8833 ECU stuck in programming session - incomplete"/>
+<capltestcase name="TESTCASE_8834" title="TESTCASE_8834 Complete and Compatible Properties"/>
+<capltestcase name="TESTCASE_55797" title="TESTCASE_55797 Check VBF file format"/>
+<capltestcase name="TESTCASE_392607" title="TESTCASE_392607 Power supply lost during erasing memory test"/>
+</testmodule>

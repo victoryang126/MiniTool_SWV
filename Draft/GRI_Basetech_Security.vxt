@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<testmodule title= "GRI_Basetech_Security" version="1.0"><description> GRI_Basetech_Security</description>
+<capltestcase name="TESTCASE_9278" title="TESTCASE_9278 Read of Security Constant - APP"/>
+<capltestcase name="TESTCASE_9279" title="TESTCASE_9279 Delay Timer after False Attempts - APP"/>
+<capltestcase name="TESTCASE_9281" title="TESTCASE_9281 Basic Random Seed Test extendedDiagnosticSession"/>
+<capltestcase name="TESTCASE_9282" title="TESTCASE_9282 Extended Random Seed Test extendedDiagnosticSession"/>
+<capltestcase name="TESTCASE_392988" title="TESTCASE_392988 Counters for False attempts - Extended/ Programming  session"/>
+<capltestcase name="TESTCASE_9283" title="TESTCASE_9283 Read of Security Constant - PBL"/>
+<capltestcase name="TESTCASE_9284" title="TESTCASE_9284 Delay Timer after False attempts - PBL"/>
+<capltestcase name="TESTCASE_9285" title="TESTCASE_9285 Basic Random Seed Test ProgrammingSession"/>
+<capltestcase name="TESTCASE_9286" title="TESTCASE_9286 Extended Random Seed Test programmingSession"/>
+<capltestcase name="TESTCASE_3426" title="TESTCASE_3426 Programming of ECU when a valid ESS is programmed"/>
+<capltestcase name="TESTCASE_3429" title="TESTCASE_3429 Sequence error"/>
+</testmodule>

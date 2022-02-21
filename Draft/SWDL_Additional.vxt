@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<testmodule title= "SWDL_Additional" version="1.0"><description> SWDL_Additional</description>
+<capltestcase name="TESTCASE_1111" title=" TESTCASE_1111:undefined "/>
+<capltestcase name="TESTCASE_8831" title=" TESTCASE_8831:Complete and Compatible - Incompatible "/>
+<capltestcase name="TESTCASE_8832" title=" TESTCASE_8832:ECU stuck in programming session - incompatible "/>
+<capltestcase name="TESTCASE_8833" title=" TESTCASE_8833:ECU stuck in programming session - incomplete "/>
+<capltestcase name="TESTCASE_8834" title=" TESTCASE_8834:Complete and Compatible Properties "/>
+<capltestcase name="TESTCASE_55797" title=" TESTCASE_55797:Check VBF file format "/>
+<capltestcase name="TESTCASE_392607" title=" TESTCASE_392607:Power supply lost during erasing memory test "/>
+</testmodule>
