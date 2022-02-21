@@ -15,6 +15,20 @@ def IsCBID(ID):
     return pattern.match(ID)
 
 
+def ConverSpecTestResult2CBCaseStatus(result):
+    """
+
+    :param result: the cell value of _VerificationStatus in TableOfContent
+    :return: return the corresonding value in CB
+    """
+    if result == "OK":
+        return "RESULT_PASSED"
+    elif result  == 'NOK':
+        return "RESULT_FAILED"
+    else:
+        return "Init"
+
+
 def ReplaceCellValue(CellValue,Df_LoopUp):
     """
     根据codebeamer 的需求ID 和Doors需求ID的映射关系，替换Doors需求ID为 codebeamer 的需求ID
@@ -137,7 +151,7 @@ def ReadSpec_TableOfContent(Spec):
     pd.set_option('display.max_rows', None)
     pd.set_option('max_colwidth', 200)
     Df_spec = pd.read_excel(Spec, "Table Of Contents", dtype='str')
-    ColumnsList = ["Object Text", "_VerifiesDOORSRequirements"]
+    ColumnsList = ["Object Text","_VerificationStatus", "_VerifiesDOORSRequirements"]
     Df_spec = Df_spec[ColumnsList]
     Df_spec = Df_spec.iloc[7:,:]
     Df_spec.dropna(subset = ["Object Text"],inplace = True)
@@ -232,15 +246,16 @@ def GenerateSpec_CB_Init(Df_spec, SpecCB):
     ColumnsList = ["ID", "Parent", "Priority", "Name", "Description", "Pre-Action", "Post-Action",
                    "Test Steps.Action", "Test Steps.Expected result",
                    "Test Steps.Critical", "Test Parameters", "Verifies",
-                   "Status", "Type", "_Original_TestCaseId", "_Test_Technique",
+                   "Status","Release", "Type", "_Original_TestCaseId", "_Test_Technique",
                    "_VerifiesNonCbRequirements", "_LastReviewDate", "_ScriptPath",
                    "_TestType", "_RegressionStrategy", "_FunctionGroup", "_Feature",
                    "Functional Safety Relevant", "Cyber Security Relevant"]
     df_SpecCB = pd.DataFrame(columns= ColumnsList)
     print(df_SpecCB)
 
-    Df_spec.columns = ["Name","Verifies"]
+    Df_spec.columns = ["Name","Status","Verifies"]
     df_SpecCB["Name"] = "   " + Df_spec["Name"]
+    df_SpecCB["Status"] = Df_spec["Status"].apply(ConverSpecTestResult2CBCaseStatus)
     df_SpecCB["Verifies"] = Df_spec["Verifies"].apply(lambda x: "[ISSUE:" + x + "]" if IsCBID(x) else "")
     df_SpecCB["_VerifiesNonCbRequirements"] = Df_spec["Verifies"].apply(lambda x: x if not IsCBID(x) else "")
     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
@@ -267,7 +282,7 @@ def ReadSpecCB_FromCB(SpecCB_FromCB):
     # print(Df_ID_Case.head(10))
     return Df_SpecCB,Df_ID_Case
 
-def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,SpecCB_Modify):
+def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,Release,SpecCB_Modify):
 
     """
     解析从CodeBeamer 下载下来的TestSpec,
@@ -275,6 +290,7 @@ def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,SpecCB_Modify):
 
     :param df_SpecCB_Generate: 通过本工具生成的需要上传的Test Specification
     :param Df_ID_Case_FromCB:从CodeBeamer 下载下来的Test Specification
+    :param Release 改测试case修改的版本号
     :param SpecCB_Modify: 修改后的Specification名称
     :return:NONE
     """
@@ -291,18 +307,19 @@ def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,SpecCB_Modify):
             df_SpecCB_Generate = df_SpecCB_Generate.append(Df_ID_Case_FromCB.loc[caseName])
             # print(Df_ID_Case_FromCB.loc[caseName])
     # print(df_SpecCB_Generate)
+    df_SpecCB_Generate["Release"] = Release
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
 
 if __name__ == '__main__':
     Spec = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result.xlsm"
     LoopUP = "..\DataSource/P05CBID.txt"
-    SpecCB_Generate = "..\DataSource/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
-    SpecCB_Modify = "..\DataSource/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
-    SpecCB_FromCB = "..\DataSource/84177 _GWM_P05_IMU_Test case.xlsx"
+    SpecCB_Generate = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
+    SpecCB_Modify = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
+    SpecCB_FromCB = "..\Data/84177 _GWM_P05_IMU_Test case.xlsx"
     # Df_LoopUp = ReadLoopUp(LoopUP)
     #
     Df_spec = ReadSpec_TableOfContent(Spec)
     #
-    # df_SpecCB_Generate = GenerateSpec_CB_Init(Df_spec, Df_LoopUp, SpecCB_Generate)
+    df_SpecCB_Generate = GenerateSpec_CB_Init(Df_spec, SpecCB_Generate)
     # df_SpecCB_FromCB,Df_ID_Case_FromCB = ReadSpecCB_FromCB(SpecCB_FromCB)
     # GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, SpecCB_Modify)

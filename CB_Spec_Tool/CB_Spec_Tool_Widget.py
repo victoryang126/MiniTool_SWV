@@ -37,6 +37,7 @@ class CB_Spec_Tool_Widget(QWidget):
         self.Test_Spec_List = []
         self.CB_Spec_ExportPath = ""
         self.CB_Spec_Generate = ""
+        self.Release = ""
         self.CB_Spec_FromCB = ""
 
         if os.path.exists('./ini/CB_Spec_Tool_Widget.ini'):
@@ -66,6 +67,7 @@ class CB_Spec_Tool_Widget(QWidget):
                 self.__ui.textB_Test_Spec.append(file)
         self.__ui.LE_CB_Spec.setText(self.CB_Spec_ExportPath)
         self.__ui.LE_CB_Spec_Generate.setText(self.CB_Spec_Generate)
+        self.__ui.LE_Release.setText(self.Release)
         self.__ui.LE_CB_Spec_FromCB.setText(self.CB_Spec_FromCB)
 
 
@@ -79,6 +81,7 @@ class CB_Spec_Tool_Widget(QWidget):
             self.Config.setValue("CONFIG/Test_Spec_List", self.Test_Spec_List)
         self.Config.setValue("CONFIG/CB_Spec_ExportPath", self.CB_Spec_ExportPath)
         self.Config.setValue("CONFIG/CB_Spec_Generate", self.CB_Spec_Generate)
+        self.Config.setValue("CONFIG/Release",self.Release)
         self.Config.setValue("CONFIG/CB_Spec_FromCB", self.CB_Spec_FromCB)
 
     # 定义错误提示框
@@ -194,6 +197,12 @@ class CB_Spec_Tool_Widget(QWidget):
         self.CB_Spec_Generate = self.__ui.LE_CB_Spec_Generate.text()
         print(self.CB_Spec_Generate)
 
+    #2 .设置LE_SWVersion
+    @pyqtSlot(str)
+    def on_LE_Release_textChanged(self,str):
+        self.Release = self.__ui.LE_Release.text()
+
+
     @pyqtSlot()
     def on_BT_CB_Spec_FromCB_clicked(self):
         # pass
@@ -214,14 +223,18 @@ class CB_Spec_Tool_Widget(QWidget):
             df_SpecCB_Generate = pd.read_excel(self.CB_Spec_Generate,"Export")
             SpecCB_Modify = os.path.basename(self.CB_Spec_Generate).split(".")[0] + "_Modify.xlsx"
             SpecCB_Modify = os.path.join(os.path.split(self.CB_Spec_Generate)[0], SpecCB_Modify)
-            CB_Tool.GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, SpecCB_Modify)
-            Excel_Files.append(SpecCB_Modify)
-            NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
-            if len(NotOK_Files):
-                self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
+
+            if self.Release:
+                CB_Tool.GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB,self.Release,SpecCB_Modify)
+                Excel_Files.append(SpecCB_Modify)
+                NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
+                if len(NotOK_Files):
+                    self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
+                else:
+                    self.DoneMessage("Generate Excel successfully")
+                    self.SaveConfig()
             else:
-                self.DoneMessage("Generate Excel successfully")
-                self.SaveConfig()
+                self.WarningMessage("Release can't be empty")
         except Exception as err:
             self.WarningMessage(err)
 

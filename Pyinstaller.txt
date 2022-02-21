@@ -4,4 +4,4 @@
 
 -F -w E:\GitHub\MiniTool_New\Main\MiniToolMain.py -p E:\GitHub\MiniTool_New --hidden-import Ascent_Generate_S37 --hidden-import CB_Spec_Tool --hidden-import CommonFunction --hidden-import Diagnostic_Parameter --hidden-import DTCDefine_SymFile --hidden-import GenerateScript --hidden-import Other_Tool --hidden-import Regression --hidden-import VBFGenerate
 
--F E:\GitHub\MiniTool_New\MiniToolMain.py -p E:\GitHub\MiniTool_New --hidden-import Ascent_Generate_S37 --hidden-import CB_Spec_Tool --hidden-import CommonFunction --hidden-import Diagnostic_Parameter --hidden-import DTCDefine_SymFile --hidden-import GenerateScript --hidden-import Other_Tool --hidden-import Regression --hidden-import VBFGenerate
+-F E:\GitHub\MiniTool_SWV\MiniToolMain.py -p E:\GitHub\MiniTool_SWV --hidden-import Ascent_Generate_S37 --hidden-import CB_Spec_Tool --hidden-import CommonFunction --hidden-import Diagnostic_Parameter --hidden-import DTCDefine_SymFile --hidden-import GenerateScript --hidden-import Other_Tool --hidden-import Regression --hidden-import VBFGenerate
