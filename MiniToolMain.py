@@ -4,20 +4,7 @@ This is a set that combine all tool used in RCS SW test Teams
 for each function, please refer to each folder to check the function
 
 '''
-import json
-import re
-import Res_rc
-import pandas as pd
-import numpy as np
-import win32com
-import numpy as np
-from win32com.client import Dispatch
-# import xlwings as xw
-from PyQt5.QtWidgets import QWidget, QApplication,QMessageBox,QFileDialog
-from PyQt5.QtCore import  pyqtSlot
-from PyQt5.QtCore import  QSettings
-import openpyxl
-import os
+
 import sys
 
 from PyQt5.QtWidgets import QWidget, QApplication,QMainWindow,QListWidget,QStackedWidget,QHBoxLayout
@@ -26,7 +13,7 @@ from PyQt5.QtGui import  QIcon
 # from PyQt5.
 from Regression import RegressionWidget
 from Ascent_Generate_S37 import GenS37Widget
-from Other_Tool import OtToolWidget
+# from Other_Tool import OtToolWidget
 from DTCDefine_SymFile import DTCDefine_SYMWidget
 from Diagnostic_Parameter import CANDWidget
 from VBFGenerate import VBFGenerateWidget
@@ -44,7 +31,7 @@ class MiniTool(QMainWindow):
         self.list = QListWidget()
         self.list.insertItem(0,'Regression')
         self.list.insertItem(1,'GenS37')
-        self.list.insertItem(2,'OtTool')
+        # self.list.insertItem(2,'OtTool')
         self.list.insertItem(3, 'DTCDefine_SYM')
         self.list.insertItem(4, 'CAND')
         self.list.insertItem(5, 'VBFGenerate')
@@ -54,7 +41,7 @@ class MiniTool(QMainWindow):
         self.stack = QStackedWidget()
         self.stack.addWidget(RegressionWidget())
         self.stack.addWidget(GenS37Widget())
-        self.stack.addWidget(OtToolWidget())
+        # self.stack.addWidget(OtToolWidget())
         self.stack.addWidget(DTCDefine_SYMWidget())
         self.stack.addWidget(CANDWidget())
         self.stack.addWidget(VBFGenerateWidget())
@@ -112,8 +99,8 @@ if __name__ == '__main__':
     # splash = QSplashScreen(QPixmap("Boot.PNG"))
     # splash.showMessage("Loading .... 0%")
     # splash.show()
-    icon = QIcon(":/icon/Images/title.PNG")
+    # icon = QIcon(":/icon/Images/title.PNG")
     MiniToolWindow = MiniTool()
-    MiniToolWindow.setWindowIcon(icon)
+    # MiniToolWindow.setWindowIcon(icon)
     MiniToolWindow.show()
     sys.exit(app.exec_())
