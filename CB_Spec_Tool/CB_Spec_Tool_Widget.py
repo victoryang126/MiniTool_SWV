@@ -6,7 +6,7 @@ import win32com
 from win32com.client import Dispatch
 from CB_Spec_Tool import ConvertSpect2CBSpec as CB_Tool
 from CB_Spec_Tool.Ui_CB_Spec_Tool import Ui_CB_Spec_Tool
-from UploadSpec2CodeBeamer import UploadSpec2CB
+from CB_Spec_Tool.UploadSpec2CodeBeamer import *
 from PyQt5.QtWidgets import QWidget, QApplication,QMessageBox,QDialog,QFileDialog
 from PyQt5.QtCore import  pyqtSlot
 from PyQt5.QtCore import  QSettings
@@ -41,6 +41,7 @@ class CB_Spec_Tool_Widget(QWidget):
         self.CB_Spec_FromCB = ""
         self.FinalCBSpec = ""
         self.CaseTrackerID = ""
+        self.CB_Spec_Folder_ID = ""
 
         if os.path.exists('./ini/CB_Spec_Tool_Widget.ini'):
             self.Config = QSettings('./ini/CB_Spec_Tool_Widget.ini', QSettings.IniFormat)
@@ -177,11 +178,11 @@ class CB_Spec_Tool_Widget(QWidget):
                 # print(SpecCB)
                 Excel_Files.append(SpecCB)
                 CB_Tool.GenerateSpec_CB_Init(Df_spec, SpecCB)
-                self.FinalCBSpec = Excel_Files[0]
 
-                self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
-                self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
-                self.CB_Spec_Generate = self.FinalCBSpec
+            self.FinalCBSpec =  os.path.join(self.CB_Spec_ExportPath,Excel_Files[0])
+            self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
+            self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
+            self.CB_Spec_Generate = self.FinalCBSpec
             NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
             if len(NotOK_Files):
                 # pass
@@ -264,6 +265,24 @@ class CB_Spec_Tool_Widget(QWidget):
     def on_LE_CaseTrackerID_textChanged(self, str):
         self.CaseTrackerID  = self.__ui.LE_CaseTrackerID.text()
         # print(self.Project)
+
+    @pyqtSlot(str)
+    def on_LE_CB_Spec_Folder_ID_textChanged(self, str):
+        self.CB_Spec_Folder_ID = self.__ui.LE_CB_Spec_Folder_ID.text()
+        # print(self.Project)
+
+    @pyqtSlot()
+    def on_BT_DownloadCBSpec_clicked(self):
+        try:
+            # print(self.FinalCBSpec)
+            # DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
+            CB_Spec_DownloadFromCB = DownLoadSpecFromCB(self.CaseTrackerID, self.CB_Spec_ExportPath,self.CB_Spec_Folder_ID )
+            self.DoneMessage("Download Succesfully")
+            self.CB_Spec_FromCB = os.path.join(self.CB_Spec_ExportPath,CB_Spec_DownloadFromCB)
+            self.__ui.LE_CB_Spec_FromCB.setText(self.CB_Spec_FromCB)
+
+        except Exception as err:
+            self.WarningMessage(err)
 
     @pyqtSlot()
     def on_BT_Upload2CB_clicked(self):
