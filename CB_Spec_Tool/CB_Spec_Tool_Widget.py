@@ -6,7 +6,7 @@ import win32com
 from win32com.client import Dispatch
 from CB_Spec_Tool import ConvertSpect2CBSpec as CB_Tool
 from CB_Spec_Tool.Ui_CB_Spec_Tool import Ui_CB_Spec_Tool
-
+from UploadSpec2CodeBeamer import UploadSpec2CB
 from PyQt5.QtWidgets import QWidget, QApplication,QMessageBox,QDialog,QFileDialog
 from PyQt5.QtCore import  pyqtSlot
 from PyQt5.QtCore import  QSettings
@@ -39,6 +39,8 @@ class CB_Spec_Tool_Widget(QWidget):
         self.CB_Spec_Generate = ""
         self.Release = ""
         self.CB_Spec_FromCB = ""
+        self.FinalCBSpec = ""
+        self.CaseTrackerID = ""
 
         if os.path.exists('./ini/CB_Spec_Tool_Widget.ini'):
             self.Config = QSettings('./ini/CB_Spec_Tool_Widget.ini', QSettings.IniFormat)
@@ -175,6 +177,11 @@ class CB_Spec_Tool_Widget(QWidget):
                 # print(SpecCB)
                 Excel_Files.append(SpecCB)
                 CB_Tool.GenerateSpec_CB_Init(Df_spec, SpecCB)
+                self.FinalCBSpec = Excel_Files[0]
+
+                self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
+                self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
+                self.CB_Spec_Generate = self.FinalCBSpec
             NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
             if len(NotOK_Files):
                 # pass
@@ -227,6 +234,8 @@ class CB_Spec_Tool_Widget(QWidget):
             if self.Release:
                 CB_Tool.GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB,self.Release,SpecCB_Modify)
                 Excel_Files.append(SpecCB_Modify)
+                self.FinalCBSpec = Excel_Files[0]
+                self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
                 NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
                 if len(NotOK_Files):
                     self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
@@ -237,6 +246,38 @@ class CB_Spec_Tool_Widget(QWidget):
                 self.WarningMessage("Release can't be empty")
         except Exception as err:
             self.WarningMessage(err)
+
+
+    @pyqtSlot()
+    def on_BT_FinalCBSpec_clicked(self):
+        # pass
+        self.__ui.LE_FinalCBSpec.clear()
+        FileName, filetype = QFileDialog.getOpenFileName(self,
+                                                         "Select the test report generate by this tool",
+                                                         self.CurrentPath,
+                                                          "excel(*.xlsx)")
+        self.__ui.LE_FinalCBSpec.setText(FileName)
+        self.FinalCBSpec = self.__ui.LE_FinalCBSpec.text()
+        print(self.FinalCBSpec)
+
+    @pyqtSlot(str)
+    def on_LE_CaseTrackerID_textChanged(self, str):
+        self.CaseTrackerID  = self.__ui.LE_CaseTrackerID.text()
+        # print(self.Project)
+
+    @pyqtSlot()
+    def on_BT_Upload2CB_clicked(self):
+        try:
+            # print(self.FinalCBSpec)
+            ReturnValue = UploadSpec2CB(self.CaseTrackerID, self.FinalCBSpec, "", "")
+            if ReturnValue:
+                self.DoneMessage("upload successfully")
+            else:
+                self.WarningMessage("upload failed, Please check the file or CB Setting")
+        except Exception as err:
+            self.WarningMessage(err)
+
+
 
 
 

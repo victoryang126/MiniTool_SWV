@@ -294,7 +294,7 @@ def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,Release,SpecCB_M
     :param SpecCB_Modify: 修改后的Specification名称
     :return:NONE
     """
-
+    print(1)
     df_SpecCB_Generate["Parent"] = Df_ID_Case_FromCB.iloc[1,1]
     #根据CodeBeamer Spec的ID给对应的Case赋值
     df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
@@ -307,6 +307,7 @@ def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,Release,SpecCB_M
             df_SpecCB_Generate = df_SpecCB_Generate.append(Df_ID_Case_FromCB.loc[caseName])
             # print(Df_ID_Case_FromCB.loc[caseName])
     # print(df_SpecCB_Generate)
+    print(2)
     df_SpecCB_Generate["Release"] = Release
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
 
