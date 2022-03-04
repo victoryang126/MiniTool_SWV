@@ -1,7 +1,7 @@
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-# from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.action_chains import ActionChains
 # from selenium.webdriver.common.keys import Keys
 import time
 # 40804608
@@ -66,9 +66,59 @@ def UploadSpec2CB(CaseTrackerID,CodeBeamer_Spec,CaseFolderID,InitCaseList):
     #     time.sleep(10)
 
     #     Action.move_to_element(targetElement).release().perform()
+
+def DownLoadSpecFromCB(CaseTrackerID,CB_Spec_Folder,CaseFolderID):
+    options = webdriver.EdgeOptions()
+
+    prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': CB_Spec_Folder}
+    options.add_experimental_option('prefs', prefs)
+    CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/" + CaseTrackerID
+    browser = webdriver.ChromiumEdge(options = options)
+    browser.get(CodeBeamer_Upload_Url)
+
+    # 点击Login
+    browser.find_element(by=By.NAME, value= "saml" ).click()
+
+    time.sleep(3)
+    CaseFolder_Filter = '//li[@id=\"' +CaseFolderID + '\"]'
+    # TargetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
+    # print(TargetElement)
+    browser.find_element(by=By.XPATH, value=CaseFolder_Filter).click()
+
+    # MoreButton = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']")
+    # print(MoreButton)
+    browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']").click()
+    browser.find_element(by=By.ID, value="ui-id-6").click()
+    print(1)
+    time.sleep(2)
+    browser.switch_to.frame("inlinedPopupIframe")
+    browser.find_element(by=By.ID, value="excelExportTabPane-tab").click()
+
+    # browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane-tab']").click()
+    print(11)
+
+
+    #下载数据
+    browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane']//input[@value='Export']").click()
+    # time.sleep(10)
+    # FileName = browser.find_element(by=By.XPATH, value="//div[@class='information onlyOneMessage']//li[@target='_top']").text()
+    # print(FileName)
+    # time.sleep(3)
+
+    browser.execute_script("window.open()")
+    # switch to new tab
+    browser.switch_to.window(browser.window_handles[-1])
+    # navigate to edge downloads
+    browser.get('edge://downloads')
+    # define the endTime
+    fileName = browser.find_element(by=By.XPATH, value="//img[@aria-label]").get_attribute("aria-label")
+    return fileName
+
 if __name__ == '__main__':
     CaseTrackerID = "10574131"
     CaseFolderID = "11862154"
+    CaseFolderID = "11132470"
+    CB_Spec_Folder = r"C:\Users\victor.yang\Desktop\Temp"
     CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
     InitCaseList = [
         "Test Case 1 - First Frame Transmitted Time and Init value",
@@ -84,4 +134,6 @@ if __name__ == '__main__':
         "Test Case 12 - Check ECU Receive Message",
         "Test Case 13 - ECU Sample Point Test"
     ]
-    UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList)
+    CodeBeamer_Spec_FromCB = ""
+    # UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList)
+    DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID)
