@@ -100,7 +100,7 @@ def DownLoadSpecFromCB(CaseTrackerID,CB_Spec_Folder,CaseFolderID):
 
     #下载数据
     browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane']//input[@value='Export']").click()
-    # time.sleep(10)
+    time.sleep(10)
     # FileName = browser.find_element(by=By.XPATH, value="//div[@class='information onlyOneMessage']//li[@target='_top']").text()
     # print(FileName)
     # time.sleep(3)

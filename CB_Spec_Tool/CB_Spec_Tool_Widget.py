@@ -132,6 +132,9 @@ class CB_Spec_Tool_Widget(QWidget):
         for file in FileNames:
             self.__ui.textB_Test_Spec.append(file)
         self.Test_Spec_List += FileNames
+        FolderName = os.path.split(self.Test_Spec_List[0])[0]
+        self.__ui.LE_CB_Spec.setText(FolderName)
+        self.CB_Spec_ExportPath = FolderName
 
 
     @pyqtSlot()
