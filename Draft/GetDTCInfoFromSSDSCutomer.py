@@ -143,9 +143,9 @@ def GenerateVeoneerCodeIni(SSDSPath, SheetName, iniFile):
 
 if __name__ == '__main__':
 
-    SSDSPath = "C:\Project\Geely_GEEA2_HX11\SW_Release\P30_03\BuildGenerationReport\error_definition_Geely_GEEA2_HX11_P30_03.xlsm"
+    SSDSPath = "C:\Project\Geely_GEEA2_HX11\SW_Release\P31_00\BuildGenerationReport\error_definition_Geely_GEEA2_HX11_P31.xlsm"
     # E:\GitHub\MiniTool\DataSource\SSDS_Customer.xlsx
-    iniFile = "C:\Project\Geely_GEEA2_HX11\SW_Release\P30_03\BuildGenerationReport\VeoneerCode.ini"
+    iniFile = "C:\Project\Geely_GEEA2_HX11\SW_Release\P31_00\BuildGenerationReport\VeoneerCode.ini"
     # SnapshotiniFile = "..\DataSource\SnapShot.ini"
     # GenerateDTCiniFile(SSDSPath, "DTC", iniFile)
 
