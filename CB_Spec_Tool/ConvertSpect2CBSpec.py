@@ -4,6 +4,7 @@ import os
 # from pandas import ExcelWriter
 # from openpyxl.utils import get_column_letter
 import re
+import openpyxl
 
 def IsCBID(ID):
     """
@@ -147,10 +148,13 @@ def ReadSpec_TableOfContent(Spec):
     :param Spec: Test specification
     :return:Df_spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
     """
+    print("ReadSpec_TableOfContent")
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
     pd.set_option('max_colwidth', 200)
+    print(1)
     Df_spec = pd.read_excel(Spec, "Table Of Contents", dtype='str')
+    print(2)
     ColumnsList = ["Object Text","_VerificationStatus", "_VerifiesDOORSRequirements"]
     Df_spec = Df_spec[ColumnsList]
     Df_spec = Df_spec.iloc[7:,:]
@@ -259,8 +263,15 @@ def GenerateSpec_CB_Init(Df_spec, SpecCB):
     df_SpecCB["Verifies"] = Df_spec["Verifies"].apply(lambda x: "[ISSUE:" + x + "]" if IsCBID(x) else "")
     df_SpecCB["_VerifiesNonCbRequirements"] = Df_spec["Verifies"].apply(lambda x: x if not IsCBID(x) else "")
     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
+    DeleteLastEmptyRow(SpecCB)
     return df_SpecCB
 
+def DeleteLastEmptyRow(Spec):
+    wb = openpyxl.load_workbook(Spec)
+    ws = wb.active
+    max_row = ws.max_row
+    ws.delete_rows(max_row + 1)
+    wb.save(Spec)
 
 def ReadSpecCB_FromCB(SpecCB_FromCB):
     """
@@ -310,6 +321,7 @@ def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,Release,SpecCB_M
     print(2)
     df_SpecCB_Generate["Release"] = Release
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
+    DeleteLastEmptyRow(SpecCB_Modify)
 
 if __name__ == '__main__':
     Spec = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result.xlsm"
@@ -319,8 +331,16 @@ if __name__ == '__main__':
     SpecCB_FromCB = "..\Data/84177 _GWM_P05_IMU_Test case.xlsx"
     # Df_LoopUp = ReadLoopUp(LoopUP)
     #
-    Df_spec = ReadSpec_TableOfContent(Spec)
+    # Df_spec = ReadSpec_TableOfContent(Spec)
     #
-    df_SpecCB_Generate = GenerateSpec_CB_Init(Df_spec, SpecCB_Generate)
+    # df_SpecCB_Generate = GenerateSpec_CB_Init(Df_spec, SpecCB_Generate)
     # df_SpecCB_FromCB,Df_ID_Case_FromCB = ReadSpecCB_FromCB(SpecCB_FromCB)
     # GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, SpecCB_Modify)
+    a = r"C:/Users/victor.yang/Downloads\CHT_System_Validation_GWM_D30_CANC_Test Specification_CodeBeamer.xlsx"
+
+    # df = pd.read_excel(a)
+    # print(df.index)
+    # print(df["Verifies"])
+
+    # APISheet.
+    # print(row)
