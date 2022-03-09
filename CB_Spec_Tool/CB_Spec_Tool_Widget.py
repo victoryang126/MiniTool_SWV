@@ -276,6 +276,9 @@ class CB_Spec_Tool_Widget(QWidget):
 
     @pyqtSlot()
     def on_BT_DownloadCBSpec_clicked(self):
+        if self.CaseTrackerID or self.CB_Spec_Folder_ID :
+            self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
+            return
         try:
             # print(self.FinalCBSpec)
             # DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
@@ -289,6 +292,9 @@ class CB_Spec_Tool_Widget(QWidget):
 
     @pyqtSlot()
     def on_BT_Upload2CB_clicked(self):
+        if not self.CaseTrackerID or not self.CB_Spec_Folder_ID :
+            self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
+            return
         try:
             # print(self.FinalCBSpec)
             InitCaseList = CB_Tool.GetInitCaseList(self.FinalCBSpec)
@@ -297,6 +303,106 @@ class CB_Spec_Tool_Widget(QWidget):
                 self.DoneMessage("upload successfully")
             else:
                 self.WarningMessage("upload failed, Please check the file or CB Setting")
+        except Exception as err:
+            self.WarningMessage(err)
+
+
+    @pyqtSlot()
+    def on_BT_Upload2CB_1stTime_clicked(self):
+        if not self.CaseTrackerID or not self.CB_Spec_Folder_ID :
+            self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
+            return
+        Excel_Files = []
+        try:
+            # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
+            for Test_Spec in self.Test_Spec_List:
+                # print(Test_Spec)
+                Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+                # print(os.path.basename(Test_Spec).split("."))
+                SpecCB = os.path.basename(Test_Spec).split(".")[0] + "_CodeBeamer.xlsx"
+                SpecCB = os.path.join(self.CB_Spec_ExportPath, SpecCB)
+                # print(SpecCB)
+                Excel_Files.append(SpecCB)
+                CB_Tool.GenerateSpec_CB_Init(Df_spec, SpecCB)
+
+            self.FinalCBSpec = os.path.join(self.CB_Spec_ExportPath, Excel_Files[0])
+            self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
+            self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
+            self.CB_Spec_Generate = self.FinalCBSpec
+            NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
+            if len(NotOK_Files):
+                # pass
+                self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
+            else:
+                self.__ui.BT_Upload2CB.click()
+                self.SaveConfig()
+        except Exception as err:
+            self.WarningMessage(err)
+
+    @pyqtSlot()
+    def on_BT_Upload2CB_Modify_clicked(self):
+        if not self.CaseTrackerID or not self.CB_Spec_Folder_ID :
+            self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
+            return
+        Excel_Files = []
+        #先重新生成
+        print("1st Generate")
+        try:
+            # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
+            for Test_Spec in self.Test_Spec_List:
+                # print(Test_Spec)
+                Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+                # print(os.path.basename(Test_Spec).split("."))
+                SpecCB = os.path.basename(Test_Spec).split(".")[0] + "_CodeBeamer.xlsx"
+                SpecCB = os.path.join(self.CB_Spec_ExportPath, SpecCB)
+                # print(SpecCB)
+                Excel_Files.append(SpecCB)
+                CB_Tool.GenerateSpec_CB_Init(Df_spec, SpecCB)
+
+            self.FinalCBSpec = os.path.join(self.CB_Spec_ExportPath, Excel_Files[0])
+            self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
+            self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
+            self.CB_Spec_Generate = self.FinalCBSpec
+            NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
+            if len(NotOK_Files):
+                # pass
+                self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
+            else:
+                #然后下载
+                print("2nd Download")
+                CB_Spec_DownloadFromCB = DownLoadSpecFromCB(self.CaseTrackerID, self.CB_Spec_ExportPath,
+                                                            self.CB_Spec_Folder_ID)
+                self.CB_Spec_FromCB = os.path.join(self.CB_Spec_ExportPath, CB_Spec_DownloadFromCB)
+                self.__ui.LE_CB_Spec_FromCB.setText(self.CB_Spec_FromCB)
+                try:
+                    Excel_Files = []
+                    #然后Modify
+                    print("3nd Modify")
+                    df_SpecCB_FromCB, Df_ID_Case_FromCB = CB_Tool.ReadSpecCB_FromCB(self.CB_Spec_FromCB)
+                    df_SpecCB_Generate = pd.read_excel(self.CB_Spec_Generate, "Export")
+                    SpecCB_Modify = os.path.basename(self.CB_Spec_Generate).split(".")[0] + "_Modify.xlsx"
+                    SpecCB_Modify = os.path.join(os.path.split(self.CB_Spec_Generate)[0], SpecCB_Modify)
+                    print(SpecCB_Modify)
+                    if self.Release:
+                        CB_Tool.GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, self.Release,
+                                                       SpecCB_Modify)
+                        Excel_Files.append(SpecCB_Modify)
+                        self.FinalCBSpec = Excel_Files[0]
+
+                        print(self.FinalCBSpec)
+                        # self.WarningMessage("T")
+                        self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
+                        NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
+                        if len(NotOK_Files):
+                            self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
+                        else:
+                            print("4th upload")
+                            self.__ui.BT_Upload2CB.click()
+                            self.SaveConfig()
+                    else:
+                        self.WarningMessage("Release can't be empty")
+                except Exception as err:
+                    self.WarningMessage(err)
         except Exception as err:
             self.WarningMessage(err)
 
