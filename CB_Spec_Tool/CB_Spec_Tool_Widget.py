@@ -291,7 +291,8 @@ class CB_Spec_Tool_Widget(QWidget):
     def on_BT_Upload2CB_clicked(self):
         try:
             # print(self.FinalCBSpec)
-            ReturnValue = UploadSpec2CB(self.CaseTrackerID, self.FinalCBSpec, "", "")
+            InitCaseList = CB_Tool.GetInitCaseList(self.FinalCBSpec)
+            ReturnValue = UploadSpec2CB(self.CaseTrackerID, self.FinalCBSpec, self.CB_Spec_Folder_ID, InitCaseList)
             if ReturnValue:
                 self.DoneMessage("upload successfully")
             else:

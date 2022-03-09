@@ -2,15 +2,17 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-# from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.keys import Keys
 import time
 # 40804608
 # 10574131
 
 def UploadSpec2CB(CaseTrackerID,CodeBeamer_Spec,CaseFolderID,InitCaseList):
+    options = webdriver.EdgeOptions()
+    options.add_experimental_option("detach",True)
     CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/importIssue.spr?tracker_id=" + CaseTrackerID
     # CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/10574131?view_id=-2"
-    browser = webdriver.ChromiumEdge()
+    browser = webdriver.ChromiumEdge(options =options )
     browser.get(CodeBeamer_Upload_Url)
 
     # 点击Login
@@ -38,35 +40,66 @@ def UploadSpec2CB(CaseTrackerID,CodeBeamer_Spec,CaseFolderID,InitCaseList):
         ErrorStatus = browser.find_element(by=By.CLASS_NAME, value= "invalidfield").is_displayed()
         if ErrorStatus:
             print("Please check the error")
-            time.sleep(120)
+            # time.sleep(120)
             return False
     except Exception as err:
         print("Not exist Error")
-        time.sleep(120)
-        return True
+
+    if len(InitCaseList) != 0:
+            # 定位到即将拖入的folder
+        print("Init Case will add to the case folder")
+        CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
+        targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
+        print(targetElement)
+        Action = ActionChains(browser)
+        Action.key_down(Keys.SHIFT)  # 按住sheift
+        for CaseName in InitCaseList:
+            CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
+            dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
+            print(CaseName)
+            Action.click(dragElement)
+            time.sleep(2)
+        time.sleep(2)
+        print(1)
+        Action.drag_and_drop(dragElement, targetElement).perform()
+        print(2)
+
+    return True
+
+
+def DragCaseItem2oFolder(CaseTrackerID,CaseFolderID,InitCaseList):
+    CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/" + CaseTrackerID
+    # CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/10574131?view_id=-2"
+    browser = webdriver.ChromiumEdge()
+    browser.get(CodeBeamer_Upload_Url)
+
+    # 点击Login
+    browser.find_element(by=By.NAME, value= "saml" ).click()
+
+    # 等待进入页面以后拖拉需要上传的spec进去
+    # time.sleep(10)
+    print(1)
+    print(CodeBeamer_Spec)
 
 
     # 定位到即将拖入的folder
-    # CaseFolder_Filter = '//li[@id=\"' +CaseFolderID + '\"]'
-    # targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-    # Action = ActionChains(browser)
-    # for CaseName in InitCaseList:
-    #     CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
-    #     dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
-    #     sheft_key = browser.find_element(by=By.ID, value="Shift")
-    #     Action.click_and_hold(sheft_key)
-    #     Action.click(dragElement)
-    # for CaseName in InitCaseList:
-    #     targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-    #     print(targetElement)
-    #     CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
-    #     dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
-    #     browser.find_elements()
-    #     Action.drag_and_drop(dragElement,targetElement).perform()
-    #     time.sleep(10)
-
-    #     Action.move_to_element(targetElement).release().perform()
-
+    CaseFolder_Filter = '//li[@id=\"' +CaseFolderID + '\"]'
+    targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
+    print(targetElement)
+    Action = ActionChains(browser)
+    Action.key_down(Keys.SHIFT) # 按住sheift
+    for CaseName in InitCaseList:
+        CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
+        dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
+        print(CaseName)
+        Action.click(dragElement)
+        time.sleep(2)
+    time.sleep(10)
+    print(1)
+    Action.drag_and_drop(dragElement,targetElement).perform()
+    print(2)
+    time.sleep(10)
+    
 def DownLoadSpecFromCB(CaseTrackerID,CB_Spec_Folder,CaseFolderID):
     CB_Spec_Folder =  CB_Spec_Folder.replace('/', '\\')
     options = webdriver.EdgeOptions()
@@ -167,7 +200,7 @@ def DownLoadSpecFromCB2(CaseTrackerID,CB_Spec_Folder,CaseFolderID):
 if __name__ == '__main__':
     CaseTrackerID = "10574131"
     CaseFolderID = "11862154"
-    CaseFolderID = "11450597"
+    # CaseFolderID = "11450597"
     CB_Spec_Folder = r"C:\Users\victor.yang\Desktop\Temp"
     CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
     InitCaseList = [
@@ -185,5 +218,6 @@ if __name__ == '__main__':
         "Test Case 13 - ECU Sample Point Test"
     ]
     CodeBeamer_Spec_FromCB = ""
-    # UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList)
-    DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID)
+    UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList)
+    # # DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID)
+    # DragCaseItem2oFolder(CaseTrackerID, CaseFolderID, InitCaseList)

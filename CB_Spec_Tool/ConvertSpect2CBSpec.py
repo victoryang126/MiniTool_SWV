@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import numpy as np
 # import win32com
 # from pandas import ExcelWriter
 # from openpyxl.utils import get_column_letter
@@ -323,6 +324,15 @@ def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,Release,SpecCB_M
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB_Modify)
 
+def GetInitCaseList(FinnalSpec):
+    df = pd.read_excel(FinnalSpec)
+
+    InitCaseList = df.loc[df["ID"].isnull()]["Name"].drop_duplicates().str.strip().values
+
+    print(type(InitCaseList) )
+    print(InitCaseList)
+    return InitCaseList
+
 if __name__ == '__main__':
     Spec = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result.xlsm"
     LoopUP = "..\DataSource/P05CBID.txt"
@@ -337,7 +347,8 @@ if __name__ == '__main__':
     # df_SpecCB_FromCB,Df_ID_Case_FromCB = ReadSpecCB_FromCB(SpecCB_FromCB)
     # GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, SpecCB_Modify)
     a = r"C:/Users/victor.yang/Downloads\CHT_System_Validation_GWM_D30_CANC_Test Specification_CodeBeamer.xlsx"
-
+    CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
+    GetInitCaseList(CodeBeamer_Spec)
     # df = pd.read_excel(a)
     # print(df.index)
     # print(df["Verifies"])
