@@ -103,7 +103,7 @@ def DragCaseItem2oFolder(CaseTrackerID,CaseFolderID,InitCaseList):
 def DownLoadSpecFromCB(CaseTrackerID,CB_Spec_Folder,CaseFolderID):
     CB_Spec_Folder =  CB_Spec_Folder.replace('/', '\\')
     options = webdriver.EdgeOptions()
-
+    print(CB_Spec_Folder)
     prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': CB_Spec_Folder}
     options.add_experimental_option('prefs', prefs)
     CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/" + CaseTrackerID
@@ -198,26 +198,27 @@ def DownLoadSpecFromCB2(CaseTrackerID,CB_Spec_Folder,CaseFolderID):
     return fileName
 
 if __name__ == '__main__':
-    CaseTrackerID = "10574131"
-    CaseFolderID = "11862154"
-    # CaseFolderID = "11450597"
-    CB_Spec_Folder = r"C:\Users\victor.yang\Desktop\Temp"
-    CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
-    InitCaseList = [
-        "Test Case 1 - First Frame Transmitted Time and Init value",
-        "Test Case 2 - Stop sending Msg  Time",
-        "Test Case 3 - BUSOFF Strategy",
-        "Test Case 4 - Transmit capability",
-        "Test Case 5 - Signal of Message ABM1(0x31C)",
-        "Test Case 7 - Receive Message Monitor",
-        "Test Case 8 - High Priority Behavior",
-        "Test Case 9 - ECU behavior during lost communication failure",
-        "Test Case 10 - Low power supply",
-        "Test Case 11 - High power supply",
-        "Test Case 12 - Check ECU Receive Message",
-        "Test Case 13 - ECU Sample Point Test"
-    ]
-    CodeBeamer_Spec_FromCB = ""
-    UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList)
-    # # DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID)
+    pass
+    CaseTrackerID = "22106033"
+    CaseFolderID = "10367368"
+    # # CaseFolderID = "11450597"
+    CB_Spec_Folder = r"C:\Users\victor.yang\Desktop\Work\CB"
+    # CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
+    # InitCaseList = [
+    #     "Test Case 1 - First Frame Transmitted Time and Init value",
+    #     "Test Case 2 - Stop sending Msg  Time",
+    #     "Test Case 3 - BUSOFF Strategy",
+    #     "Test Case 4 - Transmit capability",
+    #     "Test Case 5 - Signal of Message ABM1(0x31C)",
+    #     "Test Case 7 - Receive Message Monitor",
+    #     "Test Case 8 - High Priority Behavior",
+    #     "Test Case 9 - ECU behavior during lost communication failure",
+    #     "Test Case 10 - Low power supply",
+    #     "Test Case 11 - High power supply",
+    #     "Test Case 12 - Check ECU Receive Message",
+    #     "Test Case 13 - ECU Sample Point Test"
+    # ]
+    # CodeBeamer_Spec_FromCB = ""
+    # UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList)
+    DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID)
     # DragCaseItem2oFolder(CaseTrackerID, CaseFolderID, InitCaseList)

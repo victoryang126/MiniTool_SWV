@@ -127,14 +127,16 @@ class CB_Spec_Tool_Widget(QWidget):
         FileNames, filetype = QFileDialog.getOpenFileNames(self,
                                                            "select test specification",
                                                            self.CurrentPath,
-                                                           "excel(*.xlsm)")
+                                                           "excel(*.xlsx *.xlsm)")
         # print(FileNames)
-        for file in FileNames:
-            self.__ui.textB_Test_Spec.append(file)
-        self.Test_Spec_List += FileNames
-        FolderName = os.path.split(self.Test_Spec_List[0])[0]
-        self.__ui.LE_CB_Spec.setText(FolderName)
-        self.CB_Spec_ExportPath = FolderName
+        if FileNames:
+            for file in FileNames:
+                self.__ui.textB_Test_Spec.append(file)
+            self.Test_Spec_List += FileNames
+            FolderName = os.path.split(self.Test_Spec_List[0])[0]
+            self.__ui.LE_CB_Spec.setText(FolderName)
+            self.CB_Spec_ExportPath = FolderName
+            print(self.CB_Spec_ExportPath)
 
 
     @pyqtSlot()
@@ -174,13 +176,14 @@ class CB_Spec_Tool_Widget(QWidget):
             # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
             for Test_Spec in self.Test_Spec_List:
                 # print(Test_Spec)
-                Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+                Df_spec,self.CaseTrackerID,self.CB_Spec_Folder_ID,self.Release= CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+
                 # print(os.path.basename(Test_Spec).split("."))
                 SpecCB = os.path.basename(Test_Spec).split(".")[0] +"_CodeBeamer.xlsx"
                 SpecCB = os.path.join(self.CB_Spec_ExportPath,SpecCB)
                 # print(SpecCB)
                 Excel_Files.append(SpecCB)
-                CB_Tool.GenerateSpec_CB_Init(Df_spec, SpecCB)
+                CB_Tool.GenerateSpec_CB_Init(Df_spec,self.Release, SpecCB)
 
             self.FinalCBSpec =  os.path.join(self.CB_Spec_ExportPath,Excel_Files[0])
             self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
@@ -230,24 +233,24 @@ class CB_Spec_Tool_Widget(QWidget):
     def on_BT_Generate_Modify_clicked(self):
         Excel_Files = []
         try:
-            df_SpecCB_FromCB, Df_ID_Case_FromCB =  CB_Tool.ReadSpecCB_FromCB(self.CB_Spec_FromCB)
+            df_SpecCB_FromCB, Df_ID_Case_FromCB =  CB_Tool.ReadSpecCB_FromCB2(self.CB_Spec_FromCB)
             df_SpecCB_Generate = pd.read_excel(self.CB_Spec_Generate,"Export")
             SpecCB_Modify = os.path.basename(self.CB_Spec_Generate).split(".")[0] + "_Modify.xlsx"
             SpecCB_Modify = os.path.join(os.path.split(self.CB_Spec_Generate)[0], SpecCB_Modify)
 
-            if self.Release:
-                CB_Tool.GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB,self.Release,SpecCB_Modify)
-                Excel_Files.append(SpecCB_Modify)
-                self.FinalCBSpec = Excel_Files[0]
-                self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
-                NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
-                if len(NotOK_Files):
-                    self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
-                else:
-                    self.DoneMessage("Generate Excel successfully")
-                    self.SaveConfig()
+           
+
+            CB_Tool.GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB,df_SpecCB_FromCB,self.Release,SpecCB_Modify)
+            Excel_Files.append(SpecCB_Modify)
+            self.FinalCBSpec = Excel_Files[0]
+            self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
+            NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
+            if len(NotOK_Files):
+                self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")
             else:
-                self.WarningMessage("Release can't be empty")
+                self.DoneMessage("Generate Excel successfully")
+                self.SaveConfig()
+
         except Exception as err:
             self.WarningMessage(err)
 
@@ -267,16 +270,16 @@ class CB_Spec_Tool_Widget(QWidget):
     @pyqtSlot(str)
     def on_LE_CaseTrackerID_textChanged(self, str):
         self.CaseTrackerID  = self.__ui.LE_CaseTrackerID.text()
-        # print(self.Project)
+        # print(self.CaseTrackerID)
 
     @pyqtSlot(str)
     def on_LE_CB_Spec_Folder_ID_textChanged(self, str):
         self.CB_Spec_Folder_ID = self.__ui.LE_CB_Spec_Folder_ID.text()
-        # print(self.Project)
+        # print(self.CB_Spec_Folder_ID)
 
     @pyqtSlot()
     def on_BT_DownloadCBSpec_clicked(self):
-        if self.CaseTrackerID or self.CB_Spec_Folder_ID :
+        if not self.CaseTrackerID or not self.CB_Spec_Folder_ID:
             self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
             return
         try:
@@ -309,21 +312,22 @@ class CB_Spec_Tool_Widget(QWidget):
 
     @pyqtSlot()
     def on_BT_Upload2CB_1stTime_clicked(self):
-        if not self.CaseTrackerID or not self.CB_Spec_Folder_ID :
-            self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
-            return
+
         Excel_Files = []
         try:
             # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
             for Test_Spec in self.Test_Spec_List:
                 # print(Test_Spec)
-                Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+                Df_spec,self.CaseTrackerID,self.CB_Spec_Folder_ID,self.Release = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+                if not self.CaseTrackerID or not self.CB_Spec_Folder_ID:
+                    self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
+                    return
                 # print(os.path.basename(Test_Spec).split("."))
                 SpecCB = os.path.basename(Test_Spec).split(".")[0] + "_CodeBeamer.xlsx"
                 SpecCB = os.path.join(self.CB_Spec_ExportPath, SpecCB)
                 # print(SpecCB)
                 Excel_Files.append(SpecCB)
-                CB_Tool.GenerateSpec_CB_Init(Df_spec, SpecCB)
+                CB_Tool.GenerateSpec_CB_Init(Df_spec, self.Release ,SpecCB)
 
             self.FinalCBSpec = os.path.join(self.CB_Spec_ExportPath, Excel_Files[0])
             self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
@@ -341,9 +345,7 @@ class CB_Spec_Tool_Widget(QWidget):
 
     @pyqtSlot()
     def on_BT_Upload2CB_Modify_clicked(self):
-        if not self.CaseTrackerID or not self.CB_Spec_Folder_ID :
-            self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
-            return
+
         Excel_Files = []
         #先重新生成
         print("1st Generate")
@@ -351,19 +353,26 @@ class CB_Spec_Tool_Widget(QWidget):
             # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
             for Test_Spec in self.Test_Spec_List:
                 # print(Test_Spec)
-                Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+                print("1" * 30)
+                Df_spec,self.CaseTrackerID,self.CB_Spec_Folder_ID,self.Release = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
+                print("3"*30)
+                if not self.CaseTrackerID or not self.CB_Spec_Folder_ID:
+                    self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
+                    return
                 # print(os.path.basename(Test_Spec).split("."))
                 SpecCB = os.path.basename(Test_Spec).split(".")[0] + "_CodeBeamer.xlsx"
                 SpecCB = os.path.join(self.CB_Spec_ExportPath, SpecCB)
                 # print(SpecCB)
                 Excel_Files.append(SpecCB)
-                CB_Tool.GenerateSpec_CB_Init(Df_spec, SpecCB)
-
+                print("5" * 30)
+                CB_Tool.GenerateSpec_CB_Init(Df_spec, self.Release,SpecCB)
+            print("4" * 30)
             self.FinalCBSpec = os.path.join(self.CB_Spec_ExportPath, Excel_Files[0])
             self.__ui.LE_CB_Spec_Generate.setText(self.FinalCBSpec)
             self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
             self.CB_Spec_Generate = self.FinalCBSpec
             NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
+
             if len(NotOK_Files):
                 # pass
                 self.WarningMessage(str(NotOK_Files) + " not been generated, please check related setting")

@@ -9,7 +9,7 @@ import sys
 
 from PyQt5.QtWidgets import QWidget, QApplication,QMainWindow,QListWidget,QStackedWidget,QHBoxLayout
 from PyQt5.QtGui import  QIcon
-
+import Res_rc
 # from PyQt5.
 from Regression import RegressionWidget
 from Ascent_Generate_S37 import GenS37Widget
@@ -24,7 +24,7 @@ class MiniTool(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('MiniTool V1.14')
-        self.setWindowIcon(QIcon('./Images/title.PNG'))
+        self.setWindowIcon(QIcon('./Images/title.ico'))
         self.setGeometry(150,150,1300,680)
 
         # 左边listWidget
