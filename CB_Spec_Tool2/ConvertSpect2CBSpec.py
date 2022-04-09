@@ -7,54 +7,13 @@ import numpy as np
 import re
 import openpyxl
 
-
-def ConvertCBStatus2GenerateStatus(Status,Status_CB):
-    if Status.strip().upper() == "INIT":
-        return Status_CB
-    else:
-        return Status
-
-def ConverIsIncidentID(cellValue):
-    """
-    检测cell value 是否是incident ID，
-    然后将内容按照[ISSUE:ID,ISSUE:ID]的格式填充
-    """
-    templist = ["ISSUE:"+ ID.strip() for ID in cellValue.split("\n") if re.match(r'^\d+$',ID)]
-    if len(templist)>0:
-        # 如果找到了元素，则按照CB的格式返回
-        return "[" + ",".join(templist) + "]"
-    else:
-        #如果没找到，返回空
-        return ""
-def GetReleaseValue(CellValue):
-    # print(CellValue)
-    if CellValue != "":
-       return CellValue.split(" - ")[1]
-    else:
-        return ""
-def GetIncidentValue(CellValue):
-    # print(CellValue)
-    if CellValue != "":
-       return CellValue.split(" - ")[0]
-    else:
-        return ""
-
-
-
-def ConverNotIncidentID(cellValue):
-    """
-    检测cell value 是否是incident ID，
-    然后将内容按照[ISSUE:ID,ISSUE:ID]的格式填充
-    """
-    templist = [ID for ID in cellValue.split("\n") if not re.match(r'^\d+$',ID)]
-    return ",".join(templist)
-
 def IsCBID(ID):
     """
     检查是否是codebeamer 的需求ID
     :param ID: 需求ID
     :return:True or false
     """
+    # print(ID)
     pattern = re.compile(r'^\d+$')
     return pattern.match(ID)
 
@@ -65,13 +24,50 @@ def ConverSpecTestResult2CBCaseStatus(result):
     :param result: the cell value of _VerificationStatus in TableOfContent
     :return: return the corresonding value in CB
     """
-    if result.strip().upper() == "OK":
+    if result.strip() == "PASSED":
         return "RESULT_PASSED"
-    elif result.strip().upper()  == 'NOK':
+    elif result.strip()  == 'FAILED':
         return "RESULT_FAILED"
     else:
         return "Init"
 
+def GetCaseResult(results):
+    """
+    如case 数据里面有FAILED，则Failed
+    如果Case 数据里面有 PASS，则Pass
+    如果Case 里面有ToByAna,要如何出来
+    如果其他的
+    """
+    # print(1)
+    if "FAILED" in results:
+        return "FAILED"
+    elif "PASSED" in results:
+        return "PASSED"
+    else:
+        return ""
+
+def ConvertTsResult2CaseResult(df):
+    """
+    根据逻辑获取Ts Result的结果，然后准换为 Case结果
+
+    将Comment 的数据用"," ，剔除相同元素
+    """
+    dict_temp = {}
+    # print(df)
+    for col in df:
+        sdata = df[col]
+        #
+        # 如果title 不在sensor list 或 不等于"Time" 则保留第一行数据
+        if col == "_VerificationStatus":
+
+            # print()
+            # dict_temp[col] = ""
+            dict_temp[col] = GetCaseResult(sdata.values)
+        elif col =="Object Text":
+            dict_temp[col] = sdata.values[0]
+        else:
+            dict_temp[col] = ",".join([str(i) for i in sdata.drop_duplicates().values])
+    return pd.Series(dict_temp)
 
 def ReplaceCellValue(CellValue,Df_LoopUp):
     """
@@ -198,21 +194,19 @@ def ReadSpec_TableOfContent(Spec):
     print(1)
     Df_spec = pd.read_excel(Spec, "Table Of Contents", dtype='str')
     print(2)
-    ColumnsList = ["Object Text","_VerificationStatus", "_VerifiesDOORSRequirements","_Comment"]
-    Result_Summary = Df_spec.iloc[0,4]
-
-    CaseTrackerID = Df_spec.iloc[2, 4]
-    CB_Spec_Folder_ID = Df_spec.iloc[3, 4]
-    Release = Df_spec.iloc[4,4]
-    # print("*"*30)
-    # print(Result_Summary)
-    # print(CaseTrackerID,CB_Spec_Folder_ID,Release)
-    # print("*" * 30)
+    ColumnsList = ["Object Text","_VerifiesDOORSRequirements"]
     Df_spec = Df_spec[ColumnsList]
     Df_spec = Df_spec.iloc[7:,:]
     Df_spec.dropna(subset = ["Object Text"],inplace = True)
-    Df_spec["_VerifiesDOORSRequirements"] = Df_spec["_VerifiesDOORSRequirements"].str.rstrip()
 
+    Df_TsResult, Result_Summary = GetCaseResultFromTsResult(Spec)
+    # Df_spec = pd.concat([Df_spec,Df_TsResult],axis=0,keys="Object Text")
+    # print(Df_TsResult.head(2))
+    Df_spec = pd.merge(Df_spec, Df_TsResult, on="Object Text", how="left")
+    # print(Df_spec.head(2))
+
+
+    Df_spec["_VerifiesDOORSRequirements"] = Df_spec["_VerifiesDOORSRequirements"].str.strip()
 
     #判断 _VerifiesDOORSRequirements  split为多个元素的时候，拓展元素
     Df_ReqID = Df_spec['_VerifiesDOORSRequirements'].str.split('\n', expand=True)
@@ -222,45 +216,20 @@ def ReadSpec_TableOfContent(Spec):
     Df_ReqID = Df_ReqID.stack()
     Df_ReqID = Df_ReqID.reset_index(level=1,drop=True) # 剔除二级index,
     Df_ReqID.name = "_VerifiesDOORSRequirements"
-    Df_specTemp1 = Df_spec.drop(['_VerifiesDOORSRequirements', "_Comment"], axis=1).join(Df_ReqID)  # 根据index 添加 _VerifiesDOORSRequirements
-    Df_specTemp1['_Comment'] = ""
-
-    #将Incident ID分行,然后转换为DataFrame,_VerifiesDOORSRequirements 列设置为空
-    Df_IssueID = Df_spec['_Comment'].str.split('\n', expand=True)
-    Df_IssueID = Df_IssueID.stack()
-    Df_IssueID = Df_IssueID.reset_index(level=1,drop=True) # 剔除二级index,
-    Df_IssueID.name = "_Comment"
-    data = {"_Comment" :Df_IssueID.values}
-    # print(data)
-    Df_IssueID = pd.DataFrame(data =data ,index= Df_IssueID.index)
-    Df_IssueID["_VerifiesDOORSRequirements"] = ""
-    Df_specTemp2 = Df_spec.drop(['_Comment','_VerifiesDOORSRequirements'], axis=1).join(Df_IssueID,how="inner")  # 根据index 添加 _VerifiesDOORSRequirements
-
-    #合并表格，然后按照index 重新排序
-    Df_spec = pd.concat([Df_specTemp1,Df_specTemp2],axis=0)
+    Df_spec = Df_spec.drop(['_VerifiesDOORSRequirements'], axis=1).join(Df_ReqID) #根据index 添加 _VerifiesDOORSRequirements
+    #没有数据的时候填充空白
     Df_spec.fillna("", inplace=True)
-    Df_spec.sort_index(inplace=True)
-    print(Df_spec.head(10))
-    #_VerifiesDOORSRequirements 是换行的过滤
-    # Df_spec = Df_spec[Df_spec['_VerifiesDOORSRequirements'].str.strip() != ""]
-    # Df_spec = Df_spec[Df_spec['_Comment'].str.strip() != ""]
 
-
-
-    #根据版本好添加summary
-    df_Summary = pd.DataFrame({"Object Text": ["Test Summary in " + Release], "Description": [Result_Summary],"_VerifiesDOORSRequirements":[" "],"Type":["Information"]})
+    df_Summary = pd.DataFrame({"Object Text": ["Test Environment Summary"], "Description": [Result_Summary],"_VerifiesDOORSRequirements":[" "]})
     print("*" * 30)
     print(df_Summary)
     print("*"*30)
     Df_spec = pd.concat([df_Summary, Df_spec])
-    Df_spec.fillna("",inplace=True)
+    # print(Df_spec["_VerifiesDOORSRequirements"])
+
+    print("*"*30)
     print(Df_spec.columns)
-    # Index(['Object Text', 'Description', '_VerifiesDOORSRequirements', 'Type',
-    #        '_VerificationStatus', '_Comment'],
-    # //Index(['Object Text', 'Description', '_VerifiesDOORSRequirements',
-    #    '_VerificationStatus', '_Comment'],
-    #   dtype='object')
-    return Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release
+    return Df_spec
 
 
 def ReadLoopUp(LoopUP):
@@ -328,7 +297,7 @@ def ReadLoopUp(LoopUP):
 #         # openpyxl引擎设置字符宽度时会缩水0.5左右个字符，所以干脆+2使左右都空出一个字宽。
 #         worksheet.column_dimensions[get_column_letter(i)].width = width + 2
 
-def GenerateSpec_CB_Init(Df_spec,Release, SpecCB):
+def GenerateSpec_CB_Init(Df_spec, SpecCB):
     """
     从Test Specification 中获取出来的DatFrame，将需求ID 写成 "[ISSUE:"  需求ID "]"的格式
     :param Df_spec:从Test Specification 中获取出来的DatFrame
@@ -342,28 +311,19 @@ def GenerateSpec_CB_Init(Df_spec,Release, SpecCB):
                    "Status","Release", "Type", "_Original_TestCaseId", "_Test_Technique",
                    "_VerifiesNonCbRequirements", "_LastReviewDate", "_ScriptPath",
                    "_TestType", "_RegressionStrategy", "_FunctionGroup", "_Feature",
-                   "Functional Safety Relevant", "Cyber Security Relevant","Reserve_1"]
+                   "Functional Safety Relevant", "Cyber Security Relevant"]
     df_SpecCB = pd.DataFrame(columns= ColumnsList)
-
-    print("GenerateSpec_CB_Init")
-    # Index(['Object Text', 'Description', '_VerifiesDOORSRequirements', 'Type',
-    #        '_VerificationStatus', '_Comment'],
-    # //Index(['Object Text', 'Description', '_VerifiesDOORSRequirements',
-    #    '_VerificationStatus', '_Comment'],
-    #   dtype='object')
-    Df_spec.columns =  ["Name", 'Description', "Verifies",'Type',"Status", 'Incident ID']
-
-    df_SpecCB["Name"] = "    " + Df_spec["Name"]
+    print(df_SpecCB)
+    # Index(['Object Text', 'Description', '_VerifiesDOORSRequirements',
+    #        '_VerificationStatus', 'Comments'],
+    Df_spec.columns = ["Name",'Description',"Verifies","Status",'Incident ID']
+    df_SpecCB["Name"] = "   " + Df_spec["Name"]
     df_SpecCB["Description"] = Df_spec["Description"]
     df_SpecCB["Status"] = Df_spec["Status"].apply(ConverSpecTestResult2CBCaseStatus)
+    df_SpecCB["Incident ID"] = Df_spec["Incident ID"]
+    print(Df_spec["Verifies"])
     df_SpecCB["Verifies"] = Df_spec["Verifies"].apply(lambda x: "[ISSUE:" + x + "]" if IsCBID(x) else "")
-
-    df_SpecCB["Type"] = Df_spec["Type"]
-
     df_SpecCB["_VerifiesNonCbRequirements"] = Df_spec["Verifies"].apply(lambda x: x if not IsCBID(x) else "")
-    df_SpecCB["Incident ID"] = Df_spec["Incident ID"].apply(lambda x: "[ISSUE:" + x + "]" if IsCBID(x) else "")
-    df_SpecCB["Reserve_1"] = Df_spec["Incident ID"].apply(lambda x: x if not IsCBID(x) else "")
-    df_SpecCB["Release"] = Release
     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB)
     return df_SpecCB
@@ -385,54 +345,17 @@ def ReadSpecCB_FromCB(SpecCB_FromCB):
     :return:Df_SpecCB    从CodeBeamer 下载下来的TestSpec 的DataFrame
             Df_ID_Case  "ID", "Parent", "Name" 形成的DataFrame
     """
-    print("&"*30 + "ReadSpecCB_FromCB" + "&"*30)
     Df_SpecCB = pd.read_excel(SpecCB_FromCB, "Export", dtype='str')
     # print(Df_SpecCB.head(10))
     Df_SpecCB[["ID","Parent","Name"]] = Df_SpecCB[["ID","Parent","Name"]] .fillna(method = 'ffill')
     # print(Df_SpecCB.head(10))
 
-    Df_ID_Case = Df_SpecCB[["ID", "Parent", "Name","Type","Status"]].drop_duplicates(subset=['ID'])
+    Df_ID_Case = Df_SpecCB[["ID", "Parent", "Name"]].drop_duplicates(subset=['ID'])
     Df_ID_Case.drop(0, inplace=True)
     Df_ID_Case["Name"] = Df_ID_Case["Name"].str.strip()
     Df_ID_Case.set_index("Name",inplace = True,drop = False)
 
-
-    print(Df_ID_Case.columns)
-    return Df_SpecCB,Df_ID_Case
-
-def ReadSpecCB_FromCB2(SpecCB_FromCB):
-    """
-    解析从CodeBeamer 下载下来的TestSpec,主要是为了知道已经存在的test case 的在CodeBeamer中的Case ID
-    :param SpecCB_FromCB: 从CodeBeamer 下载下来的TestSpec
-    :return:Df_SpecCB    从CodeBeamer 下载下来的TestSpec 的DataFrame
-            Df_ID_Case  "ID", "Parent", "Name" 形成的DataFrame
-    """
-    print("&"*30 + "ReadSpecCB_FromCB2" + "&"*30)
-    Df_SpecCB = pd.read_excel(SpecCB_FromCB, "Export", dtype='str')
-    # print(Df_SpecCB.head(10))
-    Df_SpecCB[["ID","Parent","Name"]] = Df_SpecCB[["ID","Parent","Name"]] .fillna(method = 'ffill')
-    # print(Df_SpecCB.head(10))
-    #获取版本号和issue ID
-    Df_SpecCB= Df_SpecCB.fillna({"Release":"","Incident ID":"","Status":"","Verifies":""})
-    Df_SpecCB["Release"] = Df_SpecCB["Release"].apply(GetReleaseValue)
-    Df_SpecCB["Incident ID"] = Df_SpecCB["Incident ID"].apply(GetIncidentValue)
-    Df_SpecCB["Verifies"] = Df_SpecCB["Verifies"].apply(GetIncidentValue)
-    Df_SpecCB =  Df_SpecCB[["ID","Parent","Name","Verifies","Status","Type","Release","Incident ID"]]
-    # Df_SpecCB.drop(0, inplace=True)
-
-
-    Df_ID_Case = Df_SpecCB[["ID", "Parent", "Name","Type","Status"]].drop_duplicates(subset=['ID'])
-    Df_ID_Case.drop(0, inplace=True)
-    Df_ID_Case["Name"] = Df_ID_Case["Name"].str.strip()
-    Df_ID_Case.set_index("Name",inplace = True,drop = False)
-
-    Df_SpecCB = Df_SpecCB[(Df_SpecCB["Incident ID"] !="") | (Df_SpecCB["Release"] !="")]
-    Df_SpecCB = Df_SpecCB[Df_SpecCB["Status"] != "Obsolete"] #删除status 部位obsolete的case
-    # print(Df_ID_Case)
-    # print(Df_ID_Case.columns)
-
-    Df_SpecCB.drop(0, inplace=True)
-    # print(Df_SpecCB.iloc[0, 2])
+    # print(Df_ID_Case.head(10))
     return Df_SpecCB,Df_ID_Case
 
 def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,Release,SpecCB_Modify):
@@ -443,109 +366,25 @@ def GenerateSpec_CB_Modify(df_SpecCB_Generate,Df_ID_Case_FromCB,Release,SpecCB_M
 
     :param df_SpecCB_Generate: 通过本工具生成的需要上传的Test Specification
     :param Df_ID_Case_FromCB:从CodeBeamer 下载下来的Test Specification
-    :param Release 该测试case修改的版本号，CB版本号
+    :param Release 改测试case修改的版本号
     :param SpecCB_Modify: 修改后的Specification名称
     :return:NONE
     """
-    print("GenerateSpec_CB_Modify")
+    print(1)
     df_SpecCB_Generate["Parent"] = Df_ID_Case_FromCB.iloc[1,1]
     #根据CodeBeamer Spec的ID给对应的Case赋值
     df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
     #对不在最新的test specification的case ，设置属性为Obsolete
     for caseName in Df_ID_Case_FromCB.index:
-
-        # 如果 属性为information,则跳过，继续判断
-        if Df_ID_Case_FromCB.loc[caseName,"Type"] == "Information":
-            # print("2")
-            continue;
         if caseName not in df_SpecCB_Generate["Name"].str.strip().values:
             # print(caseName)
-            # Df_ID_Case_FromCB.loc[caseName,"Status"] = "Obsolete"
+            Df_ID_Case_FromCB.loc[caseName,"Status"] = "Obsolete"
             Df_ID_Case_FromCB.loc[caseName,"Name"] = "    " + caseName
             df_SpecCB_Generate = df_SpecCB_Generate.append(Df_ID_Case_FromCB.loc[caseName])
             # print(Df_ID_Case_FromCB.loc[caseName])
     # print(df_SpecCB_Generate)
     print(2)
     df_SpecCB_Generate["Release"] = Release
-    df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
-    DeleteLastEmptyRow(SpecCB_Modify)
-
-
-
-def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromCB,Release,SpecCB_Modify):
-
-    """
-    解析从CodeBeamer 下载下来的TestSpec,
-    1. 知道已经存在的test case 的在CodeBeamer中的Case ID
-
-    :param df_SpecCB_Generate: 通过本工具生成的需要上传的Test Specification
-    :param Df_ID_Case_FromCB:从CodeBeamer 下载下来的Test Specification
-    :param Release 该测试case修改的版本号，CB版本号
-    :param SpecCB_Modify: 修改后的Specification名称
-    :return:NONE
-    """
-    print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&GenerateSpec_CB_Modify2&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
-    df_SpecCB_Generate["Parent"] = Df_ID_Case_FromCB.iloc[1,1]
-    #根据CodeBeamer Spec的ID给对应的Case赋值
-    print(df_SpecCB_Generate.index)
-    df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
-    #对不在最新的test specification的case ，设置属性为Obsolete
-    for caseName in Df_ID_Case_FromCB.index:
-
-        # 如果 属性为information,则跳过，继续判断
-        if Df_ID_Case_FromCB.loc[caseName,"Type"] == "Information":
-            # print("2")
-            continue;
-        if caseName not in df_SpecCB_Generate["Name"].str.strip().values:
-            print(caseName)
-            Df_ID_Case_FromCB.loc[caseName,"Status"] = "Obsolete"
-            Df_ID_Case_FromCB.loc[caseName,"Name"] = "    " + caseName
-            df_SpecCB_Generate = df_SpecCB_Generate.append(Df_ID_Case_FromCB.loc[caseName])
-
-            #从Df_SpecCB_FromCB 中删除掉这个case
-            Df_SpecCB_FromCB = Df_SpecCB_FromCB[Df_SpecCB_FromCB["Name"].str.strip() != caseName]
-            # print(Df_SpecCB_FromCB["Name"])
-            print("*" * 40)
-            # print(Df_SpecCB_FromCB["Name","Status"])
-            # print(Df_ID_Case_FromCB.loc[caseName])
-
-    Df_Status_FromCB = Df_SpecCB_FromCB[["Name","Status"]]
-    Df_Status_FromCB["Name"] = Df_Status_FromCB["Name"].str.strip()
-    Df_Status_FromCB.drop_duplicates(keep="first",inplace = True,subset=['Name'])
-    Df_Status_Generate = df_SpecCB_Generate[["Name","Status","Release"]]
-    Df_Status_Generate["Name"] = Df_Status_Generate["Name"].str.strip()
-    Df_Status_temp  = Df_Status_Generate.merge(Df_Status_FromCB,left_on="Name",right_on="Name",suffixes=["","_CB"],how="left")
-    Df_Status_temp["Status_CB"] = Df_Status_temp["Status_CB"].fillna("Init")
-    # Df_Status_temp.set_index("Name",inplace=True)
-    # for i in
-    # Df_Status_temp["Status"] = Df_Status_temp["Status"].apply(ConvertCBStatus2GenerateStatus,Status_CB=Df_Status_temp["Status_CB"])
-    # Df_Status_temp["Status"] = Df_Status_temp["Status"].apply(lambda x: x if x.strip().upper =="INIT"  else Df_ID_Case_FromCB.loc[x, "Status"])
-
-    for i in Df_Status_temp.index:
-        # print(Df_Status_temp.loc[i,"Status"].strip().upper == "INIT")
-        if Df_Status_temp.loc[i,"Status"].strip().upper() == "INIT":
-            Df_Status_temp.loc[i, "Status"]=  Df_Status_temp.loc[i,"Status_CB"]
-            Df_Status_temp.loc[i, "Release"] = ""
-    # print(Df_Status_temp["Status"])
-
-
-
-    print(2)
-    # print(df_SpecCB_Generate[[ "Status"]])
-    print("*"*40)
-    df_SpecCB_Generate.index = Df_Status_temp.index
-    df_SpecCB_Generate["Release"] = Df_Status_temp["Release"]
-    df_SpecCB_Generate["Status"] = Df_Status_temp["Status"]
-    # print(df_SpecCB_Generate[["Status"]] )
-
-
-    Df_SpecCB_FromCB["Name"] = "    " + Df_SpecCB_FromCB["Name"]
-    Df_SpecCB_FromCB["Status"] = ""
-    df_SpecCB_Generate = pd.concat([df_SpecCB_Generate,Df_SpecCB_FromCB])
-
-    # Name 按照升序，Status按照降序，Status 为空的必须放在后面，这个部分的行主要是为了添加之前CB 上的Release号和Issue
-    df_SpecCB_Generate.sort_values(by=["Name","Status"],ascending=[True,False],inplace = True)
-
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB_Modify)
 
@@ -558,43 +397,47 @@ def GetInitCaseList(FinnalSpec):
     print(InitCaseList)
     return InitCaseList
 
+def GetCaseResultFromTsResult(Spec):
+    """
+       读取Test specification 的TableOfContent
+       然后将一个 case 对应一个单元格里面需求ID
+       根据单元格的需求ID的数量,
+       转换成多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+       :param Spec: Test specification
+       :return:Df_spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+       """
+    # print("ReadSpec_TableOfContent")
+    # pd.set_option('display.max_columns', None)
+    # pd.set_option('display.max_rows', None)
+    # pd.set_option('max_colwidth', 200)
+
+    Df_TsResult = pd.read_excel(Spec, "TS Result", dtype='str')
+    # print(Df_TsResult)
+    # print(Df_TsResult.head(8))
+    Result_Summary = Df_TsResult.iloc[2,2]
+    # print(Result_Summary)
+    # df = pd.DataFrame({"Object Text": [""],"Summary":[Result_Summary]})
+    # print(df)
+    # Df_TsResult = pd.read_excel(Spec, "FunctionName1_Matrix", dtype='str',header=5)
+    print(Result_Summary)
+    Df_TsResult = Df_TsResult.iloc[6:,[3,4,6]]
+    print("*"*20)
+    print(Df_TsResult.head(5))
+    ColumnsList = ["_VerificationStatus","Comments","Object Text" ]
+    Df_TsResult.columns = ColumnsList
+    Df_TsResult.dropna(subset=["Object Text"], inplace=True)
+    # print(Df_TsResult["Object Text"])
+    df_Group = Df_TsResult.groupby(by="Object Text", as_index=False,sort = False)
+    Df_TsResult = df_Group.apply(ConvertTsResult2CaseResult)
+    print("*" * 20)
+    # print(Df_TsResult.head(2))
+    print(Df_TsResult.head(5))
+    print("#" * 20)
+    return Df_TsResult,Result_Summary
 
 if __name__ == '__main__':
-    pass
-    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result.xlsm"
-    Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release= ReadSpec_TableOfContent(Spec)
-    SpecCB = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CB.xlsx"
-    SpecCB_FromCB = r"C:\Users\victor.yang\Desktop\Work\CB\84194_GWM_D30_RCS_SC2_2S - TC_L30_DES_SW_Test_Cases (4).xlsx"
-    CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
-    GenerateSpec_CB_Init(Df_spec,Release,CB_Spec_Generate)
-    df_SpecCB_FromCB, Df_ID_Case_FromCB =  ReadSpecCB_FromCB2(SpecCB_FromCB)
-    df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")
-    SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer_Modify.xlsx"
-
-
-    GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB, df_SpecCB_FromCB,Release,
-                                    SpecCB_Modify)
-    # GenerateSpec_CB_Init(Df_spec,Release,SpecCB)
+    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GWM_D30_2S_IMU_Test Result.xlsm"
+    Df_spec =  ReadSpec_TableOfContent(Spec)
+    SpecCB =  r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GWM_D30_2S_IMU_Test Result_CB.xlsx"
+    GenerateSpec_CB_Init(Df_spec, SpecCB)
     # ReadSpec_TableOfContent(Spec)
-    # pass
-    # Spec = "C:\Users\victor.yang\Desktop\Work\CB"
-    # LoopUP = "..\DataSource/P05CBID.txt"
-    # SpecCB_Generate = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
-    # SpecCB_Modify = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
-    # SpecCB_FromCB = "..\Data/84177 _GWM_P05_IMU_Test case.xlsx"
-    # Df_LoopUp = ReadLoopUp(LoopUP)
-    #
-    # Df_spec = ReadSpec_TableOfContent(Spec)
-    #
-    # df_SpecCB_Generate = GenerateSpec_CB_Init(Df_spec, SpecCB_Generate)
-    # df_SpecCB_FromCB,Df_ID_Case_FromCB = ReadSpecCB_FromCB(SpecCB_FromCB)
-    # GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, SpecCB_Modify)
-    # a = r"C:/Users/victor.yang/Downloads\CHT_System_Validation_GWM_D30_CANC_Test Specification_CodeBeamer.xlsx"
-    # CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
-    # GetInitCaseList(CodeBeamer_Spec)
-    # df = pd.read_excel(a)
-    # print(df.index)
-    # print(df["Verifies"])
-
-    # APISheet.
-    # print(row)
