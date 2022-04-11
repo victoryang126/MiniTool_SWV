@@ -15,7 +15,7 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     # CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/10574131?view_id=-2"
     browser = webdriver.ChromiumEdge(options=options)
     browser.get(CodeBeamer_Upload_Url)
-
+    browser.maximize_window()
     # 点击Login
     browser.find_element(by=By.NAME, value="saml").click()
 
@@ -35,6 +35,7 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     browser.find_element(by=By.NAME, value="_eventId_next").click()
     # Finish
     browser.find_element(by=By.NAME, value="_eventId_next").click()
+    # browser.implicitly_wait(10)
     time.sleep(10)
     # 判断是否有错误，如果错误，则停
     try:
@@ -50,21 +51,47 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         # 定位到即将拖入的folder
         print("Init Case will add to the case folder")
         CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
-        targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-        print(targetElement)
+
+        scroll_js_Top ="var q=document.documentElement.scrollTop=0"
+        scroll_js_Down = "var q=document.documentElement.scrollTop=500"
         Action = ActionChains(browser)
         Action.key_down(Keys.SHIFT)  # 按住sheift
         for CaseName in InitCaseList:
             CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
-            dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
-            print(CaseName)
-            Action.click(dragElement)
-            time.sleep(2)
+            while True:
+                try:
+                    dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
+                    print(CaseName)
+                    Action.click(dragElement)
+
+                    break;
+                except Exception as err:
+                    print(err)
+                    browser.execute_script(scroll_js_Down)
+                    continue;
+                time.sleep(2)
+
         time.sleep(2)
         print(1)
-        Action.drag_and_drop(dragElement, targetElement).perform()
-        print(2)
+        # browser.execute_script(scroll_js_Top)
+        time.sleep(10)
+        while True:
+            try:
+                time.sleep(10)
+                targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
+                print(targetElement)
+                time.sleep(10)
+                Action.drag_and_drop(dragElement, targetElement).perform()
+                break;
+            except Exception as err:
+                print("Can't find folder")
+                browser.execute_script(scroll_js_Down)
+                time.sleep(2)
+                continue;
 
+
+        print(2)
+    time.sleep(10)
     return True
 
 
