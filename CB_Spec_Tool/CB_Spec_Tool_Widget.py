@@ -239,7 +239,7 @@ class CB_Spec_Tool_Widget(QWidget):
             SpecCB_Modify = os.path.join(os.path.split(self.CB_Spec_Generate)[0], SpecCB_Modify)
 
            
-
+          
             CB_Tool.GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB,df_SpecCB_FromCB,self.Release,SpecCB_Modify)
             Excel_Files.append(SpecCB_Modify)
             self.FinalCBSpec = Excel_Files[0]
@@ -387,13 +387,13 @@ class CB_Spec_Tool_Widget(QWidget):
                     Excel_Files = []
                     #然后Modify
                     print("3nd Modify")
-                    df_SpecCB_FromCB, Df_ID_Case_FromCB = CB_Tool.ReadSpecCB_FromCB(self.CB_Spec_FromCB)
+                    df_SpecCB_FromCB, Df_ID_Case_FromCB = CB_Tool.ReadSpecCB_FromCB2(self.CB_Spec_FromCB)
                     df_SpecCB_Generate = pd.read_excel(self.CB_Spec_Generate, "Export")
                     SpecCB_Modify = os.path.basename(self.CB_Spec_Generate).split(".")[0] + "_Modify.xlsx"
                     SpecCB_Modify = os.path.join(os.path.split(self.CB_Spec_Generate)[0], SpecCB_Modify)
                     print(SpecCB_Modify)
                     if self.Release:
-                        CB_Tool.GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, self.Release,
+                        CB_Tool.GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB,df_SpecCB_FromCB, self.Release,
                                                        SpecCB_Modify)
                         Excel_Files.append(SpecCB_Modify)
                         self.FinalCBSpec = Excel_Files[0]

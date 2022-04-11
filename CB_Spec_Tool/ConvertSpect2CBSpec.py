@@ -238,9 +238,10 @@ def ReadSpec_TableOfContent(Spec):
 
     #合并表格，然后按照index 重新排序
     Df_spec = pd.concat([Df_specTemp1,Df_specTemp2],axis=0)
+    # 上面的步骤会把Df_IssueID  放到最后，需要通过sort index将 对应case的ID单元啦上去
     Df_spec.fillna("", inplace=True)
-    Df_spec.sort_index(inplace=True)
-    print(Df_spec.head(10))
+    Df_spec.sort_index(inplace=True) #
+
     #_VerifiesDOORSRequirements 是换行的过滤
     # Df_spec = Df_spec[Df_spec['_VerifiesDOORSRequirements'].str.strip() != ""]
     # Df_spec = Df_spec[Df_spec['_Comment'].str.strip() != ""]
@@ -250,7 +251,7 @@ def ReadSpec_TableOfContent(Spec):
     #根据版本好添加summary
     df_Summary = pd.DataFrame({"Object Text": ["Test Summary in " + Release], "Description": [Result_Summary],"_VerifiesDOORSRequirements":[" "],"Type":["Information"]})
     print("*" * 30)
-    print(df_Summary)
+    # print(Df_spec.head(20))
     print("*"*30)
     Df_spec = pd.concat([df_Summary, Df_spec])
     Df_spec.fillna("",inplace=True)
@@ -363,7 +364,8 @@ def GenerateSpec_CB_Init(Df_spec,Release, SpecCB):
     df_SpecCB["_VerifiesNonCbRequirements"] = Df_spec["Verifies"].apply(lambda x: x if not IsCBID(x) else "")
     df_SpecCB["Incident ID"] = Df_spec["Incident ID"].apply(lambda x: "[ISSUE:" + x + "]" if IsCBID(x) else "")
     df_SpecCB["Reserve_1"] = Df_spec["Incident ID"].apply(lambda x: x if not IsCBID(x) else "")
-    df_SpecCB["Release"] = Release
+    # df_SpecCB["Release"] = Release
+    # print(df_SpecCB[["Name","Verifies"]])
     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB)
     return df_SpecCB
@@ -397,7 +399,7 @@ def ReadSpecCB_FromCB(SpecCB_FromCB):
     Df_ID_Case.set_index("Name",inplace = True,drop = False)
 
 
-    print(Df_ID_Case.columns)
+    # print(Df_ID_Case.columns)
     return Df_SpecCB,Df_ID_Case
 
 def ReadSpecCB_FromCB2(SpecCB_FromCB):
@@ -426,7 +428,7 @@ def ReadSpecCB_FromCB2(SpecCB_FromCB):
     Df_ID_Case["Name"] = Df_ID_Case["Name"].str.strip()
     Df_ID_Case.set_index("Name",inplace = True,drop = False)
 
-    Df_SpecCB = Df_SpecCB[(Df_SpecCB["Incident ID"] !="") | (Df_SpecCB["Release"] !="")]
+    # Df_SpecCB = Df_SpecCB[(Df_SpecCB["Incident ID"] !="") | (Df_SpecCB["Release"] !="")]
     Df_SpecCB = Df_SpecCB[Df_SpecCB["Status"] != "Obsolete"] #删除status 部位obsolete的case
     # print(Df_ID_Case)
     # print(Df_ID_Case.columns)
@@ -487,7 +489,7 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&GenerateSpec_CB_Modify2&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     df_SpecCB_Generate["Parent"] = Df_ID_Case_FromCB.iloc[1,1]
     #根据CodeBeamer Spec的ID给对应的Case赋值
-    print(df_SpecCB_Generate.index)
+    # print(df_SpecCB_Generate.index)
     df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
     #对不在最新的test specification的case ，设置属性为Obsolete
     for caseName in Df_ID_Case_FromCB.index:
@@ -508,10 +510,29 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
             print("*" * 40)
             # print(Df_SpecCB_FromCB["Name","Status"])
             # print(Df_ID_Case_FromCB.loc[caseName])
+    df_SpecCB_Generate["Release"] = Release
+    # 、**********************************判断DF_Generate 里面的case ID是否有新增加**********************************
+    # Verify 可能会有空的数据，导致Df_Verify_Generate_2 里面没数据,所以需要剔除这个部分的数据
+    Df_Verify_CB = Df_SpecCB_FromCB[["Name", "Verifies"]]
+    Df_Verify_CB.dropna(subset=["Name", "Verifies"], inplace=True)
+    Df_Verify_CB["Name"] = Df_Verify_CB["Name"].str.strip()
+    Df_Verify_CB_2 = Df_Verify_CB["Name"].str.strip() + "," + Df_Verify_CB["Verifies"]
 
+    Df_Verify_Generate = df_SpecCB_Generate[["Name", "Verifies"]]
+    Df_Verify_Generate.dropna(subset=["Name", "Verifies"], inplace=True)
+    Df_Verify_Generate["Name"] = Df_Verify_Generate["Name"].str.strip()
+    Df_Verify_Generate_2 = Df_Verify_Generate["Name"] + "," + Df_Verify_Generate["Verifies"]
+
+    print(Df_Verify_Generate_2.isin(Df_Verify_CB_2))
+    Df_New_Verify = Df_Verify_Generate[~Df_Verify_Generate_2.isin(Df_Verify_CB_2)]
+    print(Df_New_Verify)
+
+    # *****************************获取之前的状态
+    #先获取CB的状态，确保case名字唯一
     Df_Status_FromCB = Df_SpecCB_FromCB[["Name","Status"]]
     Df_Status_FromCB["Name"] = Df_Status_FromCB["Name"].str.strip()
     Df_Status_FromCB.drop_duplicates(keep="first",inplace = True,subset=['Name'])
+    #然后获取Generate的状态
     Df_Status_Generate = df_SpecCB_Generate[["Name","Status","Release"]]
     Df_Status_Generate["Name"] = Df_Status_Generate["Name"].str.strip()
     Df_Status_temp  = Df_Status_Generate.merge(Df_Status_FromCB,left_on="Name",right_on="Name",suffixes=["","_CB"],how="left")
@@ -523,10 +544,16 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
 
     for i in Df_Status_temp.index:
         # print(Df_Status_temp.loc[i,"Status"].strip().upper == "INIT")
+        #只要是init就把case的 Release给干掉
         if Df_Status_temp.loc[i,"Status"].strip().upper() == "INIT":
-            Df_Status_temp.loc[i, "Status"]=  Df_Status_temp.loc[i,"Status_CB"]
             Df_Status_temp.loc[i, "Release"] = ""
-    # print(Df_Status_temp["Status"])
+            print(Df_Status_temp.loc[i,"Name"])
+            # 如果这个case 没有新增加的需求ID，则使用之前的case状态
+            print(Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values)
+            if Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values:
+                Df_Status_temp.loc[i, "Status"]=  Df_Status_temp.loc[i,"Status_CB"]
+
+
 
 
 
@@ -541,7 +568,8 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
 
     Df_SpecCB_FromCB["Name"] = "    " + Df_SpecCB_FromCB["Name"]
     Df_SpecCB_FromCB["Status"] = ""
-    df_SpecCB_Generate = pd.concat([df_SpecCB_Generate,Df_SpecCB_FromCB])
+    Df_SpecCB_Temp = Df_SpecCB_FromCB[(Df_SpecCB_FromCB["Incident ID"] != "") | (Df_SpecCB_FromCB["Release"] != "")]
+    df_SpecCB_Generate = pd.concat([df_SpecCB_Generate,Df_SpecCB_Temp])
 
     # Name 按照升序，Status按照降序，Status 为空的必须放在后面，这个部分的行主要是为了添加之前CB 上的Release号和Issue
     df_SpecCB_Generate.sort_values(by=["Name","Status"],ascending=[True,False],inplace = True)
