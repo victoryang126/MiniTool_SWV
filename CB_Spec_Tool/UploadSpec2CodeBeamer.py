@@ -132,8 +132,7 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     # browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane-tab']").click()
     print(11)
 
-    browser.find_element(by=By.XPATH,
-                         value="//div[@id='excelExportTabPane']//label[@for='roundtripExcelExport']").click()
+    browser.find_element(by=By.XPATH,value="//div[@id='excelExportTabPane']//label[@for='roundtripExcelExport']").click()
 
     # 下载数据
     browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane']//input[@value='Export']").click()
