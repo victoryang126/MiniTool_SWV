@@ -155,8 +155,9 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
 
     browser.implicitly_wait(5)
     # fileName = browser.find_element(by=By.XPATH, value="// *[ @ id = 'downloads-item-1'] / div[1] / img[1]").get_attribute("aria-label")
-    fileName = browser.find_element(by=By.XPATH, value="//*[@id='downloads-item-1'] / div[1] / img[1]").get_attribute(
-        "aria-label")
+    # fileName = browser.find_element(by=By.XPATH, value="//*[@id='downloads-item-1'] / div[1] / img[1]").get_attribute(
+    #     "aria-label")
+    fileName = browser.find_element(by=By.XPATH, value="//img[@aria-label]").get_attribute("aria-label")
     print(fileName)
     return fileName
 
