@@ -239,7 +239,7 @@ class CB_Spec_Tool_Widget(QWidget):
             SpecCB_Modify = os.path.join(os.path.split(self.CB_Spec_Generate)[0], SpecCB_Modify)
 
            
-          
+
             CB_Tool.GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB,df_SpecCB_FromCB,self.Release,SpecCB_Modify)
             Excel_Files.append(SpecCB_Modify)
             self.FinalCBSpec = Excel_Files[0]

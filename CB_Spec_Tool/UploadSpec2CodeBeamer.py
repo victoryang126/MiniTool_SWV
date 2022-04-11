@@ -104,7 +104,7 @@ def DragCaseItem2oFolder(CaseTrackerID, CaseFolderID, InitCaseList):
 def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     CB_Spec_Folder = CB_Spec_Folder.replace('/', '\\')
     options = webdriver.EdgeOptions()
-    print(CB_Spec_Folder)
+    # print(CB_Spec_Folder)
     prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': CB_Spec_Folder}
     options.add_experimental_option('prefs', prefs)
     CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/" + CaseTrackerID
