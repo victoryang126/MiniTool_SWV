@@ -8,12 +8,18 @@ from win32com.client import Dispatch
 # import xlwings as xw
 
 from DTCDefine_SymFile.Ui_DTCDefine_SYM import Ui_DTCDefine_SYM
-from PyQt5.QtWidgets import QWidget, QApplication,QMessageBox,QFileDialog
+from PyQt5.QtWidgets import QWidget, QApplication,QMessageBox,QFileDialog,QLabel
 from PyQt5.QtCore import  pyqtSlot
-from PyQt5.QtCore import  QSettings
+from PyQt5.QtCore import  QSettings,QThread,QMutex
 import openpyxl
 
-
+class Generate_Thread(QThread):
+    def __init__(self,ActionFunc):
+        super().__init__();
+        self.ActionFunc = ActionFunc
+    def run(self) -> None:
+        self.ActionFunc()
+        # Generate_SYM(Project, SWVersion, PBCT_Excel, EPPROM_Trans_Excel, SYM_OutPut, SheetList)
 
 
 def SaveErrorDefinitionFromFltMonr_Configurator(FltMonr_Configurator,ErrorDefinition):
@@ -228,6 +234,7 @@ def Generate_SYM(Project,SWVersion,PBCT_Excel,EPPROM_Trans_Excel,SYM_OutPut,Shee
     """
 
     #获取PBCT参数信息
+    print("Generate_SYM")
     # *******************************************************************
     SYM_OutPut = SYM_OutPut + "/" + Project + "_" + SWVersion + ".sym"
     # print(SheetList)
@@ -240,7 +247,7 @@ def Generate_SYM(Project,SWVersion,PBCT_Excel,EPPROM_Trans_Excel,SYM_OutPut,Shee
         df_temp["UNKNOWN"] = pd.Series(np.zeros(df_temp["FLASH ADDRESS"].shape[0]), dtype=int)
         df_temp = df_temp[9:][["PARAMETER NAME", "FLASH ADDRESS", "SIZE", "UNKNOWN"]]
         df_SYM = pd.concat([df_temp,df_SYM])
-    # # print(SYM_OutPut)
+    # print(SYM_OutPut)
 
     #获取NVM 参数信息
     # *******************************************************************
@@ -285,6 +292,18 @@ class DTCDefine_SYMWidget(QWidget):
         self.__ui = Ui_DTCDefine_SYM()  # 创建UI对象
         self.__ui.setupUi(self)  # 构造UI界面
 
+        # font = self.font()
+        # font.setPixelSize(20)
+        # self.pb = QLabel(self)
+        # self.pb.setGeometry(400,400,400,55)
+        # self.pb.setFont(font)
+        # # self.pb.setStyleSheet('font-size:44px;')
+        # self.pb.setStyleSheet("background-color:cornflowerBlue")
+        # self.pb.setText("^-^ Generating file,Please wait for moment")
+        # self.pb.hide()
+        # self.timer = QBasicTimer();
+        # self.step = 0
+        # self.pb.hide()
         # *****************定义 OtTool相关属性****************************************
         self.Config = ""
 
@@ -302,7 +321,7 @@ class DTCDefine_SYMWidget(QWidget):
         self.PBCT_Excel = ""
         self.EEPROM_Trans_Excel = ""
         self.SYM_OutPut = ""
-
+        # self.SYM_OutPut_Folder = ""
 
 
 
@@ -312,6 +331,14 @@ class DTCDefine_SYMWidget(QWidget):
             self.Config = QSettings('./ini/DTCDefine_SYMWidget.ini', QSettings.IniFormat)
             self.LoadConfig()
 
+    # def timerEvent(self, e) -> None:
+    #     if self.step >=100:
+    #         self.time.stop()
+    #         return
+    #     self.step +=1
+    #     self.pb.setValue(self.step)
+
+    # def doAction(self,value):
 
     # 定义错误提示框
     def WarningMessage(self,str):
@@ -489,15 +516,53 @@ class DTCDefine_SYMWidget(QWidget):
                                                       "Please the symfiles.sym output path",
                                                       self.CurrentPath)  # 起始路径
         self.__ui.LE_SYM_OutPut.setText(FolderName)
+        # self.SYM_OutPut_Folder = self.__ui.LE_SYM_OutPut.text()
         self.SYM_OutPut = self.__ui.LE_SYM_OutPut.text()
         # print(self.SYM_OutPut)
         path = self.SYM_OutPut
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
-    # 14
+    def Generate_Sym(self):
+
+        self.PBCT_SheetList = []
+        print("on_BT_Generate_SYM_clicked")
+        for count in range(self.__ui.CB_SheetConfig.count()):
+            self.PBCT_SheetList.append(self.__ui.CB_SheetConfig.itemText(count))
+        SheetList = [i.split(":") for i in self.PBCT_SheetList]
+        try:
+            args = {"Project": self.Project, "SWVersion": self.SWVersion,
+                    "PBCT_Excel": self.PBCT_Excel, "EPPROM_Trans_Excel": self.EEPROM_Trans_Excel,
+                    "SYM_OutPut": self.SYM_OutPut, "SheetList": SheetList}
+            file = Generate_SYM(**args)
+            if not os.path.exists(file):
+                self.WarningMessage(file + " not been generated, please check related setting")
+            else:
+                self.DoneMessage("Generate symfile successfully")
+                self.SaveConfig()
+
+        except Exception as err:
+            self.WarningMessage(str(err))
+
+        self.__ui.BT_Generate_SYM.setEnabled(True)
+        self.pb.hide()
+    # def Pb_Thread(self):
+    #     self.timer.start(100, self)
+
+    # @pyqtSlot()
+    # def on_BT_Generate_SYM_clicked(self):
+    #     self.__ui.BT_Generate_SYM.setEnabled(False)
+    #     self.pb.show()
+    #     try:
+    #         self.Thread = Generate_Thread(self.Generate_Sym)
+    #         self.Thread.run()
+    #     except Exception as err:
+    #         print(err)
+    # # 14
     @pyqtSlot()
     def on_BT_Generate_SYM_clicked(self):
+
         self.PBCT_SheetList = []
+        print("on_BT_Generate_SYM_clicked")
         for count in range(self.__ui.CB_SheetConfig.count()):
             self.PBCT_SheetList.append(self.__ui.CB_SheetConfig.itemText(count))
         SheetList = [i.split(":") for i in self.PBCT_SheetList]
@@ -505,15 +570,15 @@ class DTCDefine_SYMWidget(QWidget):
             args = {"Project":self.Project, "SWVersion":self.SWVersion,
                     "PBCT_Excel":self.PBCT_Excel, "EPPROM_Trans_Excel":self.EEPROM_Trans_Excel,
                     "SYM_OutPut":self.SYM_OutPut,"SheetList":SheetList}
-            self.SYM_OutPut = Generate_SYM(**args)
-            if not os.path.exists(self.SYM_OutPut):
-                self.WarningMessage(self.SYM_OutPut+ " not been generated, please check related setting")
+            file = Generate_SYM(**args)
+            if not os.path.exists(file):
+                self.WarningMessage(file+ " not been generated, please check related setting")
             else:
                 self.DoneMessage("Generate symfile successfully")
                 self.SaveConfig()
         except Exception as err:
             self.WarningMessage(str(err))
-        # Generate_SYM(Project, SWVersion, PBCT_Excel, EPPROM_Trans_Excel, SYM_OutPut)
+
 
     #15设置BT_SaveConfig
     @pyqtSlot()

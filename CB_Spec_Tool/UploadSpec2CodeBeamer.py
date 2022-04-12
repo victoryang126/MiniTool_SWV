@@ -53,12 +53,13 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
 
         scroll_js_Top ="var q=document.documentElement.scrollTop=0"
-        scroll_js_Down = "var q=document.documentElement.scrollTop=500"
+        scroll_js_Down = "var q=document.documentElement.scrollTop=1000"
         Action = ActionChains(browser)
         Action.key_down(Keys.SHIFT)  # 按住sheift
         for CaseName in InitCaseList:
             CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
-            while True:
+            try_Counter = 0
+            while try_Counter < 6:
                 try:
                     dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
                     print(CaseName)
@@ -68,6 +69,10 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
                 except Exception as err:
                     print(err)
                     browser.execute_script(scroll_js_Down)
+                    try_Counter += 1
+                    if try_Counter == 5:
+                        raise Exception("Can't find " + CaseName + " in the left tree pane")
+
                     continue;
                 time.sleep(2)
 
@@ -75,7 +80,8 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         print(1)
         # browser.execute_script(scroll_js_Top)
         time.sleep(10)
-        while True:
+        try_Counter = 0
+        while try_Counter < 5:
             try:
                 time.sleep(10)
                 targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
@@ -86,6 +92,9 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
             except Exception as err:
                 print("Can't find folder")
                 browser.execute_script(scroll_js_Down)
+                try_Counter+=1
+                if try_Counter == 4:
+                    raise Exception("Can't find " + CaseFolder_Filter + " in the left tree pane")
                 time.sleep(2)
                 continue;
 
