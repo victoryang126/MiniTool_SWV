@@ -84,15 +84,18 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         Action.key_down(Keys.SHIFT)  # 按住sheift
         for CaseName in InitCaseList:
             CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
+            try_counter = 0
             while True:
                 try:
                     dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
                     print(CaseName)
                     Action.click(dragElement)
-
                     break;
                 except Exception as err:
                     print(err)
+                    try_counter += 1
+                    if try_counter == 5:
+                        break;
                     browser.execute_script(scroll_js_Down)
                     continue;
                 time.sleep(2)
@@ -101,6 +104,7 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         print(1)
         # browser.execute_script(scroll_js_Top)
         time.sleep(10)
+        try_counter = 0
         while True:
             try:
                 time.sleep(10)
@@ -113,6 +117,9 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
             except Exception as err:
                 print("Can't find folder")
                 browser.execute_script(scroll_js_Down)
+                try_counter+=1
+                if try_counter ==5:
+                    break;
                 time.sleep(2)
                 continue;
 
