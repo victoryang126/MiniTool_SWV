@@ -410,7 +410,8 @@ def ReadSpecCB_FromCB2(SpecCB_FromCB):
             Df_ID_Case  "ID", "Parent", "Name" 形成的DataFrame
     """
     print("&"*30 + "ReadSpecCB_FromCB2" + "&"*30)
-    Df_SpecCB = pd.read_excel(SpecCB_FromCB, "Export", dtype='str')
+    Df_SpecCB = pd.read_excel(SpecCB_FromCB, "Export",dtype=object)
+    # print(Df_SpecCB["ID"])
     # print(Df_SpecCB.head(10))
     Df_SpecCB[["ID","Parent","Name"]] = Df_SpecCB[["ID","Parent","Name"]] .fillna(method = 'ffill')
     # print(Df_SpecCB.head(10))
@@ -424,10 +425,16 @@ def ReadSpecCB_FromCB2(SpecCB_FromCB):
 
 
     Df_ID_Case = Df_SpecCB[["ID", "Parent", "Name","Type","Status"]].drop_duplicates(subset=['ID'])
+
     Df_ID_Case.drop(0, inplace=True)
     Df_ID_Case["Name"] = Df_ID_Case["Name"].str.strip()
     Df_ID_Case.set_index("Name",inplace = True,drop = False)
-
+    Df_ID_Case = Df_ID_Case.astype({"ID":"int64","Parent":"int64"})
+    # print( Df_ID_Case.astype({"ID":"int64","Parent":"int64"})["ID"].dtypes)
+    # Df_ID_Case.astype("ID":)
+    # print(Df_ID_Case["ID"])
+    # Df_ID_Case["ID"] = Df_ID_Case["ID"].str.replace(".0","")
+    # Df_ID_Case["Parent"] = Df_ID_Case["Parent"].str.replace(".0", "")
     # Df_SpecCB = Df_SpecCB[(Df_SpecCB["Incident ID"] !="") | (Df_SpecCB["Release"] !="")]
     Df_SpecCB = Df_SpecCB[Df_SpecCB["Status"] != "Obsolete"] #删除status 部位obsolete的case
     # print(Df_ID_Case)
@@ -491,6 +498,9 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
     #根据CodeBeamer Spec的ID给对应的Case赋值
     # print(df_SpecCB_Generate.index)
     df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
+    # print(df_SpecCB_Generate[['ID', "Name"]])
+    # print("*" * 40)
+    # print(Df_ID_Case_FromCB[['ID', "Name"]])
     #对不在最新的test specification的case ，设置属性为Obsolete
     for caseName in Df_ID_Case_FromCB.index:
 
@@ -499,7 +509,7 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
             # print("2")
             continue;
         if caseName not in df_SpecCB_Generate["Name"].str.strip().values:
-            print(caseName)
+            # print(caseName)
             Df_ID_Case_FromCB.loc[caseName,"Status"] = "Obsolete"
             Df_ID_Case_FromCB.loc[caseName,"Name"] = "    " + caseName
             df_SpecCB_Generate = df_SpecCB_Generate.append(Df_ID_Case_FromCB.loc[caseName])
@@ -523,9 +533,9 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
     Df_Verify_Generate["Name"] = Df_Verify_Generate["Name"].str.strip()
     Df_Verify_Generate_2 = Df_Verify_Generate["Name"] + "," + Df_Verify_Generate["Verifies"]
 
-    print(Df_Verify_Generate_2.isin(Df_Verify_CB_2))
+    # print(Df_Verify_Generate_2.isin(Df_Verify_CB_2))
     Df_New_Verify = Df_Verify_Generate[~Df_Verify_Generate_2.isin(Df_Verify_CB_2)]
-    print(Df_New_Verify)
+    # print(Df_New_Verify)
 
     # *****************************获取之前的状态
     #先获取CB的状态，确保case名字唯一
@@ -547,9 +557,9 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
         #只要是init就把case的 Release给干掉
         if Df_Status_temp.loc[i,"Status"].strip().upper() == "INIT":
             Df_Status_temp.loc[i, "Release"] = ""
-            print(Df_Status_temp.loc[i,"Name"])
+            # print(Df_Status_temp.loc[i,"Name"])
             # 如果这个case 没有新增加的需求ID，则使用之前的case状态
-            print(Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values)
+            # print(Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values)
             if Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values:
                 Df_Status_temp.loc[i, "Status"]=  Df_Status_temp.loc[i,"Status_CB"]
 
@@ -573,7 +583,7 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
 
     # Name 按照升序，Status按照降序，Status 为空的必须放在后面，这个部分的行主要是为了添加之前CB 上的Release号和Issue
     df_SpecCB_Generate.sort_values(by=["Name","Status"],ascending=[True,False],inplace = True)
-
+    # print(df_SpecCB_Generate[['ID', "Name"]])
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB_Modify)
 

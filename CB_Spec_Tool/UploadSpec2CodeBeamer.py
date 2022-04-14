@@ -29,7 +29,33 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     # Next
     browser.find_element(by=By.ID, value="_eventId_next").click()
     # Next
+    #选择ID Mapping
+    print(1)
+    id_slectorbutton= "//*[@id ='rawDataTable']/ tbody/tr[1]/th[2]/ button"
+    browser.find_element(by=By.XPATH, value=id_slectorbutton).click()
     print(2)
+
+    print(3)
+    ul_slector = "/ html / body / div[12] / ul"
+    parent_elemnt = browser.find_element(by=By.XPATH, value=ul_slector)
+    slection_list = parent_elemnt.find_element(by=By.XPATH, value=ul_slector).text.split("\n")
+    # time.sleep(10)
+    print(slection_list)
+    if "ID" in slection_list:
+        print("find the ID selection")
+        id_filter = "/ html / body / div[12] / div / div / input"
+        browser.find_element(by=By.XPATH, value=id_filter).send_keys("ID")
+        id_slector = "//label/span[text()='ID']"
+        parent_elemnt.find_element(by=By.XPATH, value=id_slector).click()
+        # print(children_element)
+    else:
+        print("Can't find the ID")
+        id_filter = "/ html / body / div[12] / div / div / input"
+        browser.find_element(by=By.XPATH, value=id_filter).send_keys("ID")
+        id_slector = "//label/span[text()='--']"
+        parent_elemnt.find_element(by=By.XPATH, value=id_slector).click()
+
+    # time.sleep(100)
     browser.find_element(by=By.NAME, value="_eventId_next").click()
     # Next
     browser.find_element(by=By.NAME, value="_eventId_next").click()
@@ -53,13 +79,12 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
 
         scroll_js_Top ="var q=document.documentElement.scrollTop=0"
-        scroll_js_Down = "var q=document.documentElement.scrollTop=1000"
+        scroll_js_Down = "var q=document.documentElement.scrollTop=500"
         Action = ActionChains(browser)
         Action.key_down(Keys.SHIFT)  # 按住sheift
         for CaseName in InitCaseList:
             CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
-            try_Counter = 0
-            while try_Counter < 6:
+            while True:
                 try:
                     dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
                     print(CaseName)
@@ -69,10 +94,6 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
                 except Exception as err:
                     print(err)
                     browser.execute_script(scroll_js_Down)
-                    try_Counter += 1
-                    if try_Counter == 5:
-                        raise Exception("Can't find " + CaseName + " in the left tree pane")
-
                     continue;
                 time.sleep(2)
 
@@ -80,21 +101,18 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         print(1)
         # browser.execute_script(scroll_js_Top)
         time.sleep(10)
-        try_Counter = 0
-        while try_Counter < 5:
+        while True:
             try:
                 time.sleep(10)
                 targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
                 print(targetElement)
                 time.sleep(10)
                 Action.drag_and_drop(dragElement, targetElement).perform()
+                print(33333)
                 break;
             except Exception as err:
                 print("Can't find folder")
                 browser.execute_script(scroll_js_Down)
-                try_Counter+=1
-                if try_Counter == 4:
-                    raise Exception("Can't find " + CaseFolder_Filter + " in the left tree pane")
                 time.sleep(2)
                 continue;
 
@@ -251,9 +269,12 @@ if __name__ == '__main__':
     CaseFolderID = "10367368"
     # # CaseFolderID = "11450597"
     CB_Spec_Folder = r"C:\Users\victor.yang\Desktop\Work\CB"
+    CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
+    UploadSpec2CB(CaseTrackerID,CB_Spec_Generate,CaseFolderID,[])
     # CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
     # InitCaseList = [
     #     "Test Case 1 - First Frame Transmitted Time and Init value",
+
     #     "Test Case 2 - Stop sending Msg  Time",
     #     "Test Case 3 - BUSOFF Strategy",
     #     "Test Case 4 - Transmit capability",
