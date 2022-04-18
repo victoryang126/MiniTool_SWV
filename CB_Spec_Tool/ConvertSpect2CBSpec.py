@@ -240,6 +240,7 @@ def ReadSpec_TableOfContent(Spec):
     Df_spec = pd.concat([Df_specTemp1,Df_specTemp2],axis=0)
     # 上面的步骤会把Df_IssueID  放到最后，需要通过sort index将 对应case的ID单元啦上去
     Df_spec.fillna("", inplace=True)
+    # Df_spec.sort_values(by=["Object Text", "_VerifiesDOORSRequirements"], ascending=[True, False], inplace=True)
     Df_spec.sort_index(inplace=True) #
 
     #_VerifiesDOORSRequirements 是换行的过滤
@@ -261,6 +262,7 @@ def ReadSpec_TableOfContent(Spec):
     # //Index(['Object Text', 'Description', '_VerifiesDOORSRequirements',
     #    '_VerificationStatus', '_Comment'],
     #   dtype='object')
+    print(CaseTrackerID,CB_Spec_Folder_ID,Release)
     return Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release
 
 
@@ -495,9 +497,11 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
     """
     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&GenerateSpec_CB_Modify2&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     df_SpecCB_Generate["Parent"] = Df_ID_Case_FromCB.iloc[1,1]
+
     #根据CodeBeamer Spec的ID给对应的Case赋值
     # print(df_SpecCB_Generate.index)
     df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
+
     # print(df_SpecCB_Generate[['ID', "Name"]])
     # print("*" * 40)
     # print(Df_ID_Case_FromCB[['ID', "Name"]])
@@ -551,6 +555,7 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
     # for i in
     # Df_Status_temp["Status"] = Df_Status_temp["Status"].apply(ConvertCBStatus2GenerateStatus,Status_CB=Df_Status_temp["Status_CB"])
     # Df_Status_temp["Status"] = Df_Status_temp["Status"].apply(lambda x: x if x.strip().upper =="INIT"  else Df_ID_Case_FromCB.loc[x, "Status"])
+    print(Df_Status_FromCB[["Name", "Status"]])
 
     for i in Df_Status_temp.index:
         # print(Df_Status_temp.loc[i,"Status"].strip().upper == "INIT")
@@ -583,7 +588,7 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
 
     # Name 按照升序，Status按照降序，Status 为空的必须放在后面，这个部分的行主要是为了添加之前CB 上的Release号和Issue
     df_SpecCB_Generate.sort_values(by=["Name","Status"],ascending=[True,False],inplace = True)
-    # print(df_SpecCB_Generate[['ID', "Name"]])
+
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB_Modify)
 
@@ -599,15 +604,15 @@ def GetInitCaseList(FinnalSpec):
 
 if __name__ == '__main__':
     pass
-    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result.xlsm"
+    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_Project_FunctionName_Test Specification_Template (5).xlsm"
     Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release= ReadSpec_TableOfContent(Spec)
     SpecCB = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CB.xlsx"
-    SpecCB_FromCB = r"C:\Users\victor.yang\Desktop\Work\CB\84194_GWM_D30_RCS_SC2_2S - TC_L30_DES_SW_Test_Cases (4).xlsx"
-    CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
+    SpecCB_FromCB = r"C:\Users\victor.yang\Desktop\Work\CB\84192_BYD_MR_RCS_SC2_2S - TC_L30_DES_SW_Test_Cases (1).xlsx"
+    CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_Project_FunctionName_Test Specification_Template (5)_CodeBeamer.xlsx"
     GenerateSpec_CB_Init(Df_spec,Release,CB_Spec_Generate)
     df_SpecCB_FromCB, Df_ID_Case_FromCB =  ReadSpecCB_FromCB2(SpecCB_FromCB)
     df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")
-    SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer_Modify.xlsx"
+    SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_Project_FunctionName_Test Specification_Template (5)_Modify.xlsx"
 
 
     GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB, df_SpecCB_FromCB,Release,
