@@ -29,11 +29,38 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     # Next
     browser.find_element(by=By.ID, value="_eventId_next").click()
     # Next
+    #选择ID Mapping
+    print(1)
+    id_slectorbutton= "//*[@id ='rawDataTable']/ tbody/tr[1]/th[2]/ button"
+    browser.find_element(by=By.XPATH, value=id_slectorbutton).click()
     print(2)
+
+    print(3)
+    ul_slector = "/ html / body / div[12] / ul"
+    parent_elemnt = browser.find_element(by=By.XPATH, value=ul_slector)
+    slection_list = parent_elemnt.find_element(by=By.XPATH, value=ul_slector).text.split("\n")
+    # time.sleep(10)
+    print(slection_list)
+    if "ID" in slection_list:
+        print("find the ID selection")
+        id_filter = "/ html / body / div[12] / div / div / input"
+        browser.find_element(by=By.XPATH, value=id_filter).send_keys("ID")
+        id_slector = "//label/span[text()='ID']"
+        parent_elemnt.find_element(by=By.XPATH, value=id_slector).click()
+        # print(children_element)
+    else:
+        print("Can't find the ID")
+        id_filter = "/ html / body / div[12] / div / div / input"
+        browser.find_element(by=By.XPATH, value=id_filter).send_keys("ID")
+        id_slector = "//label/span[text()='--']"
+        parent_elemnt.find_element(by=By.XPATH, value=id_slector).click()
+
+    # time.sleep(100)
     browser.find_element(by=By.NAME, value="_eventId_next").click()
     # Next
     browser.find_element(by=By.NAME, value="_eventId_next").click()
     # Finish
+    time.sleep(10)
     browser.find_element(by=By.NAME, value="_eventId_next").click()
     # browser.implicitly_wait(10)
     time.sleep(10)
@@ -63,7 +90,6 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
                     dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
                     print(CaseName)
                     Action.click(dragElement)
-
                     break;
                 except Exception as err:
                     print(err)
@@ -142,18 +168,33 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     # 点击Login
     browser.find_element(by=By.NAME, value="saml").click()
 
-    browser.implicitly_wait(5)
+    browser.implicitly_wait(30)
+    time.sleep(10)
     CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
     # TargetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-    # print(TargetElement)
+    print("Find Case Folder ID")
     browser.find_element(by=By.XPATH, value=CaseFolder_Filter).click()
 
+    print("Click Case Folder ID")
     # MoreButton = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']")
     # print(MoreButton)
-    browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']").click()
-    browser.find_element(by=By.ID, value="ui-id-6").click()
-    print(1)
+    browser.implicitly_wait(30)
+    # time.sleep(10)
+    # browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']").click()
+    # ele = browser.find_element(by=By.XPATH, value="/html/body/div[3]/div/form/div[2]/div[1]/div[1]/table/tbody/tr/td[1]/span/span/img")
+    actionBarColumn = browser.find_element(by=By.XPATH,value="//td[@class='actionBarColumn']/span/span/img")#新版本是可以使用
+    # ele = actionBarColumn.find_element(by=By.XPATH, value="//span[@class ='inlinemenuTrigger  initialized']")
+    # ele = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']"#老版本上可以使用的
+    print(actionBarColumn)
+    actionBarColumn.click()
     browser.implicitly_wait(5)
+    print("Click data-tooltip='more")
+    exportSelection =  browser.find_element(by=By.XPATH,value="//div[@class='yuimenu inlinemenu']/div/ul[2]/li[3]")
+    # browser.find_element(by=By.ID, value="ui-id-6").click()
+    exportSelection.click()
+    print("exportSelection")
+    browser.implicitly_wait(5)
+
     browser.switch_to.frame("inlinedPopupIframe")
     browser.find_element(by=By.ID, value="excelExportTabPane-tab").click()
 
@@ -189,63 +230,18 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     return fileName
 
 
-def DownLoadSpecFromCB2(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
-    options = webdriver.ChromeOptions()
-
-    prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': CB_Spec_Folder}
-    options.add_experimental_option('prefs', prefs)
-    CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/" + CaseTrackerID
-    browser = webdriver.Chrome(chrome_options=options)
-    browser.get(CodeBeamer_Upload_Url)
-
-    # 点击Login
-    browser.find_element(by=By.NAME, value="saml").click()
-
-    time.sleep(3)
-    CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
-    # TargetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-    # print(TargetElement)
-    browser.find_element(by=By.XPATH, value=CaseFolder_Filter).click()
-
-    # MoreButton = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']")
-    # print(MoreButton)
-    browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']").click()
-    browser.find_element(by=By.ID, value="ui-id-6").click()
-    print(1)
-    time.sleep(2)
-    browser.switch_to.frame("inlinedPopupIframe")
-    browser.find_element(by=By.ID, value="excelExportTabPane-tab").click()
-
-    # browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane-tab']").click()
-    print(11)
-
-    # 下载数据
-    browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane']//input[@value='Export']").click()
-    time.sleep(30)
-    # FileName = browser.find_element(by=By.XPATH, value="//div[@class='information onlyOneMessage']//li[@target='_top']").text()
-    # print(FileName)
-    # time.sleep(3)
-
-    browser.execute_script("window.open()")
-    # switch to new tab
-    browser.switch_to.window(browser.window_handles[-1])
-    # navigate to edge downloads
-    browser.get('chrome://downloads')
-    # define the endTime
-    fileName = browser.find_element(by=By.XPATH, value="//button[@aria-label]").get_attribute("aria-label")
-
-    return fileName
-
-
 if __name__ == '__main__':
     pass
     CaseTrackerID = "22106033"
     CaseFolderID = "10367368"
     # # CaseFolderID = "11450597"
     CB_Spec_Folder = r"C:\Users\victor.yang\Desktop\Work\CB"
+    CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
+    UploadSpec2CB(CaseTrackerID,CB_Spec_Generate,CaseFolderID,[])
     # CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
     # InitCaseList = [
     #     "Test Case 1 - First Frame Transmitted Time and Init value",
+
     #     "Test Case 2 - Stop sending Msg  Time",
     #     "Test Case 3 - BUSOFF Strategy",
     #     "Test Case 4 - Transmit capability",
