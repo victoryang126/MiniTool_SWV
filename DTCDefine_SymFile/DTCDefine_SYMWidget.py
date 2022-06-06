@@ -237,10 +237,12 @@ def Generate_SYM(Project,SWVersion,PBCT_Excel,EPPROM_Trans_Excel,SYM_OutPut,Shee
     print("Generate_SYM")
     # *******************************************************************
     SYM_OutPut = SYM_OutPut + "/" + Project + "_" + SWVersion + ".sym"
-    # print(SheetList)
+    print(SheetList)
     df_SYM = pd.DataFrame(columns=["PARAMETER NAME", "FLASH ADDRESS", "SIZE", "UNKNOWN"])
     for SheetName in SheetList:
+        print("Read " + SheetName[0])
         df_temp = pd.read_excel(PBCT_Excel, SheetName[0],dtype='str',header=0)
+
         #如果有缩写表示需要在parameter 前加前缀
         if len(SheetName) > 1:
             df_temp["PARAMETER NAME"] = SheetName[1] + "_" + df_temp["PARAMETER NAME"]
@@ -252,6 +254,7 @@ def Generate_SYM(Project,SWVersion,PBCT_Excel,EPPROM_Trans_Excel,SYM_OutPut,Shee
     #获取NVM 参数信息
     # *******************************************************************
     #NVM 地址计算公式为："EE" +DEC2Hex(BlockID,1) + Dec2Hex(Block address offset,2)
+    print("Read EPPROM_Trans_Excel")
     df_NVM = pd.read_excel(EPPROM_Trans_Excel, "EEPROM Parameters",dtype='str')
     # df_NVM.info()
     Fun_BlockId = lambda x: Str2Hex(x, 1)

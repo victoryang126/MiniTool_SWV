@@ -23,7 +23,7 @@ from GenerateScript import GenerateScriptsWidget
 class MiniTool(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('MiniTool V1.14')
+        self.setWindowTitle('MiniTool V1.14.1')
         self.setWindowIcon(QIcon('./Images/title.ico'))
         self.setGeometry(150,150,1300,680)
 

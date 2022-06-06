@@ -23,6 +23,9 @@
        <bold>false</bold>
       </font>
      </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
      <property name="placeholderText">
       <string>the final spec used to upload to Codebeamer</string>
      </property>
@@ -36,6 +39,9 @@
        <weight>50</weight>
        <bold>false</bold>
       </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
      <property name="placeholderText">
       <string>the Spec download from Codebeamer</string>
@@ -72,6 +78,9 @@
    </item>
    <item row="3" column="0">
     <widget class="QPushButton" name="BT_Replace_DoosID">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>
@@ -81,6 +90,12 @@
      </property>
      <property name="text">
       <string>Replace_DoorsID</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -93,6 +108,9 @@
        <bold>false</bold>
       </font>
      </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
      <property name="placeholderText">
       <string>The spec generante by this tool</string>
      </property>
@@ -100,6 +118,9 @@
    </item>
    <item row="5" column="4">
     <widget class="QPushButton" name="BT_CB_Spec_Generate">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>
@@ -121,10 +142,16 @@
        <bold>false</bold>
       </font>
      </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item row="11" column="4">
     <widget class="QPushButton" name="BT_FinalCBSpec">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>
@@ -172,7 +199,7 @@
       </font>
      </property>
      <property name="readOnly">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="placeholderText">
       <string>The Case TrackerID in CodeBearmer</string>
@@ -209,6 +236,9 @@
    </item>
    <item row="0" column="4">
     <widget class="QPushButton" name="BT_LookUp">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>
@@ -218,6 +248,12 @@
      </property>
      <property name="text">
       <string>Browse</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -229,6 +265,9 @@
        <weight>50</weight>
        <bold>false</bold>
       </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
      <property name="placeholderText">
       <string>the Relese version in CodeBeamer</string>
@@ -243,6 +282,9 @@
        <weight>50</weight>
        <bold>false</bold>
       </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
      <property name="placeholderText">
       <string>the CodeBeamerID of the Spec Folder </string>
@@ -293,6 +335,9 @@
    </item>
    <item row="2" column="4">
     <widget class="QPushButton" name="BT_CB_Spec">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>
@@ -315,7 +360,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Test_Spec or Test_Result</string>
+      <string>Test_Spec</string>
      </property>
     </widget>
    </item>
@@ -388,6 +433,9 @@
    </item>
    <item row="9" column="4">
     <widget class="QPushButton" name="BT_CB_Spec_FromCB">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>
@@ -430,6 +478,9 @@
    </item>
    <item row="8" column="4">
     <widget class="QPushButton" name="BT_DownloadCBSpec">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>

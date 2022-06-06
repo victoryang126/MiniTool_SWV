@@ -60,6 +60,7 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     # Next
     browser.find_element(by=By.NAME, value="_eventId_next").click()
     # Finish
+    time.sleep(10)
     browser.find_element(by=By.NAME, value="_eventId_next").click()
     # browser.implicitly_wait(10)
     time.sleep(10)
@@ -84,7 +85,6 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         Action.key_down(Keys.SHIFT)  # 按住sheift
         for CaseName in InitCaseList:
             CaseName_Filter = '//li[@title=\"' + CaseName + '\"]'
-            try_counter = 0
             while True:
                 try:
                     dragElement = browser.find_element(by=By.XPATH, value=CaseName_Filter)
@@ -93,9 +93,6 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
                     break;
                 except Exception as err:
                     print(err)
-                    try_counter += 1
-                    if try_counter == 5:
-                        break;
                     browser.execute_script(scroll_js_Down)
                     continue;
                 time.sleep(2)
@@ -104,7 +101,6 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
         print(1)
         # browser.execute_script(scroll_js_Top)
         time.sleep(10)
-        try_counter = 0
         while True:
             try:
                 time.sleep(10)
@@ -117,9 +113,6 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
             except Exception as err:
                 print("Can't find folder")
                 browser.execute_script(scroll_js_Down)
-                try_counter+=1
-                if try_counter ==5:
-                    break;
                 time.sleep(2)
                 continue;
 
@@ -175,18 +168,33 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     # 点击Login
     browser.find_element(by=By.NAME, value="saml").click()
 
-    browser.implicitly_wait(5)
+    browser.implicitly_wait(30)
+    time.sleep(10)
     CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
     # TargetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-    # print(TargetElement)
+    print("Find Case Folder ID")
     browser.find_element(by=By.XPATH, value=CaseFolder_Filter).click()
 
+    print("Click Case Folder ID")
     # MoreButton = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']")
     # print(MoreButton)
-    browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']").click()
-    browser.find_element(by=By.ID, value="ui-id-6").click()
-    print(1)
+    browser.implicitly_wait(30)
+    # time.sleep(10)
+    # browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']").click()
+    # ele = browser.find_element(by=By.XPATH, value="/html/body/div[3]/div/form/div[2]/div[1]/div[1]/table/tbody/tr/td[1]/span/span/img")
+    actionBarColumn = browser.find_element(by=By.XPATH,value="//td[@class='actionBarColumn']/span/span/img")#新版本是可以使用
+    # ele = actionBarColumn.find_element(by=By.XPATH, value="//span[@class ='inlinemenuTrigger  initialized']")
+    # ele = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']"#老版本上可以使用的
+    print(actionBarColumn)
+    actionBarColumn.click()
     browser.implicitly_wait(5)
+    print("Click data-tooltip='more")
+    exportSelection =  browser.find_element(by=By.XPATH,value="//div[@class='yuimenu inlinemenu']/div/ul[2]/li[3]")
+    # browser.find_element(by=By.ID, value="ui-id-6").click()
+    exportSelection.click()
+    print("exportSelection")
+    browser.implicitly_wait(5)
+
     browser.switch_to.frame("inlinedPopupIframe")
     browser.find_element(by=By.ID, value="excelExportTabPane-tab").click()
 
@@ -219,54 +227,6 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     #     "aria-label")
     fileName = browser.find_element(by=By.XPATH, value="//img[@aria-label]").get_attribute("aria-label")
     print(fileName)
-    return fileName
-
-
-def DownLoadSpecFromCB2(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
-    options = webdriver.ChromeOptions()
-
-    prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': CB_Spec_Folder}
-    options.add_experimental_option('prefs', prefs)
-    CodeBeamer_Upload_Url = "https://codebeamer.corp.int/cb/tracker/" + CaseTrackerID
-    browser = webdriver.Chrome(chrome_options=options)
-    browser.get(CodeBeamer_Upload_Url)
-
-    # 点击Login
-    browser.find_element(by=By.NAME, value="saml").click()
-
-    time.sleep(3)
-    CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
-    # TargetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-    # print(TargetElement)
-    browser.find_element(by=By.XPATH, value=CaseFolder_Filter).click()
-
-    # MoreButton = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']")
-    # print(MoreButton)
-    browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']").click()
-    browser.find_element(by=By.ID, value="ui-id-6").click()
-    print(1)
-    time.sleep(2)
-    browser.switch_to.frame("inlinedPopupIframe")
-    browser.find_element(by=By.ID, value="excelExportTabPane-tab").click()
-
-    # browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane-tab']").click()
-    print(11)
-
-    # 下载数据
-    browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane']//input[@value='Export']").click()
-    time.sleep(30)
-    # FileName = browser.find_element(by=By.XPATH, value="//div[@class='information onlyOneMessage']//li[@target='_top']").text()
-    # print(FileName)
-    # time.sleep(3)
-
-    browser.execute_script("window.open()")
-    # switch to new tab
-    browser.switch_to.window(browser.window_handles[-1])
-    # navigate to edge downloads
-    browser.get('chrome://downloads')
-    # define the endTime
-    fileName = browser.find_element(by=By.XPATH, value="//button[@aria-label]").get_attribute("aria-label")
-
     return fileName
 
 

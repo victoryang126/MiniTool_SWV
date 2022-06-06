@@ -6,6 +6,39 @@ import numpy as np
 # from openpyxl.utils import get_column_letter
 import re
 import openpyxl
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import Alignment
+
+
+def to_excel_auto_column_weight(df, writer, sheet_name):
+    """DataFrame保存为excel并自动设置列宽"""
+    df.to_excel(writer, sheet_name=sheet_name, index=False)
+    #  计算表头的字符宽度
+    column_widths = (
+        df.columns.to_series().apply(lambda x: len(x.encode('gbk'))).values
+    )
+    #  计算每列的最大字符宽度
+    max_widths = (
+        df.astype(str).applymap(lambda x: len(x.encode('gbk'))).agg(max).values
+    )
+    # 计算整体最大宽度
+    widths = np.max([column_widths, max_widths], axis=0)
+    # 设置列宽
+    worksheet = writer.sheets[sheet_name]
+    alignment = Alignment(wrap_text=True)
+    for i, width in enumerate(widths, 1):
+        # openpyxl引擎设置字符宽度时会缩水0.5左右个字符，所以干脆+2使左右都空出一个字宽。
+        worksheet.column_dimensions[get_column_letter(i)].width = width + 2
+        worksheet.column_dimensions[get_column_letter(i)].alignment = alignment
+def GetCBID(x,df):
+    # lambda x: Df_ID_Case_FromCB.loc[x.strip(), "ID"] if x.strip() in Df_ID_Case_FromCB.index else ""
+    # print(x)
+    if x.strip() in df.index:
+        # print(df.loc[x.strip(), "ID"])
+        return df.loc[x.strip(), "ID"]
+    else:
+        print("NONE")
+        return ""
 
 
 def ConvertCBStatus2GenerateStatus(Status,Status_CB):
@@ -240,7 +273,6 @@ def ReadSpec_TableOfContent(Spec):
     Df_spec = pd.concat([Df_specTemp1,Df_specTemp2],axis=0)
     # 上面的步骤会把Df_IssueID  放到最后，需要通过sort index将 对应case的ID单元啦上去
     Df_spec.fillna("", inplace=True)
-    # Df_spec.sort_values(by=["Object Text", "_VerifiesDOORSRequirements"], ascending=[True, False], inplace=True)
     Df_spec.sort_index(inplace=True) #
 
     #_VerifiesDOORSRequirements 是换行的过滤
@@ -262,7 +294,6 @@ def ReadSpec_TableOfContent(Spec):
     # //Index(['Object Text', 'Description', '_VerifiesDOORSRequirements',
     #    '_VerificationStatus', '_Comment'],
     #   dtype='object')
-    print(CaseTrackerID,CB_Spec_Folder_ID,Release)
     return Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release
 
 
@@ -368,6 +399,8 @@ def GenerateSpec_CB_Init(Df_spec,Release, SpecCB):
     df_SpecCB["Reserve_1"] = Df_spec["Incident ID"].apply(lambda x: x if not IsCBID(x) else "")
     # df_SpecCB["Release"] = Release
     # print(df_SpecCB[["Name","Verifies"]])
+    # with pd.ExcelWriter(SpecCB) as writer:
+    #     to_excel_auto_column_weight(df_SpecCB, writer, sheet_name="Export")
     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB)
     return df_SpecCB
@@ -413,7 +446,6 @@ def ReadSpecCB_FromCB2(SpecCB_FromCB):
     """
     print("&"*30 + "ReadSpecCB_FromCB2" + "&"*30)
     Df_SpecCB = pd.read_excel(SpecCB_FromCB, "Export",dtype=object)
-    # print(Df_SpecCB["ID"])
     # print(Df_SpecCB.head(10))
     Df_SpecCB[["ID","Parent","Name"]] = Df_SpecCB[["ID","Parent","Name"]] .fillna(method = 'ffill')
     # print(Df_SpecCB.head(10))
@@ -427,16 +459,10 @@ def ReadSpecCB_FromCB2(SpecCB_FromCB):
 
 
     Df_ID_Case = Df_SpecCB[["ID", "Parent", "Name","Type","Status"]].drop_duplicates(subset=['ID'])
-
     Df_ID_Case.drop(0, inplace=True)
     Df_ID_Case["Name"] = Df_ID_Case["Name"].str.strip()
     Df_ID_Case.set_index("Name",inplace = True,drop = False)
-    Df_ID_Case = Df_ID_Case.astype({"ID":"int64","Parent":"int64"})
-    # print( Df_ID_Case.astype({"ID":"int64","Parent":"int64"})["ID"].dtypes)
-    # Df_ID_Case.astype("ID":)
-    # print(Df_ID_Case["ID"])
-    # Df_ID_Case["ID"] = Df_ID_Case["ID"].str.replace(".0","")
-    # Df_ID_Case["Parent"] = Df_ID_Case["Parent"].str.replace(".0", "")
+    Df_ID_Case = Df_ID_Case.astype({"ID": "int64", "Parent": "int64"})
     # Df_SpecCB = Df_SpecCB[(Df_SpecCB["Incident ID"] !="") | (Df_SpecCB["Release"] !="")]
     Df_SpecCB = Df_SpecCB[Df_SpecCB["Status"] != "Obsolete"] #删除status 部位obsolete的case
     # print(Df_ID_Case)
@@ -497,23 +523,35 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
     """
     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&GenerateSpec_CB_Modify2&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
     df_SpecCB_Generate["Parent"] = Df_ID_Case_FromCB.iloc[1,1]
-
     #根据CodeBeamer Spec的ID给对应的Case赋值
+    print("assign df_SpecCB_Generate Parent")
+    # print(Df_ID_Case_FromCB.index)
+    # # print(df_SpecCB_Generate["Name"])
     # print(df_SpecCB_Generate.index)
-    df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
+    print("#"*20)
+    # print(Df_ID_Case_FromCB.index)
 
-    # print(df_SpecCB_Generate[['ID', "Name"]])
-    # print("*" * 40)
-    # print(Df_ID_Case_FromCB[['ID', "Name"]])
+    df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(GetCBID,df = Df_ID_Case_FromCB)
+
+            # print("NONE")
+            # return ""
+    # df_SpecCB_Generate["Name"].apply(GetCBID, df=Df_ID_Case_FromCB)
+    # df_SpecCB_Generate["ID"] = df_SpecCB_Generate["Name"].apply(lambda x:Df_ID_Case_FromCB.loc[x.strip(),"ID"] if x.strip() in Df_ID_Case_FromCB.index else "")
+    # df_SpecCB_Generate["Name"].apply(lambda x: print(x) if x.strip() in Df_ID_Case_FromCB.index else "")
+    print("assign df_SpecCB_Generate ID")
+
     #对不在最新的test specification的case ，设置属性为Obsolete
+    # print(Df_ID_Case_FromCB)
     for caseName in Df_ID_Case_FromCB.index:
-
+        print(caseName)
         # 如果 属性为information,则跳过，继续判断
+        print(Df_ID_Case_FromCB.loc[caseName,"Type"])
+
         if Df_ID_Case_FromCB.loc[caseName,"Type"] == "Information":
             # print("2")
             continue;
         if caseName not in df_SpecCB_Generate["Name"].str.strip().values:
-            # print(caseName)
+            print(caseName)
             Df_ID_Case_FromCB.loc[caseName,"Status"] = "Obsolete"
             Df_ID_Case_FromCB.loc[caseName,"Name"] = "    " + caseName
             df_SpecCB_Generate = df_SpecCB_Generate.append(Df_ID_Case_FromCB.loc[caseName])
@@ -525,21 +563,22 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
             # print(Df_SpecCB_FromCB["Name","Status"])
             # print(Df_ID_Case_FromCB.loc[caseName])
     df_SpecCB_Generate["Release"] = Release
+    print("assign df_SpecCB_Generate Release")
     # 、**********************************判断DF_Generate 里面的case ID是否有新增加**********************************
     # Verify 可能会有空的数据，导致Df_Verify_Generate_2 里面没数据,所以需要剔除这个部分的数据
     Df_Verify_CB = Df_SpecCB_FromCB[["Name", "Verifies"]]
     Df_Verify_CB.dropna(subset=["Name", "Verifies"], inplace=True)
     Df_Verify_CB["Name"] = Df_Verify_CB["Name"].str.strip()
     Df_Verify_CB_2 = Df_Verify_CB["Name"].str.strip() + "," + Df_Verify_CB["Verifies"]
-
+    print("assign Df_Verify_CB_2 ")
     Df_Verify_Generate = df_SpecCB_Generate[["Name", "Verifies"]]
     Df_Verify_Generate.dropna(subset=["Name", "Verifies"], inplace=True)
     Df_Verify_Generate["Name"] = Df_Verify_Generate["Name"].str.strip()
     Df_Verify_Generate_2 = Df_Verify_Generate["Name"] + "," + Df_Verify_Generate["Verifies"]
 
-    # print(Df_Verify_Generate_2.isin(Df_Verify_CB_2))
+    print(Df_Verify_Generate_2.isin(Df_Verify_CB_2))
     Df_New_Verify = Df_Verify_Generate[~Df_Verify_Generate_2.isin(Df_Verify_CB_2)]
-    # print(Df_New_Verify)
+    print(Df_New_Verify)
 
     # *****************************获取之前的状态
     #先获取CB的状态，确保case名字唯一
@@ -555,16 +594,15 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
     # for i in
     # Df_Status_temp["Status"] = Df_Status_temp["Status"].apply(ConvertCBStatus2GenerateStatus,Status_CB=Df_Status_temp["Status_CB"])
     # Df_Status_temp["Status"] = Df_Status_temp["Status"].apply(lambda x: x if x.strip().upper =="INIT"  else Df_ID_Case_FromCB.loc[x, "Status"])
-    print(Df_Status_FromCB[["Name", "Status"]])
 
     for i in Df_Status_temp.index:
         # print(Df_Status_temp.loc[i,"Status"].strip().upper == "INIT")
         #只要是init就把case的 Release给干掉
         if Df_Status_temp.loc[i,"Status"].strip().upper() == "INIT":
             Df_Status_temp.loc[i, "Release"] = ""
-            # print(Df_Status_temp.loc[i,"Name"])
+            print(Df_Status_temp.loc[i,"Name"])
             # 如果这个case 没有新增加的需求ID，则使用之前的case状态
-            # print(Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values)
+            print(Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values)
             if Df_Status_temp.loc[i,"Name"].strip() not in Df_New_Verify["Name"].values:
                 Df_Status_temp.loc[i, "Status"]=  Df_Status_temp.loc[i,"Status_CB"]
 
@@ -588,7 +626,7 @@ def GenerateSpec_CB_Modify2(df_SpecCB_Generate,Df_ID_Case_FromCB,Df_SpecCB_FromC
 
     # Name 按照升序，Status按照降序，Status 为空的必须放在后面，这个部分的行主要是为了添加之前CB 上的Release号和Issue
     df_SpecCB_Generate.sort_values(by=["Name","Status"],ascending=[True,False],inplace = True)
-
+    print(df_SpecCB_Generate[['ID',"Name"]])
     df_SpecCB_Generate.to_excel(SpecCB_Modify, sheet_name="Export", index=False)
     DeleteLastEmptyRow(SpecCB_Modify)
 
@@ -604,15 +642,15 @@ def GetInitCaseList(FinnalSpec):
 
 if __name__ == '__main__':
     pass
-    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_Project_FunctionName_Test Specification_Template (5).xlsm"
+    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result.xlsm"
     Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release= ReadSpec_TableOfContent(Spec)
     SpecCB = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CB.xlsx"
-    SpecCB_FromCB = r"C:\Users\victor.yang\Desktop\Work\CB\84192_BYD_MR_RCS_SC2_2S - TC_L30_DES_SW_Test_Cases (1).xlsx"
-    CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_Project_FunctionName_Test Specification_Template (5)_CodeBeamer.xlsx"
+    SpecCB_FromCB = r"C:\Users\victor.yang\Desktop\Work\CB\84194_GWM_D30_RCS_SC2_2S - TC_L30_DES_SW_Test_Cases (4).xlsx"
+    CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
     GenerateSpec_CB_Init(Df_spec,Release,CB_Spec_Generate)
     df_SpecCB_FromCB, Df_ID_Case_FromCB =  ReadSpecCB_FromCB2(SpecCB_FromCB)
     df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")
-    SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_Project_FunctionName_Test Specification_Template (5)_Modify.xlsx"
+    SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer_Modify.xlsx"
 
 
     GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB, df_SpecCB_FromCB,Release,
