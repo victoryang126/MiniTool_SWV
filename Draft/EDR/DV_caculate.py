@@ -1,6 +1,6 @@
 def calculate_dv(lsb, ms):
     time = int(ms / 10)
-    print('DV1 = 0x7F')
+    print('DV1 = 127')
     for i in range(time):
         current_dv = round(lsb / 16 * 9.8 * (i + 1) * 10 / 1000 / 1000 * 3600) + 127
         print('DV' + str(i + 2) + ' = ' + hex(current_dv))
@@ -11,41 +11,6 @@ def calculate_dv(lsb, ms):
     print('ac = ' + hex(round(lsb / 16 + 127)))
     print('Square DV = ' + str(hex(dv_square)))
     print("Tend = " + hex(round((ms + 40) / 2.5)))
-    print("-------------------------------------------------------" )
-
-def calculate_dv2(lsb, ms,gapTime, lsb2, ms2):
-    print("-----------------------1st event--------------------------------")
-    time = int(ms / 10)
-    print('DV1 = 0x7F')
-    for i in range(time):
-        current_dv = round(lsb / 16 * 9.8 * (i + 1) * 10 / 1000 / 1000 * 3600) + 127
-        print('DV' + str(i + 2) + ' = ' + hex(current_dv))
-    dv = round(lsb / 16 * 9.8 * ms / 1000 / 1000 * 3600 + 127)
-    dv_square = round((lsb / 16 * 9.8 * ms / 1000 / 1000 * 3600) * (lsb / 16 * 9.8 * ms / 1000 / 1000 * 3600))
-    print("Max dv = " + hex(dv))
-    print("Max dv time = " + hex(round(ms / 2.5)))
-    print('ac = ' + hex(round(lsb / 16 + 127)))
-    # print('Square DV = ' + str(hex(dv_square)))
-    # print("Tend = " + hex(round((ms + 40) / 2.5)))
-
-    print("-----------------------2nd event--------------------------------")
-
-    time1 = int((ms + gapTime) / 10)
-    print('DV1 = 0x7F')
-    for i in range(time1):
-        print('DV' + str(i + 2) + ' = 0x7F' )
-    j = i
-    time2 = int(ms2 / 10)
-    for i in range(time2):
-        current_dv = round(lsb2 / 16 * 9.8 * (i + 1) * 10 / 1000 / 1000 * 3600) + 127
-        print('DV' + str(j + i + 3) + ' = ' + hex(current_dv))
-    dv = round(lsb2 / 16 * 9.8 * ms2 / 1000 / 1000 * 3600 + 127)
-    dv_square = round((lsb / 16 * 9.8 * ms / 1000 / 1000 * 3600) * (lsb2 / 16 * 9.8 * ms2 / 1000 / 1000 * 3600))
-    print("Max dv = " + hex(dv))
-    print("Max dv time = " + hex(round((ms + gapTime + ms2 ) / 2.5)))
-    print('ac = ' + hex(round(lsb2 / 16 + 127)))
-    print('Square DV = ' + str(hex(dv_square)))
-    print("Tend = " + hex(round((ms + gapTime + ms2 + 40) / 2.5)))
     print("-------------------------------------------------------" )
 
 
@@ -71,8 +36,7 @@ def Caculate(Yaw,Y,X):
     print("%"*30)
 
 if __name__ == "__main__":
-    calculate_dv(-200, 10)
-    # calculate_dv2(-400, 20, 35, -375, 50)
+    calculate_dv(80, 50)
     # # calculate_rsu(125, 150, 6, 16, 10, 35, 14, 45, 28, 40)
     # calculate_rsu(125, 150, 6, 8, 14, 16, 10, 12, 18, 20)
     # # calculate_rsu(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
