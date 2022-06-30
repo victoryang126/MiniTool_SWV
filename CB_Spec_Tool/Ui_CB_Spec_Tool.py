@@ -250,7 +250,7 @@ class Ui_CB_Spec_Tool(object):
         self.textB_Test_Spec.setObjectName("textB_Test_Spec")
         self.gridLayout.addWidget(self.textB_Test_Spec, 1, 1, 1, 3)
         self.BT_CB_Spec_FromCB = QtWidgets.QPushButton(CB_Spec_Tool)
-        self.BT_CB_Spec_FromCB.setEnabled(False)
+        self.BT_CB_Spec_FromCB.setEnabled(True)
         font = QtGui.QFont()
         font.setPointSize(12)
         font.setBold(False)

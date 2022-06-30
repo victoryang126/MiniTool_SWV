@@ -124,8 +124,9 @@ def GetIMUObject(ExcelDir,ObjectType,IMU_Template,G_RegObjectFile,IMUDataPath,Sc
         # ComFun.AddObject2Ts(G_RegObjectFile, TempStr)
         VarArguments = "var " + KeyTemp + " = "
         CommonFun.DumpObject2Ts(G_RegObjectFile,VarArguments,ObjectDict[KeyTemp])
-        CommonFun.CreateScript(ScriptTemplateContent,ScriptPath, TestType, ObjectType, KeyTemp,TestProject)
-        
+        # CommonFun.CreateScript(ScriptTemplateContent,ScriptPath, TestType, ObjectType, KeyTemp,TestProject)
+        ReplaceDict = {"TestProject": TestProject, "TestObjectStr": KeyTemp, "ObjectType": ObjectType}
+        CommonFun.GenerateScripts_BaseTemplate(ScriptTemplateContent, ReplaceDict, ScriptPath, KeyTemp, TestType)
     # '''
 if __name__ == "__main__":
     G_RegParameterFile = "C:\Python\GitHub\Minitool\DataSource\Reg_RegressionParameter.ts"

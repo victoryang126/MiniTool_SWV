@@ -5,7 +5,7 @@ import sys
 
 import os
 from CommonFunction import CommonFun
-
+from Regression import CrashOutput
 
 # import ComFun
 
@@ -111,6 +111,7 @@ def GetCrashObject(ExcelDir,ObjectType,Crash_Template,G_RegObjectFile,CrashDataP
 
     # pd.set_option('display.max_columns', None)
     df = pd.read_excel(ExcelDir,ObjectType,dtype = str)
+    print("Crash Read Excel successfully")
     # df.set_index("Config", inplace=True)
     dfHeaderRow = 9
     dfHeaderCol = 12
@@ -131,14 +132,14 @@ def GetCrashObject(ExcelDir,ObjectType,Crash_Template,G_RegObjectFile,CrashDataP
     RowEnd = HeaderDict["Config"]["RowEnd"]
     # print(SensorColStart,SensorColEnd)
     df.set_index("Config", inplace=True,drop = False) #不能丢弃该列，还保留在DataFrame中，
-
+    print("Get Header data ")
     # 2.**********获取data/ms的数据
     df.columns = df.loc[RowStart]; # 将dataFrame的title设置为 CrashSeverityLevel 所在的行
     DataScale = df.loc["DataScale", SensorColStart:SensorColEnd].to_list()
     # 截取从CrashSeverityLevel 后面的数据 但是这个数据会包含CrashSeverityLevel 所在的行
     # 必须包含，下面获取sensor list ,LoopList DTCList 会用到
     dfConfig = df.loc[RowStart:RowEnd,]
-
+    print("Get data/ms ")
     # 3.**********获取sensor list,Loop List,DTC list
     SensorList = dfConfig.loc[RowStart, SensorColStart:SensorColEnd].to_list()
     LoopList = dfConfig.loc[RowStart, LoopColStart:LoopColEnd].to_list()
@@ -155,27 +156,29 @@ def GetCrashObject(ExcelDir,ObjectType,Crash_Template,G_RegObjectFile,CrashDataP
     #                通过根据CrashSeverityLevel 相同的名字 将不同行的数据 拼接起来组成复杂波形
     dfConfig_Group = dfConfig.groupby(by="CrashSeverityLevel", as_index=False,sort = False)
     dfConfig = dfConfig_Group.apply(JoinSeries,SensorList = SensorList)
-
+    print("sort ")
     # 5 .********** 获取support的Loops
+    print(LoopList)
     dfLoops = dfConfig[LoopList]
+    # print(dfLoops)
     for i in dfConfig.index:
-        # print(i)
         dfConfig['DeployLoops'].at[i] = [dfLoops[j].at[i] for j in LoopList if dfLoops[j].at[i] != "undefined"]
         if not dfConfig['DeployLoops'].at[i]:
             dfConfig['DeployLoops'].at[i] = ["NONE"]
-
+    print("获取support的Loops")
     # 6 .********** 获取Support DTC
     dfDTC = dfConfig[DTCList]
     for i in dfConfig.index:
         dfConfig["DTC"].at[i] = ",".join([dfDTC[j].at[i]  for j in DTCList if dfDTC[j].at[i] != "undefined"])
         if not dfConfig["DTC"].at[i]:
             dfConfig["DTC"].at[i] = "NONE"
-
+    print("获取Support DTC")
     # 7 .********** 创建Crash curves,并生成CrashCurves变量
     # 每个txt名字，CrashSeverityLevel+Sensor
     for i in SensorList:
         dfConfig[i + "_Curves"] =  dfConfig["CrashSeverityLevel"] + "_" + i + ".txt"
     #创建crash文件
+    print("创建crash文件")
     SensorCurves = [i + "_Curves" for i in SensorList]
     for i in dfConfig.index:
         CrashCurves_List = []
@@ -194,14 +197,24 @@ def GetCrashObject(ExcelDir,ObjectType,Crash_Template,G_RegObjectFile,CrashDataP
     # 8 .********** 根据DataFrame 生成字典，导入每个点爆的等级的字典数据，然后生成测试脚本
     dfConfig.set_index("CrashSeverityLevel",inplace = True)
     dfCrash = dfConfig[["DeployLoops","CrashCurves","DTC"]]
+
+
     ObjectDict= dfCrash.to_dict(orient = "index")
+
+    print(ObjectDict)
+
+    crashoutput_dict = CrashOutput.GetCrashOutput(ExcelDir, "CrashOutput")
+
     ScriptTemplateContent, TestType = CommonFun.GetTempleteScript(Crash_Template)
     # 添加字典配置进ObjectFile里面 生成测试脚本
     for KeyTemp in ObjectDict:
         TempStr = "var " + KeyTemp + " = " + str(ObjectDict[KeyTemp]) + ";"
+        # print(KeyTemp)
         CommonFun.AddParameter2Ts(G_RegObjectFile, TempStr)
-        CommonFun.CreateScript(ScriptTemplateContent, ScriptPath,TestType, ObjectType, KeyTemp,TestProject)
-
+        ReplaceDict = {"TestProject": TestProject, "TestObjectStr": KeyTemp, "ObjectType": ObjectType}
+        ReplaceDict["CrashOutput"] = crashoutput_dict[KeyTemp]["CrashOutput"]
+        CommonFun.GenerateScripts_BaseTemplate(ScriptTemplateContent, ReplaceDict, ScriptPath,KeyTemp,TestType)
+    print("generate scripts")
 
 def GetCrashCurvesObject(ExcelDir,ObjectType,G_CrashCurves,CrashDataPath):
 

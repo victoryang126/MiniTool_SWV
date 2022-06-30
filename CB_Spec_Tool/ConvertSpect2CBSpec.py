@@ -40,6 +40,16 @@ def GetCBID(x,df):
         print("NONE")
         return ""
 
+def GetCBID(x,df):
+    # lambda x: Df_ID_Case_FromCB.loc[x.strip(), "ID"] if x.strip() in Df_ID_Case_FromCB.index else ""
+    # print(x)
+    if x.strip() in df.index:
+        # print(df.loc[x.strip(), "ID"])
+        return df.loc[x.strip(), "ID"]
+    else:
+        print("NONE")
+        return ""
+
 
 def ConvertCBStatus2GenerateStatus(Status,Status_CB):
     if Status.strip().upper() == "INIT":

@@ -66,9 +66,11 @@ if(CheckTestEnvironment())
     Thread.Sleep(8000);
     //3.0.Check if deploy the expected loops
     //-----------------------------TEST STEP------------------------------//
-    CommentStep("Check if deploy the expected loops")
+    CommentStep("Check if deploy the expected loops and Crash output")
     CrashGetAllTTF();
     CompareLoopDeploy(ExpectLoops);
+
+    ${CrashOutput}
 
     //4.0.Check if expected DTC shown
     //-----------------------------TEST STEP------------------------------//
