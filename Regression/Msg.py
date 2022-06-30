@@ -139,7 +139,9 @@ def GetMsgObject(ExcelDir, ObjectType, FaultTemplate, G_RegObjectFile,ScriptPath
     for KeyTemp in MsgDict :
         VarArguments = "var " + KeyTemp + " = "
         CommonFun.DumpObject2Ts(G_RegObjectFile,VarArguments,MsgDict[KeyTemp])
-        CommonFun.CreateScript(FaultScriptTemplateContent,ScriptPath, FaultTestType, ObjectType, KeyTemp,TestProject)
+        # CommonFun.CreateScript(FaultScriptTemplateContent,ScriptPath, FaultTestType, ObjectType, KeyTemp,TestProject)
+        ReplaceDict = {"TestProject": TestProject, "TestObjectStr": KeyTemp, "ObjectType": ObjectType}
+        CommonFun.GenerateScripts_BaseTemplate(FaultScriptTemplateContent, ReplaceDict, ScriptPath, KeyTemp, FaultTestType)
 
 if __name__ == '__main__':
     # ExcelDir = "E:\GitHub\Minitool\DataSource\GWM_P0102_2S_RegressionImprove.xlsx"

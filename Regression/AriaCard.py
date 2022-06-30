@@ -139,12 +139,17 @@ def GetSensorObject(ExcelDir, ObjectType, FaultTemplate, NormalTemplate, G_RegPa
         # TempStr = "var " + KeyTemp + " = " + str(ObjectDict[KeyTemp]) + ";"
         # ComFun.AddObject2Ts(G_RegObjectFile, TempStr)
         VarArguments = "var " + KeyTemp + " = "
+        ReplaceDict = {"TestProject": TestProject, "TestObjectStr": KeyTemp, "ObjectType": ObjectType}
         CommonFun.DumpObject2Ts(G_RegObjectFile, VarArguments, ObjectDict[KeyTemp])
-        CommonFun.CreateScript(FaultScriptTemplateContent, ScriptPath, FaultTestType, ObjectType, KeyTemp, TestProject)
-
+        # CommonFun.CreateScript(FaultScriptTemplateContent, ScriptPath, FaultTestType, ObjectType, KeyTemp, TestProject)
+        CommonFun.GenerateScripts_BaseTemplate(FaultScriptTemplateContent,ReplaceDict,ScriptPath,KeyTemp,FaultTestType)
         if ObjectType == "DCS":
-            CommonFun.CreateScript(NomrlaScriptTemplateContent, ScriptPath, NormalTestType, ObjectType, KeyTemp,
-                                   TestProject)
+            # CommonFun.CreateScript(NomrlaScriptTemplateContent, ScriptPath, NormalTestType, ObjectType, KeyTemp,
+            #                        TestProject)
+            CommonFun.GenerateScripts_BaseTemplate(NomrlaScriptTemplateContent, ReplaceDict, ScriptPath, KeyTemp,
+                                                   NormalTestType)
+
+        # CommonFun.GenerateScripts_BaseTemplate(ScriptTemplateContent, ReplaceDict, ScriptPath, KeyTemp, TestType)
 
     # '''
 
