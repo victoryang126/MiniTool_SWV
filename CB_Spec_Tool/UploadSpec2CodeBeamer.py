@@ -18,7 +18,7 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     browser.maximize_window()
     # 点击Login
     browser.find_element(by=By.NAME, value="saml").click()
-
+    # browser.find_element(by=By.XPATH, value="//input[@title='SSL-Login']").click()
     # 等待进入页面以后拖拉需要上传的spec进去
     # time.sleep(10)
     print(1)
