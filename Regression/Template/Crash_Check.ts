@@ -85,7 +85,7 @@ if(CheckTestEnvironment())
     
     if(ExpectDTC == "NONE")
     {
-        var WL = "OFF"；
+        var WL = "OFF";
         FaultInfo_Str = "NONE";
     }
     else

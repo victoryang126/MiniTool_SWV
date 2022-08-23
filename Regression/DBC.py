@@ -142,6 +142,7 @@ def ImportDataIntoExcel(DBCPath, ExcelPath):
             i in range(len(MsgIDList))]
     book = load_workbook(ExcelPath)
     ws = book["Communication"]
+
     for row in data:
         ws.append(row)
     rows = ws.rows

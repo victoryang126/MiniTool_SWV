@@ -161,21 +161,61 @@ def GenerateSnapshot(SSDSPath, SheetName,SheetName2,iniFile):
         json.dump(Snapshot_Dict, ini_f,indent = 4)
         ini_f.write(";\n")
 
+def GenerateSnapshotSWV(snapshotPath,SheetName):
+    df_Snapshot = pd.read_excel(snapshotPath, SheetName, dtype='str')
+    df_Snapshot.drop(df_Snapshot.columns[0],axis =1,inplace=True)
+    # print(df_Snapshot.columns)
+
+    df_Snapshot_DID = df_Snapshot[["SnapshotDataIdentification","DID"]]
+    df_Snapshot_DID = df_Snapshot_DID.pivot_table(index=['SnapshotDataIdentification'], aggfunc=lambda x: ','.join(x))
+    # print(df_Snapshot_DID)
+
+    df_Snapshot_DTC = df_Snapshot[["DTC","Snapshot"]].dropna()
+    df_Snapshot_DTC["Snapshot"] = df_Snapshot_DTC["Snapshot"].str.rstrip()
+    # 判断 _VerifiesDOORSRequirements  split为多个元素的时候，拓展元素
+    df_Snapshot_ID = df_Snapshot_DTC["Snapshot"].str.split(',', expand=True)
+    df_Snapshot_ID = df_Snapshot_ID.stack()
+    df_Snapshot_ID = df_Snapshot_ID.reset_index(level=1, drop=True)  # 剔除二级index
+    df_Snapshot_ID.name = "SnapshotDataIdentification"
+    df_Snapshot_DTC = df_Snapshot_DTC.drop(['Snapshot'], axis=1).join(df_Snapshot_ID)  # 根据index 添加 _VerifiesDOORSRequirements
+    # print(df_Snapshot_DTC)
+
+    df_Snapshot = pd.merge(df_Snapshot_DTC,df_Snapshot_DID,on = "SnapshotDataIdentification",how = "left")
+    # print(df_Temp["SnapshotDataIdentification"])
+    df_Snapshot["SnapshotDataIdentification"] = df_Snapshot["SnapshotDataIdentification"].apply(getSnapshotType2)
+    df_Snapshot = df_Snapshot.pivot_table(index=['DTC'], columns=["SnapshotDataIdentification"],
+                                          aggfunc=lambda x: ','.join(x))
+    print(df_Snapshot)
+    df_Snapshot.set_axis([x[1] for x in df_Snapshot.columns.values], axis='columns', inplace=True)  #
+    # print(df_Snapshot)
+    df_Snapshot.fillna("undefined",inplace= True)
+    # Snapshot_Dict = df_Snapshot.to_dict(orient="index")
+    # print(df_Snapshot)
+    # print(df_Snapshot.columns)
+
+def getSnapshotType2(x):
+    if x[2:] == "00":
+        return x[0:2]
+    else:
+        return x[0:2]+"_addi"
 
 if __name__ == '__main__':
-    SSDSPath = "E:\Project_Test\Geely_Geea2_HX11\SRS Supplementary Restraint System (VDS) 8889420300  G (2021-12-17) Rev06.xlsx"
-    # SSDSPath = "..\DataSource\SSDS_Customer.xlsx"
-    # E:\GitHub\MiniTool\DataSource\SSDS_Customer.xlsx
-    iniFile = "..\DataSource\DTCList.ini"
-    SnapshotiniFile = "..\Data\SnapShot.ts"
-    SnapshotDID_File = "..\Data\SnapShotDID.ts"
-    # GenerateDTCiniFile(SSDSPath, "DTC", iniFile)
-    SheetName = "DTC"
-    OutPutFile = r"C:\Project\Geely_GEEA2_HX11\ARiA_Configuration\P30_01\Scripts\AA\AA_Geely_GEEA2_HX11_DTC_SSDS.ts"
-    # GenerateSnapotDIDDict(SSDSPath, "Snapshot DID", SnapshotDID_File)
-    # GenerateDTCiniFile(SSDSPath,SheetName,iniFile)
-    # GenerateSnapotIni(SSDSPath, "Snapshot", SnapshotiniFile)
-    # GenerateSnapotDict(SSDSPath, "Snapshot", SnapshotiniFile)
-    # GenerateDTCDictFromSSDS(SSDSPath, SheetName, OutPutFile)
-    # GenerateSnapotDIDIni(SSDSPath, "Snapshot DID", SnapshotiniFile)
-    GenerateSnapshot(SSDSPath, "Snapshot", "Snapshot DID",SnapshotDID_File)
+    snapshotPath = r"E:\GitHub\MiniTool_SWV\Draft\Snapshot.xlsx"
+    SheetName = "Global_Local_Snapshot"
+    GenerateSnapshotSWV(snapshotPath, SheetName)
+    # SSDSPath = "E:\Project_Test\Geely_Geea2_HX11\SRS Supplementary Restraint System (VDS) 8889420300  G (2021-12-17) Rev06.xlsx"
+    # # SSDSPath = "..\DataSource\SSDS_Customer.xlsx"
+    # # E:\GitHub\MiniTool\DataSource\SSDS_Customer.xlsx
+    # iniFile = "..\DataSource\DTCList.ini"
+    # SnapshotiniFile = "..\Data\SnapShot.ts"
+    # SnapshotDID_File = "..\Data\SnapShotDID.ts"
+    # # GenerateDTCiniFile(SSDSPath, "DTC", iniFile)
+    # SheetName = "DTC"
+    # OutPutFile = r"C:\Project\Geely_GEEA2_HX11\ARiA_Configuration\P30_01\Scripts\AA\AA_Geely_GEEA2_HX11_DTC_SSDS.ts"
+    # # GenerateSnapotDIDDict(SSDSPath, "Snapshot DID", SnapshotDID_File)
+    # # GenerateDTCiniFile(SSDSPath,SheetName,iniFile)
+    # # GenerateSnapotIni(SSDSPath, "Snapshot", SnapshotiniFile)
+    # # GenerateSnapotDict(SSDSPath, "Snapshot", SnapshotiniFile)
+    # # GenerateDTCDictFromSSDS(SSDSPath, SheetName, OutPutFile)
+    # # GenerateSnapotDIDIni(SSDSPath, "Snapshot DID", SnapshotiniFile)
+    # GenerateSnapshot(SSDSPath, "Snapshot", "Snapshot DID",SnapshotDID_File)

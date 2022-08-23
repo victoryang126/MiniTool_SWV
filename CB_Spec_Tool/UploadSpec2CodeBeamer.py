@@ -173,7 +173,11 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
     # TargetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
     print("Find Case Folder ID")
-    browser.find_element(by=By.XPATH, value=CaseFolder_Filter).click()
+    try:
+        browser.find_element(by=By.XPATH, value=CaseFolder_Filter).click()
+    except Exception as err:
+        print("Can't find the ID, try to check the collapse item")
+
 
     print("Click Case Folder ID")
     # MoreButton = browser.find_element(by=By.XPATH, value="//img[@data-tooltip='more']")
@@ -232,12 +236,12 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
 
 if __name__ == '__main__':
     pass
-    CaseTrackerID = "22106033"
-    CaseFolderID = "10367368"
+    CaseTrackerID = "35734097"
+    CaseFolderID = "14334688"
     # # CaseFolderID = "11450597"
     CB_Spec_Folder = r"C:\Users\victor.yang\Desktop\Work\CB"
     CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
-    UploadSpec2CB(CaseTrackerID,CB_Spec_Generate,CaseFolderID,[])
+    # UploadSpec2CB(CaseTrackerID,CB_Spec_Generate,CaseFolderID,[])
     # CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
     # InitCaseList = [
     #     "Test Case 1 - First Frame Transmitted Time and Init value",
