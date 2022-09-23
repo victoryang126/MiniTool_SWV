@@ -19,11 +19,12 @@ from Diagnostic_Parameter import CANDWidget
 from VBFGenerate import VBFGenerateWidget
 from CB_Spec_Tool import CB_Spec_Tool_Widget
 from GenerateScript import GenerateScriptsWidget
+from CB_Tool_SC3 import CB_Tool_Widget
 
 class MiniTool(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('MiniTool V1.14.2')
+        self.setWindowTitle('MiniTool V1.15')
         self.setWindowIcon(QIcon('./Images/title.ico'))
         self.setGeometry(150,150,1300,680)
 
@@ -37,6 +38,7 @@ class MiniTool(QMainWindow):
         self.list.insertItem(5, 'VBFGenerate')
         self.list.insertItem(6, 'CB_Spec_Tool')
         self.list.insertItem(7, 'GenerateScript')
+        self.list.insertItem(8, 'CB_Tool_SC3')
         # 右边StackedWidget
         self.stack = QStackedWidget()
         self.stack.addWidget(RegressionWidget())
@@ -47,6 +49,7 @@ class MiniTool(QMainWindow):
         self.stack.addWidget(VBFGenerateWidget())
         self.stack.addWidget(CB_Spec_Tool_Widget())
         self.stack.addWidget(GenerateScriptsWidget())
+        self.stack.addWidget(CB_Tool_Widget())
         hbox = QHBoxLayout()
         hbox.addWidget(self.list)
 
