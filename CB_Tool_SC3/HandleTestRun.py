@@ -44,27 +44,27 @@ def ReadResult_TableOfContent(Result):
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
     pd.set_option('max_colwidth', 200)
-    print(1)
+    # print(1)
     df_result = pd.read_excel(Result, "Table Of Contents", dtype='str')
-    print(2)
+    # print(2)
     ColumnsList = ["Object Text","_VerificationStatus"]
     Result_Summary = df_result.iloc[0,4]
     TestRun_TrackerName = df_result.iloc[1, 4]
     CaseTrackerID = df_result.iloc[2, 4]
     CB_Spec_Folder_ID = df_result.iloc[3, 4]
     Release = df_result.iloc[4,4]
-    print(df_result)
+    # print(df_result)
     print("#"*30)
     # print("*"*30)
     # print(Result_Summary)
-    print(CaseTrackerID,CB_Spec_Folder_ID,Release)
+    # print(CaseTrackerID,CB_Spec_Folder_ID,Release)
     # print("*" * 30)
     df_result = df_result[ColumnsList]
     df_result = df_result.iloc[7:,:]
     df_result.columns = ["Name","RUN RESULT"]
     df_result.set_index("Name",inplace = True,drop = False)
 
-    print(df_result)
+    # print(df_result)
     df_result = df_result.fillna("undefined")
     df_result["RUN RESULT"] = df_result["RUN RESULT"].apply(ConvertExcelResult2TRunResult)
     return df_result, CaseTrackerID, CB_Spec_Folder_ID, Release,TestRun_TrackerName
@@ -78,7 +78,7 @@ def Handle_TestRun_Report(Excel,Df_Result):
 
     wb = openpyxl.load_workbook(Excel)
     ws = wb.active
-    print(ws.max_row)
+    # print(ws.max_row)
     #Name Row 3, col 2
     name_col =2
     # Run Result row 3, col 9
@@ -97,14 +97,16 @@ def Handle_TestRun_Report(Excel,Df_Result):
     """
     while start_row < ws.max_row:
         case_name = ws.cell(start_row,name_col).value
-        print(case_name)
+        # print(case_name)
         # print(Df_Result.index)
         if case_name in Df_Result.index:
             ws.cell(start_row, result_col).value = Df_Result.loc[case_name,"RUN RESULT"]
             # ws.cell(start_row, release_col).value = Release
             start_row += step_up
         else:
-            raise Exception(case_name +" not in index")
+            #2022/09/27 不处理这种异常，跳到下一个case
+            # raise Exception(case_name +" not in index")
+            start_row += step_up
     wb.save(Excel)
 
     # 必须使用excel app 重新打开保存一下文件，否则会报错

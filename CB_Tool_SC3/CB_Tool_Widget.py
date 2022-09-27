@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QDialog, QFileDi
 from PyQt5.QtCore import pyqtSlot,Qt
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QPalette
+import numpy as np
 
 class CB_Tool_Widget(QWidget):
 
@@ -30,7 +31,7 @@ class CB_Tool_Widget(QWidget):
         self.Release = ""
         self.CaseTrackerID = ""
         self.CaseFolderID = ""
-        self.Test_Run_TrackerName = ""
+        self.TestRun_TrackerName = ""
 
         self.CB_Spec_FromCB = ""
         self.FinalCBSpec = ""
@@ -40,6 +41,8 @@ class CB_Tool_Widget(QWidget):
         self.TestRun_Report = ""
         self.TestRun_Status = ""
         self.TestRun_Result = ""
+
+        self.PTC_Result_List = []
 
 
     # 定义错误提示框
@@ -82,6 +85,15 @@ class CB_Tool_Widget(QWidget):
             WhiteColor.setColor(QPalette.Window, Qt.white)
             self.__ui.TestRun_Result.setPalette(WhiteColor)
             self.__ui.TestRun_Status.setPalette(WhiteColor)
+    def check_testrun_tackename(self):
+        print(self.TestRun_TrackerName == np.nan,self.TestRun_TrackerName)
+        if np.isnan(self.TestRun_TrackerName):
+            self.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
+        else:
+            self.__ui.LE_TestRun_TrackerName.setText(self.TestRun_TrackerName)
+
+        if not self.TestRun_TrackerName:
+            raise Exception("TestRun_TrackerName can't be empty")
 
     ########################Test Run ################################
     @pyqtSlot()
@@ -101,7 +113,7 @@ class CB_Tool_Widget(QWidget):
         ### 后期加函数处理
         self.set_status_result(False)
         try:
-            Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.Test_Run_TrackerName = ReadResult_TableOfContent(
+            Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.TestRun_TrackerName = ReadResult_TableOfContent(
                 self.PTC_Result)
 
             # if self.CaseTrackerID or self.CB_Spec_Folder_ID or self.Release:
@@ -109,11 +121,8 @@ class CB_Tool_Widget(QWidget):
             print(self.CaseTrackerID)
             print(self.CaseFolderID)
             print(self.Release)
-            print(self.Test_Run_TrackerName)
-            if self.Test_Run_TrackerName:
-                self.Test_Run_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
-            else:
-                self.__ui.LE_TestRun_TrackerName.setText(self.Test_Run_TrackerName)
+            # print(self.TestRun_TrackerName)
+            self.check_testrun_tackename()
             self.__ui.LE_CaseTrackerID.setText(self.CaseTrackerID)
             self.__ui.LE_CB_Spec_Folder_ID.setText(self.CaseFolderID)
             self.__ui.LE_Release.setText(self.Release)
@@ -123,7 +132,7 @@ class CB_Tool_Widget(QWidget):
                 "CaseTrackerID": self.CaseTrackerID,
                 "CaseFolderID": self.CaseFolderID,
                 "Test_Run_Folder": self.CurrentPath,
-                "Test_Run_TrackerName": self.Test_Run_TrackerName,
+                "TestRun_TrackerName": self.TestRun_TrackerName,
                 "Df_Result": Df_Result,
                 "Release": self.Release
             }
@@ -140,7 +149,7 @@ class CB_Tool_Widget(QWidget):
     @pyqtSlot(str)
     def on_LE_TestRun_TrackerName_textChanged(self):
         if self.__ui.LE_TestRun_TrackerName.text():
-            self.Test_Run_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
+            self.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
 
 
 
@@ -170,14 +179,14 @@ class CB_Tool_Widget(QWidget):
         # self.CaseTrackerID = "10574131"
         # self.CaseFolderID = "15704840"
         # self.Release = "CHERY_T26&M1E_Release P10"
-        # self.Test_Run_TrackerName = "TR_SHR_TestRuns"
+        # self.TestRun_TrackerName = "TR_SHR_TestRuns"
         pass
 
     @pyqtSlot()
     def on_BT_Restart_TestRun_clicked(self):
         self.set_status_result(False)
         try:
-            Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.Test_Run_TrackerName = ReadResult_TableOfContent(
+            Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.TestRun_TrackerName = ReadResult_TableOfContent(
                 self.PTC_Result)
 
             # if self.CaseTrackerID or self.CB_Spec_Folder_ID or self.Release:
@@ -187,10 +196,7 @@ class CB_Tool_Widget(QWidget):
             self.__ui.LE_CB_Spec_Folder_ID.setText(self.CaseFolderID)
             self.__ui.LE_Release.setText(self.Release)
             #为了 让旧模板的人通过填写TestRun的方式，而不是在Excel里填写
-            if self.Test_Run_TrackerName:
-                self.Test_Run_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
-            else:
-                self.__ui.LE_TestRun_TrackerName.setText(self.Test_Run_TrackerName)
+            self.check_testrun_tackename()
             args = {
                 "Test_Run_ID": self.TestRun_ID,
                 "Test_Run_Folder": self.CurrentPath,
@@ -209,16 +215,50 @@ class CB_Tool_Widget(QWidget):
             self.WarningMessage(err)
 
 
-    # @pyqtSlot()
-    # def on_BT_Upload_TestRun_clicked(self):
-    #     self.set_status_result(False)
-    #     try:
-    #         print(1)
-    #         self.TestRun_Status, self.TestRun_Result = ReUpload_TestRun(self.TestRun_ID,self.TestRun_Report)
-    #         print(2)
-    #         self.set_status_result()
-    #     except Exception as err:
-    #         self.WarningMessage(err)
+    @pyqtSlot()
+    def on_BT_PTC_Results_clicked(self):
+        self.PTC_Result_List = []
+        self.__ui.textBrowser_TestResults.clear()
+        Files, filetype = QFileDialog.getOpenFileNames(self,
+                                                           "Select Test Result files",
+                                                           self.CurrentPath,
+                                                           "Excel(*.xlsm *.xlsx)")
+        # print(FileNames)
+        for file in Files:
+            self.__ui.textBrowser_TestResults.append(file)
+            self.PTC_Result_List = Files[:]
+        if Files:
+            self.CurrentPath =  os.path.abspath(Files[0]) if os.path.isdir(Files[0]) else os.path.dirname(Files[0])
+
+    @pyqtSlot()
+    def on_BT_Init_Upload_TestRuns_clicked(self):
+        for ptc_result in self.PTC_Result_List:
+            try:
+                Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.TestRun_TrackerName = ReadResult_TableOfContent(
+                    ptc_result)
+
+                # if self.CaseTrackerID or self.CB_Spec_Folder_ID or self.Release:
+                #     raise Exception("CaseTrackerID or CB_Spec_Folder_ID or Release can't be empty")
+                self.check_testrun_tackename()
+                args = {
+                    "CaseTrackerID": self.CaseTrackerID,
+                    "CaseFolderID": self.CaseFolderID,
+                    "Test_Run_Folder": self.CurrentPath,
+                    "TestRun_TrackerName": self.TestRun_TrackerName,
+                    "Df_Result": Df_Result,
+                    "Release": self.Release
+                }
+                self.TestRun_Report, self.TestRun_ID, self.TestRun_Status, self.TestRun_Result = CreateTestRun_UpdateResult(
+                    **args)
+                print("### Upload" + ptc_result + " to test run,TestRun_Status:" + self.TestRun_Status + "TestRun_Result: " + self.TestRun_Result)
+                # self.__ui.LE_TestRun_Report.setText(self.TestRun_Report)
+                # self.__ui.LE_TestRun_ID.setText(self.TestRun_ID)
+                # self.__ui.TestRun_Status.setText(self.TestRun_Status)
+                # self.__ui.TestRun_Result.setText(self.TestRun_Result)
+                # 根据结果设置颜色
+                # self.set_status_result(True)
+            except Exception as err:
+                self.WarningMessage(err)
 
 
 

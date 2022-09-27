@@ -55,7 +55,7 @@ if(CheckTestEnvironment())
     //1.0.Load Crash Curves
     //-----------------------------TEST STEP------------------------------//
     CommentStep("Load Crash Curves" + Test_ObjectStr)
-
+	
     CrashLoadPulse(CrashCurves);
 
     //2.0.CrashSimulate
@@ -63,6 +63,8 @@ if(CheckTestEnvironment())
     CommentStep("CrashSimulate")
     CrashSimulate();
     CAN.InsertLogMessage('Trigger');
+    Thread.Sleep(1000);
+    ${CrashOutput}
     Thread.Sleep(8000);
     //3.0.Check if deploy the expected loops
     //-----------------------------TEST STEP------------------------------//
@@ -70,7 +72,7 @@ if(CheckTestEnvironment())
     CrashGetAllTTF();
     CompareLoopDeploy(ExpectLoops);
 
-    ${CrashOutput}
+  
 
     //4.0.Check if expected DTC shown
     //-----------------------------TEST STEP------------------------------//
@@ -85,7 +87,7 @@ if(CheckTestEnvironment())
     
     if(ExpectDTC == "NONE")
     {
-        var WL = "OFF"；
+        var WL = "OFF";
         FaultInfo_Str = "NONE";
     }
     else

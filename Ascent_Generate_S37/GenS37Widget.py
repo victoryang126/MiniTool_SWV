@@ -289,6 +289,7 @@ class GenS37Widget(QWidget):
         # print(self.__ui.TextB_GenS37_Files.text())
         self.GenS37_Files += FileNames
         self.GenS37_Files_InTextB = self.GenS37_Files[:]
+        #当时为啥加了一个变量 GenS37_Files_InTextB 和 GenS37_Files 有啥去吧
 
         try:
             path = self.GenS37_Files[0]

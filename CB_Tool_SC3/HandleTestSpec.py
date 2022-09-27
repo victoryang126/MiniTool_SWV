@@ -191,7 +191,33 @@ def RepaceDoorsID_SaveMacroEcel(ExcelAPP,Spec,Df_spec,LastSheet_Name,RowSize):
 
 # ''
 
-#1. 读取spec的
+def ConvertVerifisPTCFormat_ToCBFormat(CellValue):
+    # print(type(CellValue))
+
+    if CellValue != "":
+        print(1)
+        CellValue = CellValue.strip()
+        cell_vaule_list = CellValue.split("\n")
+        cell_vaule_list = [ "[ISSUE:" + x + "]" for x in cell_vaule_list if IsCBID(x)]
+        CellValue= "\n".join(cell_vaule_list)
+        return CellValue
+    else:
+        print(2)
+        return CellValue
+
+
+def ConvertIncidentPTCFormat_ToCBFormat(CellValue):
+    #不为空,则处理，否则不处理
+    if CellValue != "":
+        CellValue = CellValue.strip()
+        cell_vaule_list = CellValue.split("\n")
+        if IsCBID(cell_vaule_list[0]): #如果第一个元素不为CBID,则也是comment,返回原来的值
+            cell_vaule_list = ["[ISSUE:" + x + "]" for x in cell_vaule_list if IsCBID(x)]
+            CellValue = "\n".join(cell_vaule_list)
+        return CellValue
+    else:
+        return CellValue
+
 def ReadSpec_TableOfContent(Spec):
     """
     读取Test specification 的TableOfContent
@@ -252,12 +278,6 @@ def ReadSpec_TableOfContent(Spec):
     Df_spec.fillna("", inplace=True)
     Df_spec.sort_index(inplace=True) #
 
-    #_VerifiesDOORSRequirements 是换行的过滤
-    # Df_spec = Df_spec[Df_spec['_VerifiesDOORSRequirements'].str.strip() != ""]
-    # Df_spec = Df_spec[Df_spec['_Comment'].str.strip() != ""]
-
-
-
     #根据版本好添加summary
     df_Summary = pd.DataFrame({"Object Text": ["Test Summary in " + Release], "Description": [Result_Summary],"_VerifiesDOORSRequirements":[" "],"Type":["Information"]})
     print("*" * 30)
@@ -272,6 +292,121 @@ def ReadSpec_TableOfContent(Spec):
     #    '_VerificationStatus', '_Comment'],
     #   dtype='object')
     return Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release
+
+
+
+def ReadSpec_TableOfContent_0925(Spec):
+    """
+    读取Test specification 的TableOfContent
+    然后将一个 case 对应一个单元格里面需求ID
+    根据单元格的需求ID的数量,
+    转换成多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+    :param Spec: Test specification
+    :return:Df_spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+    """
+    print("ReadSpec_TableOfContent")
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
+    pd.set_option('max_colwidth', 200)
+    df_spec = pd.read_excel(Spec, "Table Of Contents", dtype='str')
+    ColumnsList = ["Object Text","_VerificationStatus", "_VerifiesDOORSRequirements","_Comment"]
+    Result_Summary = df_spec.iloc[0,4]
+    TestRun_TrackerName = df_spec.iloc[1, 4]
+    CaseTrackerID = df_spec.iloc[2, 4]
+    CB_Spec_Folder_ID = df_spec.iloc[3, 4]
+    Release = df_spec.iloc[4,4]
+
+    df_spec = df_spec[ColumnsList]
+    df_spec = df_spec.iloc[7:,:]
+    df_spec.dropna(subset = ["Object Text"],inplace = True)
+    df_spec["_VerifiesDOORSRequirements"] = df_spec["_VerifiesDOORSRequirements"].str.rstrip()
+
+
+    #判断 _VerifiesDOORSRequirements  split为多个元素的时候，拓展元素
+    Df_ReqID = df_spec['_VerifiesDOORSRequirements'].str.split('\n', expand=True)
+    # 将单元格列表内容分开成多行， 会形成二级index
+    #   0    1                          0         11
+    #   11  12               =>         1         12
+    Df_ReqID = Df_ReqID.stack()
+    Df_ReqID = Df_ReqID.reset_index(level=1,drop=True) # 剔除二级index,
+    Df_ReqID.name = "_VerifiesDOORSRequirements"
+    Df_specTemp1 = df_spec.drop(['_VerifiesDOORSRequirements', "_Comment"], axis=1).join(Df_ReqID)  # 根据index 添加 _VerifiesDOORSRequirements
+    Df_specTemp1['_Comment'] = ""
+
+    #将Incident ID分行,然后转换为DataFrame,_VerifiesDOORSRequirements 列设置为空
+    Df_IssueID = df_spec['_Comment'].str.split('\n', expand=True)
+    Df_IssueID = Df_IssueID.stack()
+    Df_IssueID = Df_IssueID.reset_index(level=1,drop=True) # 剔除二级index,
+    Df_IssueID.name = "_Comment"
+    data = {"_Comment" :Df_IssueID.values}
+    # print(data)
+    Df_IssueID = pd.DataFrame(data =data ,index= Df_IssueID.index)
+    Df_IssueID["_VerifiesDOORSRequirements"] = ""
+    Df_specTemp2 = df_spec.drop(['_Comment','_VerifiesDOORSRequirements'], axis=1).join(Df_IssueID,how="inner")  # 根据index 添加 _VerifiesDOORSRequirements
+
+    #合并表格，然后按照index 重新排序
+    df_spec = pd.concat([Df_specTemp1,Df_specTemp2],axis=0)
+    # 上面的步骤会把Df_IssueID  放到最后，需要通过sort index将 对应case的ID单元啦上去
+    df_spec.fillna("", inplace=True)
+    df_spec.sort_index(inplace=True) #
+
+    #根据版本好添加summary
+    # df_Summary = pd.DataFrame({"Object Text": ["Test Summary in " + Release], "Description": [Result_Summary],"_VerifiesDOORSRequirements":[" "],"Type":["Information"]})
+    # print("*" * 30)
+    # print(Df_spec.head(20))
+    # print("*"*30)
+    # Df_spec = pd.concat([df_Summary, Df_spec])
+    df_spec.fillna("",inplace=True)
+    print(df_spec.columns)
+    # Index(['Object Text', 'Description', '_VerifiesDOORSRequirements', 'Type',
+    #        '_VerificationStatus', '_Comment'],
+    # //Index(['Object Text', 'Description', '_VerifiesDOORSRequirements',
+    #    '_VerificationStatus', '_Comment'],
+    #   dtype='object')
+    return df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release
+
+#1. 读取spec的
+def ReadSpec_TableOfContent_SC3(Spec):
+    """
+    读取Test specification 的TableOfContent
+    然后将一个 case 对应一个单元格里面需求ID
+    根据单元格的需求ID的数量,
+    转换成多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+    :param Spec: Test specification
+    :return:Df_spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+    """
+    print("ReadSpec_TableOfContent")
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
+    pd.set_option('max_colwidth', 200)
+    df_spec = pd.read_excel(Spec, "Table Of Contents", dtype='str')
+
+    #需要加入 TestMethod的方式
+    ColumnsList = ["Object Text","_VerificationStatus", "_VerifiesDOORSRequirements","_Comment"]
+    Result_Summary = df_spec.iloc[0,4]  # 2022/08/25 后期对里面的start date和End date进行处理
+    TestRun_TrackerName = df_spec.iloc[1, 4]
+    CaseTrackerID = df_spec.iloc[2, 4]
+    CB_Spec_Folder_ID = df_spec.iloc[3, 4]
+    Release = df_spec.iloc[4,4]
+    # print("*"*30)
+    # print(Result_Summary)
+    print(CaseTrackerID,CB_Spec_Folder_ID,Release)
+    # print("*" * 30)
+    df_spec = df_spec[ColumnsList]
+    df_spec = df_spec.iloc[7:,:]
+    df_spec.dropna(subset = ["Object Text"],inplace = True)
+    df_spec["_VerifiesDOORSRequirements"] = df_spec["_VerifiesDOORSRequirements"].str.rstrip()
+    # ColumnsList = ["Object Text", "_VerificationStatus", "_VerifiesDOORSRequirements", "_Comment"]
+    df_spec.columns = ["Name","Status","Verifies","Incident ID"]
+
+    df_spec.fillna("",inplace = True)
+    df_spec["Verifies"] = df_spec["Verifies"].apply(ConvertVerifisPTCFormat_ToCBFormat)
+    df_spec["Incident ID"] = df_spec["Incident ID"].apply(ConvertIncidentPTCFormat_ToCBFormat)
+    # df_spec["Verifies"] = df_spec["Verifies"].apply(lambda x: "[ISSUE:" + xi + "]" for xi in x if IsCBID(xi) else "")
+    print(df_spec[["Verifies","Incident ID"]])
+    # print(df_spec.iloc[1,2])
+
+    return df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release,TestRun_TrackerName
 
 
 def ReadLoopUp(LoopUP):
@@ -292,52 +427,6 @@ def ReadLoopUp(LoopUP):
     return Df_LoopUp
 
 
-# # 3.生成表格
-# def GenerateSpec_CB(Df_spec,Df_LoopUp,SpecCB):
-#     # ColumnsList = ["ID", "Priority","Name","Description","Pre-Action","Post-Action","Test Steps.Action","Test Steps.Expected result","Test Steps.Critical","Test Parameters","Verifies","Status","Type"]
-#     ColumnsList = ["ID", "Parent", "Priority", "Name", "Description", "Pre-Action", "Post-Action",
-#                    "Test Steps.Action", "Test Steps.Expected result",
-#                    "Test Steps.Critical", "Test Parameters", "Verifies",
-#                    "Status", "Type", "_Original_TestCaseId", "_Test_Technique",
-#                    "_VerifiesNonCbRequirements", "_LastReviewDate", "_ScriptPath",
-#                    "_TestType", "_RegressionStrategy", "_FunctionGroup", "_Feature",
-#                    "Functional Safety Relevant", "Cyber Security Relevant"]
-#     df_SpecCB = pd.DataFrame(columns= ColumnsList)
-#     # print(df_SpecCB)
-#     # ColumnsList_Temp = ["Name","Verifies"]
-#
-#     Df_spec['_VerifiesDOORSRequirements'] = Df_spec['_VerifiesDOORSRequirements'].apply(lambda x:x if x not in Df_LoopUp.index else "[ISSUE:" + Df_LoopUp.loc[x,"CBID"] + "]")
-#
-#     Df_spec.columns = ["Name","Verifies"]
-#
-#     # print(Df_LoopUp.loc["undefined","CBID"])
-#     df_SpecCB = df_SpecCB.append(Df_spec)
-#     #
-#     # print(df_SpecCB)
-#     # print(Df_spec)
-#     #CB格式要求，前面加三个空格
-#     df_SpecCB["Name"] = "   " + df_SpecCB["Name"]
-#     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
-#     # print(Df_LoopUp)
-
-# def to_excel_auto_column_weight(df, writer, sheet_name):
-#     """DataFrame保存为excel并自动设置列宽"""
-#     df.to_excel(writer, sheet_name=sheet_name, index=False)
-#     #  计算表头的字符宽度
-#     column_widths = (
-#         df.columns.to_series().apply(lambda x: len(x.encode('utf-8'))).values
-#     )
-#     #  计算每列的最大字符宽度
-#     max_widths = (
-#         df.astype(str).applymap(lambda x: len(x.encode('utf'))).agg(max).values
-#     )
-#     # 计算整体最大宽度
-#     widths = np.max([column_widths, max_widths], axis=0)
-#     # 设置列宽
-#     worksheet = writer.sheets[sheet_name]
-#     for i, width in enumerate(widths, 1):
-#         # openpyxl引擎设置字符宽度时会缩水0.5左右个字符，所以干脆+2使左右都空出一个字宽。
-#         worksheet.column_dimensions[get_column_letter(i)].width = width + 2
 
 def GenerateSpec_CB_Init(Df_spec,Release, SpecCB):
     """
@@ -372,8 +461,9 @@ def GenerateSpec_CB_Init(Df_spec,Release, SpecCB):
     df_SpecCB["Type"] = Df_spec["Type"]
 
     df_SpecCB["_VerifiesNonCbRequirements"] = Df_spec["Verifies"].apply(lambda x: x if not IsCBID(x) else "")
-    df_SpecCB["Incident ID"] = Df_spec["Incident ID"].apply(lambda x: "[ISSUE:" + x + "]" if IsCBID(x) else "")
-    df_SpecCB["Reserve_1"] = Df_spec["Incident ID"].apply(lambda x: x if not IsCBID(x) else "")
+
+    # df_SpecCB["Incident ID"] = Df_spec["Incident ID"].apply(lambda x: "[ISSUE:" + x + "]" if IsCBID(x) else "")
+    # df_SpecCB["Reserve_1"] = Df_spec["Incident ID"].apply(lambda x: x if not IsCBID(x) else "")
     # df_SpecCB["Release"] = Release
     # print(df_SpecCB[["Name","Verifies"]])
     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
@@ -617,40 +707,18 @@ def GetInitCaseList(FinnalSpec):
 
 if __name__ == '__main__':
     pass
-    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result.xlsm"
-    Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release= ReadSpec_TableOfContent(Spec)
+    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\CANDI_P32_Case.xlsm"
+    # Df_spec,CaseTrackerID,CB_Spec_Folder_ID,Release,TestRun_TrackerName= ReadSpec_TableOfContent(Spec)
     SpecCB = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CB.xlsx"
     SpecCB_FromCB = r"C:\Users\victor.yang\Desktop\Work\CB\84194_GWM_D30_RCS_SC2_2S - TC_L30_DES_SW_Test_Cases (4).xlsx"
     CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
-    GenerateSpec_CB_Init(Df_spec,Release,CB_Spec_Generate)
-    df_SpecCB_FromCB, Df_ID_Case_FromCB =  ReadSpecCB_FromCB2(SpecCB_FromCB)
-    df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")
-    SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer_Modify.xlsx"
-
-
-    GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB, df_SpecCB_FromCB,Release,
-                                    SpecCB_Modify)
-    # GenerateSpec_CB_Init(Df_spec,Release,SpecCB)
-    # ReadSpec_TableOfContent(Spec)
-    # pass
-    # Spec = "C:\Users\victor.yang\Desktop\Work\CB"
-    # LoopUP = "..\DataSource/P05CBID.txt"
-    # SpecCB_Generate = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
-    # SpecCB_Modify = "..\Data/CHT_SWV_GWM_P0102_2S_IMU_Test Result_CodeBeamer.xlsx"
-    # SpecCB_FromCB = "..\Data/84177 _GWM_P05_IMU_Test case.xlsx"
-    # Df_LoopUp = ReadLoopUp(LoopUP)
+    ReadSpec_TableOfContent_SC3(Spec)
+    ReadSpec_TableOfContent_0925(Spec)
+    # GenerateSpec_CB_Init(Df_spec,Release,CB_Spec_Generate)
+    # df_SpecCB_FromCB, Df_ID_Case_FromCB =  ReadSpecCB_FromCB2(SpecCB_FromCB)
+    # df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")
+    # SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer_Modify.xlsx"
     #
-    # Df_spec = ReadSpec_TableOfContent(Spec)
     #
-    # df_SpecCB_Generate = GenerateSpec_CB_Init(Df_spec, SpecCB_Generate)
-    # df_SpecCB_FromCB,Df_ID_Case_FromCB = ReadSpecCB_FromCB(SpecCB_FromCB)
-    # GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, SpecCB_Modify)
-    # a = r"C:/Users/victor.yang/Downloads\CHT_System_Validation_GWM_D30_CANC_Test Specification_CodeBeamer.xlsx"
-    # CodeBeamer_Spec = "E:\Project_Test\Geely_Geea2_HX11\DCS\CHT_System_Validation_Chery_T26_CANC_Test Specification_CodeBeamer.xlsx"
-    # GetInitCaseList(CodeBeamer_Spec)
-    # df = pd.read_excel(a)
-    # print(df.index)
-    # print(df["Verifies"])
-
-    # APISheet.
-    # print(row)
+    # GenerateSpec_CB_Modify2(df_SpecCB_Generate, Df_ID_Case_FromCB, df_SpecCB_FromCB,Release,
+    #                                 SpecCB_Modify)

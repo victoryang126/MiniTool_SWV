@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import os
 from CB_Tool_SC3 import HandleTestRun as HRun
+import datetime
 
 
 
@@ -52,8 +53,8 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     # browser.find_element(by=By.XPATH, value="//input[@title='SSL-Login']").click()
     # 等待进入页面以后拖拉需要上传的spec进去
     # time.sleep(10)
-    print(1)
-    print(CodeBeamer_Spec)
+    # print(1)
+    # print(CodeBeamer_Spec)
 
     browser.find_element(by=By.XPATH, value="//input[@type='file']").send_keys(CodeBeamer_Spec)
     time.sleep(10)
@@ -61,18 +62,18 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     browser.find_element(by=By.ID, value="_eventId_next").click()
     # Next
     #选择ID Mapping
-    print(1)
+    # print(1)
     id_slectorbutton= "//*[@id ='rawDataTable']/ tbody/tr[1]/th[2]/ button"
     browser.find_element(by=By.XPATH, value=id_slectorbutton).click()
-    print(2)
+    # print(2)
 
-    print(3)
+    # print(3)
     #查看下拉框菜单的内容
     ul_slector = "/ html / body / div[12] / ul"
     parent_elemnt = browser.find_element(by=By.XPATH, value=ul_slector)
     slection_list = parent_elemnt.find_element(by=By.XPATH, value=ul_slector).text.split("\n")
     # time.sleep(10)
-    print(slection_list)
+    # print(slection_list)
     if "ID" in slection_list:
         print("find the ID selection")
         id_filter = "/ html / body / div[12] / div / div / input"
@@ -132,17 +133,17 @@ def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
                 time.sleep(2)
 
         time.sleep(2)
-        print(1)
+        # print(1)
         # browser.execute_script(scroll_js_Top)
         time.sleep(10)
         while True:
             try:
                 time.sleep(10)
                 targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-                print(targetElement)
+                # print(targetElement)
                 time.sleep(10)
                 Action.drag_and_drop(dragElement, targetElement).perform()
-                print(33333)
+                # print(33333)
                 break;
             except Exception as err:
                 print("Can't find folder")
@@ -167,13 +168,13 @@ def DragCaseItem2oFolder(CaseTrackerID, CaseFolderID, InitCaseList):
 
     # 等待进入页面以后拖拉需要上传的spec进去
     # time.sleep(10)
-    print(1)
+    # print(1)
     # print(CodeBeamer_Spec)
 
     # 定位到即将拖入的folder
     CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
     targetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
-    print(targetElement)
+    # print(targetElement)
     Action = ActionChains(browser)
     Action.key_down(Keys.SHIFT)  # 按住sheift
     for CaseName in InitCaseList:
@@ -183,9 +184,9 @@ def DragCaseItem2oFolder(CaseTrackerID, CaseFolderID, InitCaseList):
         Action.click(dragElement)
         time.sleep(2)
     time.sleep(10)
-    print(1)
+    # print(1)
     Action.drag_and_drop(dragElement, targetElement).perform()
-    print(2)
+    # print(2)
     time.sleep(10)
 
 
@@ -233,7 +234,7 @@ def DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
     browser.find_element(by=By.ID, value="excelExportTabPane-tab").click()
 
     # browser.find_element(by=By.XPATH, value="//div[@id='excelExportTabPane-tab']").click()
-    print(11)
+    # print(11)
 
     browser.find_element(by=By.XPATH,value="//div[@id='excelExportTabPane']//label[@for='roundtripExcelExport']").click()
 
@@ -269,7 +270,7 @@ def Run_TestRun_InExcel(Browser,Test_Run_Folder,Df_Result):
     #定位当前的TestRun ID
     test_run_id_element = Browser.find_element(by=By.XPATH,value="//div[@class='actionMenuBar large']//span[@class='breadcrumbs-summary  tail']//span")
     Test_Run_ID = test_run_id_element.text.replace("#","")
-    print(Test_Run_ID)
+    # print(Test_Run_ID)
 
     print("Click run in  excel")
     ######################**************************************************
@@ -289,7 +290,7 @@ def Run_TestRun_InExcel(Browser,Test_Run_Folder,Df_Result):
     Test_Run_Report = Browser.find_element(by=By.XPATH, value="//img[@aria-label]").get_attribute("aria-label")
 
     Test_Run_Report_WithPath = os.path.join(Test_Run_Folder, Test_Run_Report)
-    print(Test_Run_Report_WithPath)
+    # print(Test_Run_Report_WithPath)
     """
     处理Test Run的数据,上传
     """
@@ -323,21 +324,26 @@ def UploadTestRun(Browser,Test_Run_Report_WithPath):
     Browser.implicitly_wait(30)
     Status = Browser.find_element(by=By.XPATH,
                                   value="//table[@class='propertyTable inlineEditEnabled']//tr[2]//td[@class='tableItem']//span").text
-    print(Status)
+    # print(Status)
 
     Result = Browser.find_element(by=By.XPATH, value="//td[@class='tableItem fieldColumn fieldId_15']").text
     print(Result)
-    time.sleep(10)
+    # time.sleep(10)
     return Status,Result
 
-def Generate_TestRun(Browser, CaseFolderID, Test_Run_TrackerName,Release):
+def Generate_TestRun(Browser, CaseFolderID, TestRun_TrackerName,Release):
 
     print("#################CreateTestRun################################")
     #
     CaseFolder_Filter = '//li[@id=\"' + CaseFolderID + '\"]'
     # TargetElement = browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
     print("Find Case Folder ID")
-    casefolder_element = Browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
+    try:
+        casefolder_element = Browser.find_element(by=By.XPATH, value=CaseFolder_Filter)
+    except Exception as err:
+        raise Exception("Can't find the case folder ID " + CaseFolderID)
+    aau_name = casefolder_element.get_attribute('title')
+
     action = ActionChains(Browser)
     action.click(casefolder_element)
     action.context_click(casefolder_element).perform()
@@ -364,7 +370,7 @@ def Generate_TestRun(Browser, CaseFolderID, Test_Run_TrackerName,Release):
 
     # print(search_pattern_element)
     print("input the test run name")
-    search_pattern_element.send_keys(Test_Run_TrackerName)  # 输入test Run 名称
+    search_pattern_element.send_keys(TestRun_TrackerName)  # 输入test Run 名称
 
     print("click search")
     search_button_element = Browser.find_element(by=By.XPATH, value="//input[@id='searchButton']")  # 点击搜索按钮
@@ -391,14 +397,26 @@ def Generate_TestRun(Browser, CaseFolderID, Test_Run_TrackerName,Release):
                                                    value="//input[@id='runOnlyAcceptedTestCases2']")  # 选择所有case
     all_case_select_element.click()
 
-
     # 需要考虑下滑到底部
     scroll_js_Down = "var q=document.documentElement.scrollTop=5000"
     Browser.execute_script(scroll_js_Down)
+
+    # start_date_element = Browser.find_element(by=By.XPATH,value = "//input[@id='startDate']")
+    #
+    # end_date_element = Browser.find_element(by=By.XPATH, value="//input[@id='closeDate']")
+
+    #对Test Run Name进行修改
+    name_element = Browser.find_element(by=By.XPATH,value = "//input[@id='summary']")
+    #根据CaseFolderID的名字抓取
+    system_date = ""
+    test_run_name = aau_name + "_" + str(datetime.date.today()).replace("-","_")
+    name_element.clear()
+    name_element.send_keys(test_run_name)
+
     release_select_element = Browser.find_element(by=By.XPATH,value="//select[@id='releaseId']")
     release_list = release_select_element.text.split("\n") # 单机release
     release_select_element.click()
-    print(release_list)
+    # print(release_list)
     release_list = [x.strip() for x in release_list]
     # option[text()='CHERY_T26&M1E_Release P10']
     if Release in release_list:
@@ -423,15 +441,15 @@ def Generate_TestRun(Browser, CaseFolderID, Test_Run_TrackerName,Release):
     Browser.implicitly_wait(30)
 
 
-def CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, Test_Run_TrackerName, Df_Result,Release):
+def CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, TestRun_TrackerName, Df_Result,Release):
 
     print("#########CreateTestRun_UpdateResult ########")
     # 生成browse
     browser = LoginCodeBeamer("https://codebeamer.corp.int/cb/tracker/", CaseTrackerID, Test_Run_Folder)
 
-    print(CaseFolderID)
+    # print(CaseFolderID)
     # 定位到CaseFolderID 里面根据Test_Run_Tracker名称去生成Test Run
-    Generate_TestRun(browser, CaseFolderID, Test_Run_TrackerName,Release)
+    Generate_TestRun(browser, CaseFolderID, TestRun_TrackerName,Release)
 
     Test_Run_Report_WithPath,Test_Run_ID= Run_TestRun_InExcel(browser, Test_Run_Folder, Df_Result)
 
@@ -441,7 +459,7 @@ def CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, Tes
 
 
 def ReUpload_TestRun(Test_Run_ID,Test_Run_Report_WithPath):
-    print(Test_Run_ID)
+    # print(Test_Run_ID)
     browser = LoginCodeBeamer_WoPath("https://codebeamer.corp.int/cb/issue/", Test_Run_ID)
 
     upload_file_element = browser.find_element(by=By.XPATH,value="//div[@class='qq-upload-button']//input[@type='file']")
@@ -469,7 +487,7 @@ def Restart_TestRun(Test_Run_ID,Test_Run_Folder,Df_Result):
     test_run_id_element = browser.find_element(by=By.XPATH,
                                                value="//div[@class='actionMenuBar large']//span[@class='breadcrumbs-summary  tail']//span")
     Test_Run_ID = test_run_id_element.text.replace("#", "")
-    print(Test_Run_ID)
+    # print(Test_Run_ID)
 
     Test_Run_Report_WithPath,Test_Run_ID= Run_TestRun_InExcel(browser, Test_Run_Folder, Df_Result)
 
@@ -483,7 +501,7 @@ if __name__ == '__main__':
     CaseTrackerID = "10574220"
     CaseFolderID = "9645625"
     # # CaseFolderID = "11450597"
-    Test_Run_TrackerName = "TR_SHR_TestRuns"
+    TestRun_TrackerName = "TR_SHR_TestRuns"
     Test_Run_Folder = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun"
     Test_Run_ID = "15666467"
     Test_Run_Report_WithPath = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\Quick Test Run for 11 Test Cases at Sep 21 2022 (2).xlsx"
@@ -498,6 +516,6 @@ if __name__ == '__main__':
     CaseTrackerID = "10574131"
     CaseFolderID = "15704840"
     Release = "CHERY_T26&M1E_Release P10"
-    CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, Test_Run_TrackerName,Df_Result,Release)
+    CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, TestRun_TrackerName,Df_Result,Release)
     # ReUpload_TestRun(Test_Run_ID,Test_Run_Report_WithPath)
     # Restart_TestRun(Test_Run_ID, Test_Run_Folder, Df_Result)
