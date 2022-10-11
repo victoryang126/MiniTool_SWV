@@ -24,7 +24,7 @@ from CB_Tool_SC3 import CB_Tool_Widget
 class MiniTool(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('MiniTool V1.15.2')
+        self.setWindowTitle('MiniTool V1.15.3')
         self.setWindowIcon(QIcon('./Images/title.ico'))
         self.setGeometry(150,150,1300,680)
 
