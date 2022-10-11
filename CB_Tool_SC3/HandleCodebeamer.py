@@ -40,6 +40,38 @@ def LoginCodeBeamer_WoPath(Url_Prefix,TrackerID):
     time.sleep(1)
     return browser
 
+def LoginCodeBeamer_WorkingSet(Url_Prefix,TrackerID,WorkingSet,DownlaodPath):
+    DownlaodPath = DownlaodPath.replace('/', '\\')
+    options = webdriver.EdgeOptions()
+    # print(CB_Spec_Folder)
+    prefs = {'profile.default_content_settings.popups': 0, 'download.default_directory': DownlaodPath}
+    options.add_experimental_option('prefs', prefs)
+    url = Url_Prefix + TrackerID
+    browser = webdriver.ChromiumEdge(options=options)
+    browser.get(url)
+
+    # 点击Login
+    browser.find_element(by=By.NAME, value="saml").click()
+
+    browser.implicitly_wait(30)
+
+    # 选择workingset
+
+    print("Click working set button")
+    workingset_element = browser.find_element(by=By.XPATH,value="//button[@id='workingSetSelector_ms']")
+    print(workingset_element)
+    workingset_element.click()
+    browser.implicitly_wait(10)
+    try:
+        target_workingset_element = browser.find_element(by=By.XPATH,value="//label[@title='" + WorkingSet + "']")
+        target_workingset_element.click()
+        print("Select working set finished")
+    except Exception as err:
+        raise Exception(WorkingSet + " not found")
+
+    browser.implicitly_wait(30)
+    return browser
+
 def UploadSpec2CB(CaseTrackerID, CodeBeamer_Spec, CaseFolderID, InitCaseList):
     options = webdriver.EdgeOptions()
     options.add_experimental_option("detach", True)
@@ -419,6 +451,9 @@ def Generate_TestRun(Browser, CaseFolderID, TestRun_TrackerName,Release):
     # print(release_list)
     release_list = [x.strip() for x in release_list]
     # option[text()='CHERY_T26&M1E_Release P10']
+    #Release_P11_BYD_SG_Series
+    #//select[@id='releaseId']//option[text()='" + Release + "']
+    #//select[@id='releaseId']//option[text()='Release_P11_BYD_SG_Series']
     if Release in release_list:
         releasee_xpath = "//select[@id='releaseId']//option[text()='" + Release + "']"
         release_element = Browser.find_element(by=By.XPATH, value=releasee_xpath)
@@ -441,11 +476,17 @@ def Generate_TestRun(Browser, CaseFolderID, TestRun_TrackerName,Release):
     Browser.implicitly_wait(30)
 
 
-def CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, TestRun_TrackerName, Df_Result,Release):
+
+
+
+def CreateTestRun_UpdateResult(CaseTrackerID,WokingSet, CaseFolderID, Test_Run_Folder, TestRun_TrackerName, Df_Result,Release):
 
     print("#########CreateTestRun_UpdateResult ########")
     # 生成browse
-    browser = LoginCodeBeamer("https://codebeamer.corp.int/cb/tracker/", CaseTrackerID, Test_Run_Folder)
+    if WokingSet == "":
+        browser = LoginCodeBeamer("https://codebeamer.corp.int/cb/tracker/", CaseTrackerID, Test_Run_Folder)
+    else:
+        browser = LoginCodeBeamer_WorkingSet("https://codebeamer.corp.int/cb/tracker/", CaseTrackerID,WokingSet, Test_Run_Folder)
 
     # print(CaseFolderID)
     # 定位到CaseFolderID 里面根据Test_Run_Tracker名称去生成Test Run
@@ -475,6 +516,22 @@ def Restart_TestRun(Test_Run_ID,Test_Run_Folder,Df_Result):
     print("Restart the test run to generate new Test Run ID")
     restart_test_run_element = browser.find_element(by=By.XPATH,value="//div[@class='item-transitions']//a")
     restart_test_run_element.click()
+    browser.implicitly_wait(30)
+
+    # reRunOpt_selected_but_in_same_run
+    print("Select reRunOpt_selected_but_in_same_run")
+    rerun_in_same_run_element = browser.find_element(by=By.XPATH,value="//input[@id='reRunOpt_selected_but_in_same_run']")
+    rerun_in_same_run_element.click()
+    browser.implicitly_wait(30)
+    browser.switch_to.frame("inlinedPopupIframe")
+
+    print("Select all case and then click select button")
+    select_all_case_element = browser.find_element(by=By.XPATH,value="//input[@name='SELECT_ALL']")
+    if not select_all_case_element.is_selected():
+        select_all_case_element.click()
+
+    submit_element = browser.find_element(by=By.XPATH,value = "//input[@onclick='saveSelection();']")
+    submit_element.click()
     browser.implicitly_wait(30)
 
     print("Save to generate new Test Run")
@@ -512,10 +569,14 @@ if __name__ == '__main__':
     # UploadTestRun(Test_Run_ID, Test_Run_File)
     Result = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\EOLP31.xlsm"
 
-    Df_Result, CaseTrackerID, CB_Spec_Folder_ID, Release = HRun.ReadResult_TableOfContent(Result)
-    CaseTrackerID = "10574131"
-    CaseFolderID = "15704840"
-    Release = "CHERY_T26&M1E_Release P10"
-    CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, TestRun_TrackerName,Df_Result,Release)
+    # Df_Result, CaseTrackerID, CB_Spec_Folder_ID, Release = HRun.ReadResult_TableOfContent(Result)
+    CaseTrackerID = "1908975"
+    CaseFolderID = "14494454"
+    Release = "1908975"
+    WorkingSet = "GEELY_GEEA2.0_SX21"#"-1"# "76695643"#"GEELY_GEEA2.0_SX21"
+    Url_Prefix = "https://codebeamer.corp.int/cb/tracker/"
+    LoginCodeBeamer_WorkingSet(Url_Prefix,CaseTrackerID,WorkingSet,Test_Run_Folder)
+    # Generate_TestRun_WorkingSet(Browser, CaseFolderID, TestRun_TrackerName,Release,WorkingSet)
+    # CreateTestRun_UpdateResult(CaseTrackerID, CaseFolderID, Test_Run_Folder, TestRun_TrackerName,Df_Result,Release)
     # ReUpload_TestRun(Test_Run_ID,Test_Run_Report_WithPath)
     # Restart_TestRun(Test_Run_ID, Test_Run_Folder, Df_Result)

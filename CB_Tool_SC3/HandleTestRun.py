@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import openpyxl
 import win32com
@@ -48,11 +49,14 @@ def ReadResult_TableOfContent(Result):
     df_result = pd.read_excel(Result, "Table Of Contents", dtype='str')
     # print(2)
     ColumnsList = ["Object Text","_VerificationStatus"]
-    Result_Summary = df_result.iloc[0,4]
-    TestRun_TrackerName = df_result.iloc[1, 4]
-    CaseTrackerID = df_result.iloc[2, 4]
-    CB_Spec_Folder_ID = df_result.iloc[3, 4]
-    Release = df_result.iloc[4,4]
+    # if np.isnan(df_result.iloc[0,4]) else df_result.iloc[0,4].strip()
+    #需要处理数据里面的前后的空格或者换行等特殊字符，
+    Result_Summary = df_result.iloc[0,4] # if np.isnan(df_result.iloc[0,4]) else df_result.iloc[0,4].strip()
+    TestRun_TrackerName = df_result.iloc[1,4]# if np.isnan(df_result.iloc[1,4]) else df_result.iloc[1,4].strip()
+    CaseTrackerID = df_result.iloc[2,4]# if np.isnan(df_result.iloc[2,4]) else df_result.iloc[2,4].strip()
+    CB_Spec_Folder_ID = df_result.iloc[3,4]# if np.isnan(df_result.iloc[3,4]) else df_result.iloc[3,4].strip()
+    Release = df_result.iloc[4,4] #if np.isnan(df_result.iloc[4,4]) else df_result.iloc[4,4].strip()
+
     # print(df_result)
     print("#"*30)
     # print("*"*30)
@@ -62,6 +66,7 @@ def ReadResult_TableOfContent(Result):
     df_result = df_result[ColumnsList]
     df_result = df_result.iloc[7:,:]
     df_result.columns = ["Name","RUN RESULT"]
+    df_result["Name"] = df_result["Name"].str.strip() # 处理掉字符串前后的空格
     df_result.set_index("Name",inplace = True,drop = False)
 
     # print(df_result)
@@ -100,12 +105,15 @@ def Handle_TestRun_Report(Excel,Df_Result):
         # print(case_name)
         # print(Df_Result.index)
         if case_name in Df_Result.index:
+            # print(case_name)
             ws.cell(start_row, result_col).value = Df_Result.loc[case_name,"RUN RESULT"]
             # ws.cell(start_row, release_col).value = Release
             start_row += step_up
         else:
             #2022/09/27 不处理这种异常，跳到下一个case
             # raise Exception(case_name +" not in index")
+            print(case_name + " not in Table Of content")
+            print(Df_Result.index)
             start_row += step_up
     wb.save(Excel)
 
@@ -121,11 +129,11 @@ def Handle_TestRun_Report(Excel,Df_Result):
 
 
 if __name__ == "__main__":
-    Excel = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\Quick Test Run for 32 Test Cases at Sep 22 2022 (1).xlsx"
+    Excel = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\IMU_2022_09_28.xlsx"
     Excel_Modify = r"C:\Users\victor.yang\Downloads\Quick Test Run for 11 Test Cases at Sep 20 2022_Modify.xlsx"
 
-    Result = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\EOLP10.xlsm"
+    Result = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\CHT_SWV_BYD_SG_IMU_Test Result.xlsm"
 
-    Df_Result, CaseTrackerID, CB_Spec_Folder_ID, Release = ReadResult_TableOfContent(Result)
+    Df_Result, CaseTrackerID, CB_Spec_Folder_ID, Release,TestRun_TrackerName= ReadResult_TableOfContent(Result)
     
     Handle_TestRun_Report(Excel,Df_Result)

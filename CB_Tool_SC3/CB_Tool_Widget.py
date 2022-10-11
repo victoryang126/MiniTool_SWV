@@ -32,6 +32,7 @@ class CB_Tool_Widget(QWidget):
         self.CaseTrackerID = ""
         self.CaseFolderID = ""
         self.TestRun_TrackerName = ""
+        self.WorkingSet = ""
 
         self.CB_Spec_FromCB = ""
         self.FinalCBSpec = ""
@@ -131,6 +132,7 @@ class CB_Tool_Widget(QWidget):
             args = {
                 "CaseTrackerID": self.CaseTrackerID,
                 "CaseFolderID": self.CaseFolderID,
+                "WokingSet": self.WorkingSet,
                 "Test_Run_Folder": self.CurrentPath,
                 "TestRun_TrackerName": self.TestRun_TrackerName,
                 "Df_Result": Df_Result,
@@ -150,6 +152,11 @@ class CB_Tool_Widget(QWidget):
     def on_LE_TestRun_TrackerName_textChanged(self):
         if self.__ui.LE_TestRun_TrackerName.text():
             self.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
+
+
+    @pyqtSlot(str)
+    def on_LE_WorkingSet_textChanged(self):
+        self.WorkingSet = self.__ui.LE_WorkingSet.text()
 
 
 
@@ -243,6 +250,7 @@ class CB_Tool_Widget(QWidget):
                 args = {
                     "CaseTrackerID": self.CaseTrackerID,
                     "CaseFolderID": self.CaseFolderID,
+                    "WokingSet":self.WorkingSet,
                     "Test_Run_Folder": self.CurrentPath,
                     "TestRun_TrackerName": self.TestRun_TrackerName,
                     "Df_Result": Df_Result,
