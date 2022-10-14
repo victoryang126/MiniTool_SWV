@@ -61,9 +61,11 @@ def LoginCodeBeamer_WorkingSet(Url_Prefix,TrackerID,WorkingSet,DownlaodPath):
     workingset_element = browser.find_element(by=By.XPATH,value="//button[@id='workingSetSelector_ms']")
     print(workingset_element)
     workingset_element.click()
-    browser.implicitly_wait(10)
+    browser.implicitly_wait(30)
     try:
+        # print("try to find the target woking set")
         target_workingset_element = browser.find_element(by=By.XPATH,value="//label[@title='" + WorkingSet + "']")
+
         target_workingset_element.click()
         print("Select working set finished")
     except Exception as err:
@@ -411,7 +413,7 @@ def Generate_TestRun(Browser, CaseFolderID, TestRun_TrackerName,Release):
     search_button_element.click()
     Browser.implicitly_wait(30)
     # time.sleep(2)
-    print("select the test run itme, then generate test run")
+    print("select the test run item, then generate test run")
     test_run_select_element = Browser.find_element(by=By.XPATH,
                                                    value="//table[@id='searchList']//tbody//div[@class='wikiLinkContainer']")  # 选中搜索到的TestRun
 
@@ -573,6 +575,7 @@ if __name__ == '__main__':
     CaseTrackerID = "1908975"
     CaseFolderID = "14494454"
     Release = "1908975"
+    # "SHR Test Runs"
     WorkingSet = "GEELY_GEEA2.0_SX21"#"-1"# "76695643"#"GEELY_GEEA2.0_SX21"
     Url_Prefix = "https://codebeamer.corp.int/cb/tracker/"
     LoginCodeBeamer_WorkingSet(Url_Prefix,CaseTrackerID,WorkingSet,Test_Run_Folder)

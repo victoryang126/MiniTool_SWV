@@ -87,12 +87,14 @@ class CB_Tool_Widget(QWidget):
             self.__ui.TestRun_Result.setPalette(WhiteColor)
             self.__ui.TestRun_Status.setPalette(WhiteColor)
     def check_testrun_tackename(self):
-        print(self.TestRun_TrackerName == np.nan,self.TestRun_TrackerName)
-        if np.isnan(self.TestRun_TrackerName):
-            self.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
-        else:
-            self.__ui.LE_TestRun_TrackerName.setText(self.TestRun_TrackerName)
+        # print(self.TestRun_TrackerName == np.nan,self.TestRun_TrackerName)
+        print("test")
+        # 如果是老版本的excel，没有TestRun_TrackName 这个单元格则为空，数据必须用工具界面填写的部分，否则使用工具里面的
 
+        if isinstance(self.TestRun_TrackerName,str):
+            self.__ui.LE_TestRun_TrackerName.setText(self.TestRun_TrackerName)
+        else:
+            self.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
         if not self.TestRun_TrackerName:
             raise Exception("TestRun_TrackerName can't be empty")
 

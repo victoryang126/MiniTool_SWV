@@ -41,7 +41,7 @@ def ReadResult_TableOfContent(Result):
     :param Result: Test specification
     :return:df_result 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
     """
-    print("ReadSpec_TableOfContent")
+    print("ReadResult_TableOfContent")
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
     pd.set_option('max_colwidth', 200)
