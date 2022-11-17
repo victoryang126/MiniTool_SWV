@@ -41,34 +41,28 @@ import time
 import datetime
 from urllib3.exceptions import InsecureRequestWarning
 from CB_Server_API.HandlePTCExcel import *
-def get_check_resp(curl,resp):
+def get_check_resp(resp):
 
     """
-    根据status code 去判断除了啥问题，如果没问题，则返回json数据
+    根据status code 去判断出了啥问题，如果没问题，则返回json数据
     Args:
-        curl: request的url
-        resp: request
+        resp: request的回复
 
     Returns:
     """
     #####Note 后面考虑对异常的数据回复，根据curl和json数据dump 到本地作为时候分析的数据
     if resp.status_code != 200:
+        print(resp.text)
         if resp.status_code == 401:
-            print(resp)
-            raise Exception(f"Access denied code 401 when execute curl::{curl}")
+            raise Exception(f"Access denied code 401 when execute url::{resp.url} ::{resp.text}")
         elif resp.status_code == 400:
-            print(resp)
-            raise Exception(f"Method not allowed code 400 when execute curl::{curl}")
+            raise Exception(f"Method not allowed code 400 when execute url::{resp.url}::{resp.text}")
         elif resp.status_code == 404:
-            print(resp)
-            raise Exception(f"Item not found code 404 when execute curl::{curl}")
+            raise Exception(f"Item not found code 404 when execute url::{resp.url}::{resp.text}")
         elif resp.status_code == 405:
-            print(resp)
-            raise Exception(f"Method not allowed code 405 when execute curl::{curl}")
+            raise Exception(f"Method not allowed code 405 when execute url::{resp.url}::{resp.text}")
         else:
-            raise Exception(f"unknow error code {resp.status_code} when execute curl:{curl}" )
-    # print(resp.status_code)
-
+            raise Exception(f"unknow error code {resp.status_code} when execute url:{resp.url}::{resp.text}")
     return resp
 
 def measure_execution_time(function):
@@ -87,52 +81,30 @@ def measure_execution_time(function):
 
     return wrapper
 
-class User:
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    login = (0,0)
-    # def __init__(self, login, rest):
-    #     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    #     self.login = login
-    #     self.rest = rest
-
-    @classmethod
-    def get(cls, curl):
-        resp = requests.get(curl, auth=cls.login, verify=False)
-
-        return get_check_resp(curl,resp)
-
-    @classmethod
-    def put(cls, curl, json):
-        resp = requests.put(curl, data=json, auth=cls.login, verify=False)
-        return get_check_resp(curl, resp)
-
-    @classmethod
-    def post(cls, curl, json):
-        resp = requests.post(curl, json=json, auth=cls.login, verify=False)
-        return get_check_resp(curl, resp)
 
 
 class CodeBeamer():
 
 
     def __init__(self,server,user,pwd ):
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         self.server = server
         self.login = (user,pwd)
 
-    def get(self, curl):
-        resp = requests.get(curl, auth=self.login, verify=False)
+    def get(self, url):
+        resp = requests.get(url, auth=self.login, verify=False)
 
-        return get_check_resp(curl,resp)
-
-
-    def put(self, curl, json):
-        resp = requests.put(curl, auth=self.login, verify=False, json=json)
-        return get_check_resp(curl, resp)
+        return get_check_resp(resp)
 
 
-    def post(self, curl, json):
-        resp = requests.post(curl, auth=self.login, verify=False, json=json)
-        return get_check_resp(curl, resp)
+    def put(self, url, json):
+        resp = requests.put(url, auth=self.login, verify=False, json=json)
+        return get_check_resp(resp)
+
+
+    def post(self, url, json):
+        resp = requests.post(url, auth=self.login, verify=False, json=json)
+        return get_check_resp(resp)
 
     def update_codebeamer(self,server,user,pwd):
         self.server = server
@@ -158,24 +130,24 @@ class CodeBeamer():
         print("#####################get release dict")
 
         #先通过Tracker id获取project的id
-        curl = self.server + f"/trackers/{testcase_trackerid}/"
-        resp_json = self.get(curl).json()
+        url = self.server + f"/trackers/{testcase_trackerid}/"
+        resp_json = self.get(url).json()
         project_id = resp_json["project"]["id"]
 
         #然后通过上面获取的projectid 获取release的id
-        curl = self.server + f"/projects/{project_id}/trackers"
-        resp_list = self.get(curl).json() # 返回的书一个数组
+        url = self.server + f"/projects/{project_id}/trackers"
+        resp_list = self.get(url).json() # 返回的书一个数组
 
         release_trackerid = 0
         for child in resp_list:
             if child["name"] == "Releases":
                 release_trackerid = child["id"]
         if release_trackerid ==0:
-            raise Exception("Can't find Tracker Release in curl" + curl)
+            raise Exception("Can't find Tracker Release in url" + url)
 
         # 再通过release_trackerid 获取对应的release
-        curl = self.server + f"/trackers/{release_trackerid}/children?page=1&pageSize=500"
-        resp_json = self.get(curl).json()
+        url = self.server + f"/trackers/{release_trackerid}/children?page=1&pageSize=500"
+        resp_json = self.get(url).json()
 
         if release in [child["name"] for child in resp_json["itemRefs"]]:
             for child in resp_json["itemRefs"]:
@@ -198,14 +170,60 @@ class CodeBeamer():
             },
         """
         # 'https://codebeamer.corp.int/cb/api/v3/items/19993113/children?page=1&pageSize=25'
-        curl = self.server + f"/items/{testcase_folderid}/children?page=1&pageSize=500"
-        resp_json = self.get(curl).json()
+        url = self.server + f"/items/{testcase_folderid}/children?page=1&pageSize=500"
+        resp_json = self.get(url).json()
         print(resp_json["itemRefs"])
 
         # df = pd.DataFrame(np.array(resp_json["itemRefs"]),columns=['id','name','type'])
         # print(df)
         return resp_json["itemRefs"]
 
+
+    def get_tracker_fileds(self,trackerid):
+        """
+        用于获取Tracker 下面的filed等相关属性。类似下面元素的列表
+         {
+        "id": 1000000,
+        "name": "Test Steps",
+        "type": "FieldReference",
+        "trackerId": 14937781
+      }
+        Args:
+            trackerid:
+
+        Returns:
+
+        """
+        # 'https://codebeamer.corp.int/cb/api/v3/trackers/14937781/fields'
+        print("#####################get_tracker_fileds")
+        url = self.server + f"/trackers/{trackerid}/fields"
+        resp = self.get(url)
+        print(resp.json())
+        return resp.json()
+
+
+    def check_get_field_id(self,trackerid,field_name):
+        """
+        获取Tracker 下面的field，并判断是否存在相关field,主要用于检查Test Method和Test Information等相关信息
+        因为这个部分存在与customefileds 里面，因为Tracker模板配置的问题，可能缺少相关属性，或者相关属性id和默认配置不一样
+        Args:
+            trackerid:
+            field_name:
+        Returns:
+        """
+        print("#####################check_get_field_id")
+        tracker_fileds = self.get_tracker_fileds(trackerid)
+        # for field in tracker_fileds:
+        #     print(field["name"], field["id"])
+        field_id_list = [field["id"] for field in tracker_fileds if field["name"] == field_name]
+        print(f"{field_name} id: {str(field_id_list)}" )
+        if len(field_id_list) == 0:
+            raise Exception(f"{field_name} not exist in related tracker, please contact Milly du to ask system engineer update config")
+        elif len(field_id_list) == 1:
+            return field_id_list[0]
+        else:
+            raise Exception(
+                f"{len(field_id_list)}  {field_name} exist in related tracker, please contact Milly du to ask system engineer update config")
 
     """
     对case的内容分成三个函数处理，
@@ -229,7 +247,7 @@ class CodeBeamer():
         """
         # 'https://codebeamer.corp.int/cb/api/v3/trackers/10574131/items?parentItemId=19993113'
 
-        curl = self.server + f"/trackers/{testcase_trackerid}/items?parentItemId={testcase_folderid}"
+        url = self.server + f"/trackers/{testcase_trackerid}/items?parentItemId={testcase_folderid}"
         print("##############create_newcase_tocb " + pandas_series["name"])
         testcase_obj = Post_TestCase_Body(pandas_series["name"])
         # testcase_obj.update_incidentid(pandas_series["Incident ID"])
@@ -240,7 +258,7 @@ class CodeBeamer():
         testcase_obj.update_versions(release_dict)
         request_body = obj_to_dict(testcase_obj)
         print(request_body)
-        resp = self.post(curl,request_body)
+        resp = self.post(url,request_body)
         print(resp.json())
         return resp
 
@@ -258,7 +276,7 @@ class CodeBeamer():
         # put 'https://codebeamer.corp.int/cb/api/v3/items/19758493'
         print("##############update_cb_testcase " + pandas_series["name"])
         itemid = pandas_series['id']
-        curl = self.server + f"/items/{itemid}"
+        url = self.server + f"/items/{itemid}"
         testcase_obj = Post_TestCase_Body(pandas_series["name"])
         # testcase_obj.update_incidentid(pandas_series["Incident ID"])
         testcase_obj.update_verifies(pandas_series["Verifies"])
@@ -267,7 +285,7 @@ class CodeBeamer():
         request_body = obj_to_dict(testcase_obj)
 
         print(request_body)
-        resp = self.put(curl, request_body)
+        resp = self.put(url, request_body)
         return resp
 
     def delete_cb_testcase(self,release_dict,pandas_series):
@@ -284,14 +302,14 @@ class CodeBeamer():
         # put 'https://codebeamer.corp.int/cb/api/v3/items/19758493'
         print("##############delete_cb_testcase " + pandas_series["name"])
         itemid = pandas_series['id']
-        curl = self.server + f"/items/{itemid}"
+        url = self.server + f"/items/{itemid}"
         testcase_obj = Post_TestCase_Body(pandas_series["name"])
         testcase_obj.update_versions(release_dict)
         testcase_obj.delete_testcase()
         request_body = obj_to_dict(testcase_obj)
         # request_body.pop("customFields")
         print(request_body)
-        resp = self.put(curl,request_body)
+        resp = self.put(url,request_body)
         return resp
 
     def upload_testcases(self,df_cbcase,testcase_trackerid,testcase_folderid,release_dict):
@@ -306,6 +324,8 @@ class CodeBeamer():
         # # excel_info["TestCaseFolderID"] = df_ptc.iloc[3, 4]
         # # excel_info["Release"] = df_ptc.iloc[4, 4]
         # release_dict = Cb.get_release(excel_info["TestCaseTrackerID"], excel_info["Release"])
+        test_method_id = self.check_get_field_id(testcase_trackerid,"Test Method")
+        Post_TestCase_Body.update_testmethod_id(test_method_id)
         for indx in df_cbcase.index:
             if df_cbcase.loc[indx, "id"] == "":
                 self.create_newcase_tocb(testcase_trackerid, testcase_folderid, release_dict,
@@ -337,19 +357,27 @@ class CodeBeamer():
         df_result = df_cbcase.loc[df_cbcase["status"].isin(["PASSED","FAILED"]) , ['id', 'name']]
         print(df_result)
         result_list = [list(df_result.loc[x].values) for x in df_result.index]
+
+
+
         testcases_in_testrun = [TestCase_In_TestRun(*x) for x in result_list]
 
-        curl = self.server + f"/trackers/{testrun_trackerid}/testruns"
+        url = self.server + f"/trackers/{testrun_trackerid}/testruns"
         # testcases, name, tracker, test_information
         current_time = str(datetime.date.today()).replace("-","_")
         name = f"{name}_{current_time}"
+
+        #判断Test Information 是否存在，并赋值新的id
+        test_information_id = self.check_get_field_id(testrun_trackerid, "Test Information")
+        TestRunMoel.update_test_inforamtion_id(test_information_id)
+
         testrun_obj = Post_TestRun_Body(testcases_in_testrun,name, testrun_trackerid, test_information)
         testrun_obj.update_versions(release_dict)
 
         request_body = obj_to_dict(testrun_obj)
         # print(testrun_obj.testRunModel.customFields[2].values)
         print(request_body)
-        resp = self.post(curl, request_body)
+        resp = self.post(url, request_body)
         print(resp.json())
         return resp.json()["id"]
 
@@ -375,11 +403,11 @@ class CodeBeamer():
         request_body = obj_to_dict(put_test_run)
         print(request_body)
         # print(put_test_run)
-        # curl - X
+        # url - X
         # 'PUT' \
         # 'https://codebeamer.corp.int/cb/api/v3/testruns/20165626' \
-        curl = self.server + f"/testruns/{testrun_id}"
-        resp = self.put(curl,request_body)
+        url = self.server + f"/testruns/{testrun_id}"
+        resp = self.put(url,request_body)
         print(resp.json())
 
 
@@ -387,7 +415,515 @@ class CodeBeamer():
 if __name__ == "__main__":
     pass
     # User.login = ("victor.yang","Mate40@VY20082021")
-    # Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@VY20082021")
+    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@VY20082021")
+    url = 'https://codebeamer.corp.int/cb/api/v3/trackers/14937781/items?parentItemId=12649519'
+    dj = {
+          "name": "Test Case  - CAN_Initial",
+          "descriptionFormat": "Wiki",
+          "customFields": [
+            {
+              "fieldId": 1027,
+              "name": "Incident ID",
+              "values": [],
+              "type": "ChoiceFieldValue"
+            },
+            {
+              "fieldId": 1033,
+              "name": "Test Method",
+              "values": [],
+              "type": "ChoiceFieldValue"
+            },
+            {
+              "fieldId": 17,
+              "name": "Verifies",
+              "values": [
+                {
+                  "id": 7677952,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7677958,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678023,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678106,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678118,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678090,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678091,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678120,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678029,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678123,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678126,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7677907,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678035,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678325,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7677946,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7678108,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7677917,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                },
+                {
+                  "id": 7677951,
+                  "type": "TrackerItemReference",
+                  "referenceData": { "suspectPropagation": "PROPAGATE" }
+                }
+              ],
+              "type": "ChoiceFieldValue"
+            }
+          ],
+          "status": {
+            "id": 1,
+            "name": "Init",
+            "type": "ChoiceOptionReference"
+          },
+          "versions": [
+            {
+              "id": 13850004,
+              "name": "Release_P42_BYD_HX",
+              "type": "TrackerItemReference"
+            }
+          ],
+          "typeName": "Testcase"
+        }
+    # resp = Cb.post(url,dj)
+    # Cb.get_tracker_fileds(14937781)
+    Cb.check_get_field_id(14937781, "Test Method")
+    # fields = [
+    #   {
+    #     "id": 0,
+    #     "name": "ID",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1,
+    #     "name": "Category",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 2,
+    #     "name": "Priority",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 3,
+    #     "name": "Name",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 4,
+    #     "name": "Submitted at",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 5,
+    #     "name": "Assigned to",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 6,
+    #     "name": "Submitted by",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 7,
+    #     "name": "Status",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 8,
+    #     "name": "Valid From",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 9,
+    #     "name": "Valid Until",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10,
+    #     "name": "-- Unused 1 --",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 11,
+    #     "name": "-- Unused 2 --",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 13,
+    #     "name": "Type",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 14,
+    #     "name": "Complexity",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 15,
+    #     "name": "Resolution",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 17,
+    #     "name": "Verifies",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 18,
+    #     "name": "Accrued Effort",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 19,
+    #     "name": "Story Points",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 29,
+    #     "name": "Assigned at",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 31,
+    #     "name": "Release",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 32,
+    #     "name": "Supervisor",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 74,
+    #     "name": "Modified at",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 75,
+    #     "name": "Modified by",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 76,
+    #     "name": "Parent",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 79,
+    #     "name": "Children",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 80,
+    #     "name": "Description",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 81,
+    #     "name": "Closed at",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 84,
+    #     "name": "Description Format",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 85,
+    #     "name": "Flags",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 88,
+    #     "name": "Attachments",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1000,
+    #     "name": "Reviewer(s)",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1001,
+    #     "name": "_LatestResult",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1002,
+    #     "name": "Referenced Reviews",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1003,
+    #     "name": "_TestType",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1004,
+    #     "name": "_RegressionStrategy",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1005,
+    #     "name": "_FunctionGroup",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1024,
+    #     "name": "_Feature",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1025,
+    #     "name": "VerificationMethod",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1026,
+    #     "name": "_ASIL",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1027,
+    #     "name": "Incident ID",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1028,
+    #     "name": "Reserve_4",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1029,
+    #     "name": "Reserve_5",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1032,
+    #     "name": "_VerifiesNonCbRequirements",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1035,
+    #     "name": "Test Method",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10000,
+    #     "name": "Precondition",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10001,
+    #     "name": "Postcondition",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10002,
+    #     "name": "Test Parameters",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10003,
+    #     "name": "Reusable",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10004,
+    #     "name": "Estimated Run Time",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10005,
+    #     "name": "_LatestResult_Text",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10006,
+    #     "name": "_Original_TestCaseId",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10007,
+    #     "name": "_Test_Technique",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10008,
+    #     "name": "_VerifiesNonCbRequirements - old",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10009,
+    #     "name": "_LastReviewDate",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10010,
+    #     "name": "_ScriptPath",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10011,
+    #     "name": "Functional Safety Relevant",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10012,
+    #     "name": "Cyber Security Relevant",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10013,
+    #     "name": "_ID",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10014,
+    #     "name": "Reserve_1",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10015,
+    #     "name": "Reserve_2",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 10016,
+    #     "name": "Reserve_3",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   },
+    #   {
+    #     "id": 1000000,
+    #     "name": "Test Steps",
+    #     "type": "FieldReference",
+    #     "trackerId": 14937781
+    #   }
+    # ]
+    # b = [field["id"] for field in fields if field["name"] == "Test Methods"]
+    # print(b)
     # # Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3", 10574131, 20108756, 10574133)
     # testcase_folderid = 19993113
     # testcase_trackerid = 10574131
