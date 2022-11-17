@@ -100,7 +100,7 @@ def ReadSpec_LastSheet_ReplaceDoorsID(Spec, Df_LoopUp):
     然后将doors需求ID 替换成 codebeamer 的需求ID，然后提供给RepaceDoorsID_SaveMacroEcel 函数 保持xlsm格式文件
     :param Spec:  specification的路径
     :param Df_LoopUp:codebeamer 的需求ID 和Doors需求ID的映射DataFrame
-    :return:Df_spec:替换需求ID以后的spec的DataFrame
+    :return:Df_PTC_Spec:替换需求ID以后的spec的DataFrame
             LastSheet_Name 最后一个sheet的名字
             RowSize 最后一个sheet的行大小
     """
@@ -118,7 +118,7 @@ def ReadSpec_LastSheet_ReplaceDoorsID(Spec, Df_LoopUp):
     Df_spec['_VerifiesDOORSRequirements_SW'] = Df_spec['_VerifiesDOORSRequirements_SW'].apply(ReplaceCellValue,Df_LoopUp = Df_LoopUp)
     Df_spec['_VerifiesNonDOORSRequirements'] = Df_spec['_VerifiesNonDOORSRequirements'].apply(ReplaceCellValue,Df_LoopUp = Df_LoopUp)
 
-    # print(Df_spec)
+    # print(Df_PTC_Spec)
     Df_spec.set_index("Test Case Name", inplace=True)
     #获取行数
     RowSize = len(Df_spec.index)
@@ -131,7 +131,7 @@ def ReadSpec_LastSheet_ReplaceDoorsID(Spec, Df_LoopUp):
 
 # # '''
 # # # 可以重新建立一个独立的进程
-# def RepaceDoorsID_SaveMacroEcel(Spec,Df_spec,LastSheet_Name,RowSize):
+# def RepaceDoorsID_SaveMacroEcel(Spec,Df_PTC_Spec,LastSheet_Name,RowSize):
 #
 #     w = win32com.client.DispatchEx('Excel.Application')
 #     w.Visible = 0
@@ -142,9 +142,9 @@ def ReadSpec_LastSheet_ReplaceDoorsID(Spec, Df_LoopUp):
 #     try:
 #         sht = wb.Worksheets(LastSheet_Name)
 #         for i in range(8,RowSize + 8):
-#             if sht.Cells(i, "B").Value in Df_spec.index:
+#             if sht.Cells(i, "B").Value in Df_PTC_Spec.index:
 #                 # print(sht.Cells(i, "B").Value)
-#                 sht.Cells(i, "M").Value = Df_spec.loc[sht.Cells(i, "B").Value,"_VerifiesDOORSRequirements_SW"]
+#                 sht.Cells(i, "M").Value = Df_PTC_Spec.loc[sht.Cells(i, "B").Value,"_VerifiesDOORSRequirements_SW"]
 #     except:
 #         pass
 #     wb.Close(SaveChanges=1)
@@ -185,7 +185,7 @@ def ReadSpec_TableOfContent(Spec):
     根据单元格的需求ID的数量,
     转换成多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
     :param Spec: Test specification
-    :return:Df_spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+    :return:Df_PTC_Spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
     """
     print("ReadSpec_TableOfContent")
     pd.set_option('display.max_columns', None)
@@ -200,10 +200,10 @@ def ReadSpec_TableOfContent(Spec):
     Df_spec.dropna(subset = ["Object Text"],inplace = True)
 
     Df_TsResult, Result_Summary = GetCaseResultFromTsResult(Spec)
-    # Df_spec = pd.concat([Df_spec,Df_TsResult],axis=0,keys="Object Text")
+    # Df_PTC_Spec = pd.concat([Df_PTC_Spec,Df_TsResult],axis=0,keys="Object Text")
     # print(Df_TsResult.head(2))
     Df_spec = pd.merge(Df_spec, Df_TsResult, on="Object Text", how="left")
-    # print(Df_spec.head(2))
+    # print(Df_PTC_Spec.head(2))
 
 
     Df_spec["_VerifiesDOORSRequirements"] = Df_spec["_VerifiesDOORSRequirements"].str.strip()
@@ -225,7 +225,7 @@ def ReadSpec_TableOfContent(Spec):
     print(df_Summary)
     print("*"*30)
     Df_spec = pd.concat([df_Summary, Df_spec])
-    # print(Df_spec["_VerifiesDOORSRequirements"])
+    # print(Df_PTC_Spec["_VerifiesDOORSRequirements"])
 
     print("*"*30)
     print(Df_spec.columns)
@@ -251,7 +251,7 @@ def ReadLoopUp(LoopUP):
 
 
 # # 3.生成表格
-# def GenerateSpec_CB(Df_spec,Df_LoopUp,SpecCB):
+# def GenerateSpec_CB(Df_PTC_Spec,Df_LoopUp,SpecCB):
 #     # ColumnsList = ["ID", "Priority","Name","Description","Pre-Action","Post-Action","Test Steps.Action","Test Steps.Expected result","Test Steps.Critical","Test Parameters","Verifies","Status","Type"]
 #     ColumnsList = ["ID", "Parent", "Priority", "Name", "Description", "Pre-Action", "Post-Action",
 #                    "Test Steps.Action", "Test Steps.Expected result",
@@ -264,15 +264,15 @@ def ReadLoopUp(LoopUP):
 #     # print(df_SpecCB)
 #     # ColumnsList_Temp = ["Name","Verifies"]
 #
-#     Df_spec['_VerifiesDOORSRequirements'] = Df_spec['_VerifiesDOORSRequirements'].apply(lambda x:x if x not in Df_LoopUp.index else "[ISSUE:" + Df_LoopUp.loc[x,"CBID"] + "]")
+#     Df_PTC_Spec['_VerifiesDOORSRequirements'] = Df_PTC_Spec['_VerifiesDOORSRequirements'].apply(lambda x:x if x not in Df_LoopUp.index else "[ISSUE:" + Df_LoopUp.loc[x,"CBID"] + "]")
 #
-#     Df_spec.columns = ["Name","Verifies"]
+#     Df_PTC_Spec.columns = ["Name","Verifies"]
 #
 #     # print(Df_LoopUp.loc["undefined","CBID"])
-#     df_SpecCB = df_SpecCB.append(Df_spec)
+#     df_SpecCB = df_SpecCB.append(Df_PTC_Spec)
 #     #
 #     # print(df_SpecCB)
-#     # print(Df_spec)
+#     # print(Df_PTC_Spec)
 #     #CB格式要求，前面加三个空格
 #     df_SpecCB["Name"] = "   " + df_SpecCB["Name"]
 #     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
@@ -404,7 +404,7 @@ def GetCaseResultFromTsResult(Spec):
        根据单元格的需求ID的数量,
        转换成多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
        :param Spec: Test specification
-       :return:Df_spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
+       :return:Df_PTC_Spec 多行case（名字相同） 对应多行单元格的需求ID 的DataFrame
        """
     # print("ReadSpec_TableOfContent")
     # pd.set_option('display.max_columns', None)

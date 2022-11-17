@@ -38,6 +38,6 @@ def Handler_MutilValueInOneCell(ExcelPath, Sheet_Name):
 if __name__ == '__main__':
     ExcelPath = "Test.xlsx"
     Sheet_Name = "2"
-    Handler_MutilValueInOneCell(ExcelPath, Sheet_Name)
+    # Handler_MutilValueInOneCell(ExcelPath, Sheet_Name)
     Sheet_Name1 = "1"
-    # Handler_MutilSameIndex(ExcelPath, Sheet_Name1)
+    Handler_MutilSameIndex(ExcelPath, Sheet_Name1)

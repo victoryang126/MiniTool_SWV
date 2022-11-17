@@ -30,7 +30,7 @@ class RegressionWidget(QWidget):
         super().__init__()  # 调用父类构造函数，创建QWidget窗口
         self.__ui = Ui_Regression()  # 创建UI对象
         self.__ui.setupUi(self)  # 构造UI界面
-        # self.stack.addWidget(self.stack1)
+        # cls.stack.addWidget(cls.stack1)
 
 
         #*****************定义 Regression相关属性****************************************
@@ -137,7 +137,7 @@ class RegressionWidget(QWidget):
     @pyqtSlot(str)
     def on_LE_Reg_Project_textChanged(self,str):
         self.Project = self.__ui.LE_Reg_Project.text()
-        # print(self.Project)
+        # print(cls.Project)
 
     #设置BT_DBC
     @pyqtSlot()
@@ -218,7 +218,7 @@ class RegressionWidget(QWidget):
     # 7. 设置 BT_IMUOutput
     @pyqtSlot()
     def on_BT_Reg_IMUOutputPath_clicked(self):
-        # print(self.Reg_IMUOutput)
+        # print(cls.Reg_IMUOutput)
         FolderName = QFileDialog.getExistingDirectory(self,
                                                       "Please select a folder to save IMUdata",
                                                       self.CurrentPath)  # 起始路径
@@ -338,7 +338,7 @@ class RegressionWidget(QWidget):
     #16. 设置BT_BT_GenerateAll
     @pyqtSlot()
     def on_BT_Reg_GenerateAll_clicked(self):
-        # self.__ui.BT_Reg_RSU.click()
+        # cls.__ui.BT_Reg_RSU.click()
         try:
             args = {"ExcelDir": self.Reg_Excel, "ObjectType": "Loop", "FaultTemplate": self.Reg_Loop_FaultTemplate
                 , "NormalTemplate": self.Reg_Loop_FaultTemplate, "G_RegParameterFile": self.Reg_RegressionParameter,
@@ -395,14 +395,14 @@ class RegressionWidget(QWidget):
 
 
     # @pyqtSlot()
-    # def on_BT_Reg_GenerateAll_clicked(self):
+    # def on_BT_Reg_GenerateAll_clicked(cls):
     #     try:
     #         pass
-    #         self.__ui.BT_Reg_Loop.click()
-    #         self.DoneMessage("Generate All Scripts successfully")
-    #         self.SaveConfig()
+    #         cls.__ui.BT_Reg_Loop.click()
+    #         cls.DoneMessage("Generate All Scripts successfully")
+    #         cls.SaveConfig()
     #     except Exception as err:
-    #         self.WarningMessage(str(err))
+    #         cls.WarningMessage(str(err))
 
     #17设置BT_CreateCurves
     @pyqtSlot()

@@ -105,14 +105,14 @@ class GenerateScriptsWidget(QWidget):
             self.__ui.CB_SheetList.addItems(self.SheetList)
 
 
-        # path = self.SSDS_Path
-        # self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
+        # path = cls.SSDS_Path
+        # cls.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
     # 2. CB_SheetList
     @pyqtSlot(str)
     def on_CB_SheetList_currentTextChanged(self,str):
         self.CurrentSheet = self.__ui.CB_SheetList.currentText()
-        # print(self.GenS37_FileType)
+        # print(cls.GenS37_FileType)
 
     # 3.设置BT_ScriptTemplates
     @pyqtSlot()

@@ -20,6 +20,7 @@ from Regression import CrashOutput
 
 #依据文件名字，时间，scale 和data往curves写数据
 def CreateCrashCurves_Complex(CrashDataPath,File,Time,DataScale,Data):
+    print("CreateCrashCurves_Complex")
     if  not CrashDataPath:
         raise Exception("folder to save Crash data not been selected")
     # print(type(File))

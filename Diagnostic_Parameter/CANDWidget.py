@@ -117,7 +117,7 @@ class CANDWidget(QWidget):
                                                          "Excel (*.xlsx *.xlsm)")
         self.__ui.LE_CANDConfig.setText(FileName)
         self.CANDConfig = self.__ui.LE_CANDConfig.text()
-        # print(self.CANDConfig)
+        # print(cls.CANDConfig)
     def on_checkB_All_stateChanged(self):
         if self.__ui.checkB_All.isChecked():
             state = True

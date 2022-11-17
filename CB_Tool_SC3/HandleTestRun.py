@@ -4,6 +4,7 @@ import openpyxl
 import win32com
 from win32com.client import Dispatch
 import os
+from CB_Tool_SC3.CodeBeamer import CodeBeamer
 CaseResult = {
 
 "Test Case DCS_1 - G_BBSD_DCS4_State":"PASSED",
@@ -32,7 +33,7 @@ def ConvertExcelResult2TRunResult(result):
     else:
         return "NOT RUN YET"
 
-def ReadResult_TableOfContent(Result):
+def ReadResult_TableOfContent(Result,CodeBeamer_Obj):
     """
     读取Test specification 的TableOfContent
     然后将一个 case 对应一个单元格里面需求ID
@@ -48,14 +49,19 @@ def ReadResult_TableOfContent(Result):
     # print(1)
     df_result = pd.read_excel(Result, "Table Of Contents", dtype='str')
     # print(2)
-    ColumnsList = ["Object Text","_VerificationStatus"]
+    ColumnsList = ["Object Text","_VerificationStatus","_Comment"]
     # if np.isnan(df_result.iloc[0,4]) else df_result.iloc[0,4].strip()
     #需要处理数据里面的前后的空格或者换行等特殊字符，
-    Result_Summary = df_result.iloc[0,4] # if np.isnan(df_result.iloc[0,4]) else df_result.iloc[0,4].strip()
-    TestRun_TrackerName = df_result.iloc[1,4]# if np.isnan(df_result.iloc[1,4]) else df_result.iloc[1,4].strip()
-    CaseTrackerID = df_result.iloc[2,4]# if np.isnan(df_result.iloc[2,4]) else df_result.iloc[2,4].strip()
-    CB_Spec_Folder_ID = df_result.iloc[3,4]# if np.isnan(df_result.iloc[3,4]) else df_result.iloc[3,4].strip()
-    Release = df_result.iloc[4,4] #if np.isnan(df_result.iloc[4,4]) else df_result.iloc[4,4].strip()
+
+    CodeBeamer_Obj.Result_Summary= df_result.iloc[0, 4]
+    CodeBeamer_Obj.TestRun_TrackerName = df_result.iloc[1, 4]
+    CodeBeamer_Obj.CaseTrackerID = df_result.iloc[2, 4]
+    CodeBeamer_Obj.CaseFolderID = df_result.iloc[3, 4]
+    CodeBeamer_Obj.Release = df_result.iloc[4,4]
+
+    Incident_ID_List = df_result["_Comment"].fillna("").values.tolist()
+    CodeBeamer_Obj.Incident_IDs = ",".join(list(set([x for x in Incident_ID_List if x != ""])))
+
 
     # print(df_result)
     print("#"*30)
@@ -65,14 +71,15 @@ def ReadResult_TableOfContent(Result):
     # print("*" * 30)
     df_result = df_result[ColumnsList]
     df_result = df_result.iloc[7:,:]
-    df_result.columns = ["Name","RUN RESULT"]
+    df_result.columns = ["Name","RUN RESULT","Incident ID"]
     df_result["Name"] = df_result["Name"].str.strip() # 处理掉字符串前后的空格
     df_result.set_index("Name",inplace = True,drop = False)
 
     # print(df_result)
     df_result = df_result.fillna("undefined")
     df_result["RUN RESULT"] = df_result["RUN RESULT"].apply(ConvertExcelResult2TRunResult)
-    return df_result, CaseTrackerID, CB_Spec_Folder_ID, Release,TestRun_TrackerName
+    # print(df_result)
+    return df_result
 
 
 
@@ -81,6 +88,7 @@ def Handle_TestRun_Report(Excel,Df_Result):
     # df = pd.read_excel(Excel)
     # df.to_excel(Excel_Modify,"Run in Excel")
 
+    print("#################Handle_TestRun_Report################################")
     wb = openpyxl.load_workbook(Excel)
     ws = wb.active
     # print(ws.max_row)
@@ -100,6 +108,7 @@ def Handle_TestRun_Report(Excel,Df_Result):
      1. Test Run 里面有相关case，但是Excel 里面没有，则报异常
      2. Test Run 里面没有相关case，但是Excel 里面有，则不处理。在update test case的时候工具会处理
     """
+    # print(Df_Result.index)
     while start_row < ws.max_row:
         case_name = ws.cell(start_row,name_col).value
         # print(case_name)
@@ -126,14 +135,15 @@ def Handle_TestRun_Report(Excel,Df_Result):
     wb.SaveAs(os.path.abspath(Excel))
     wb.Close(SaveChanges=0)
     ExcelAPP.Quit()
+    print("#################Handle_TestRun_Report Finished################################")
 
 
 if __name__ == "__main__":
-    Excel = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\IMU_2022_09_28.xlsx"
+    Excel = r"C:/Users/victor.yang/Desktop/Work/CB/SpecTemplate/VictorTest_2022_11_07 (1).xlsx"
     Excel_Modify = r"C:\Users\victor.yang\Downloads\Quick Test Run for 11 Test Cases at Sep 20 2022_Modify.xlsx"
 
-    Result = r"C:\Users\victor.yang\Desktop\Work\CB\TestRun\CHT_SWV_BYD_SG_IMU_Test Result.xlsm"
-
-    Df_Result, CaseTrackerID, CB_Spec_Folder_ID, Release,TestRun_TrackerName= ReadResult_TableOfContent(Result)
+    Result =r"C:/Users/victor.yang/Desktop/Work/CB/SpecTemplate/CHT_SWV_Project_FunctionName_Test Specification_Template_SC3.xlsm"
+    CodeBeamer_Obj = CodeBeamer()
+    Df_Result  = ReadResult_TableOfContent(Result,CodeBeamer_Obj)
     
-    Handle_TestRun_Report(Excel,Df_Result)
+    # Handle_TestRun_Report(Excel,Df_Result)

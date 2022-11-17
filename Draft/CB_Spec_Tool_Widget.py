@@ -75,8 +75,8 @@ class SmartEDRWidget(QWidget):
         self.__ui.LE_LookUp.setText(FileName)
         self.LookUp = self.__ui.LE_LookUp.text()
         print(self.LookUp)
-        # path = self.SSDS_Path
-        # self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
+        # path = cls.SSDS_Path
+        # cls.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
     #2.设置BT_Test_Spec
     @pyqtSlot()
@@ -127,7 +127,7 @@ class SmartEDRWidget(QWidget):
         print(2)
         Excel_Files = []
         try:
-            # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
+            # Df_LoopUp = CB_Tool.ReadLoopUp(cls.LookUp)
             print(1)
             for Test_Spec in self.Test_Spec_List:
                 # print(Test_Spec)

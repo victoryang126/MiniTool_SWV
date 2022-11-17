@@ -295,18 +295,18 @@ class DTCDefine_SYMWidget(QWidget):
         self.__ui = Ui_DTCDefine_SYM()  # 创建UI对象
         self.__ui.setupUi(self)  # 构造UI界面
 
-        # font = self.font()
+        # font = cls.font()
         # font.setPixelSize(20)
-        # self.pb = QLabel(self)
-        # self.pb.setGeometry(400,400,400,55)
-        # self.pb.setFont(font)
-        # # self.pb.setStyleSheet('font-size:44px;')
-        # self.pb.setStyleSheet("background-color:cornflowerBlue")
-        # self.pb.setText("^-^ Generating file,Please wait for moment")
-        # self.pb.hide()
-        # self.timer = QBasicTimer();
-        # self.step = 0
-        # self.pb.hide()
+        # cls.pb = QLabel(cls)
+        # cls.pb.setGeometry(400,400,400,55)
+        # cls.pb.setFont(font)
+        # # cls.pb.setStyleSheet('font-size:44px;')
+        # cls.pb.setStyleSheet("background-color:cornflowerBlue")
+        # cls.pb.setText("^-^ Generating file,Please wait for moment")
+        # cls.pb.hide()
+        # cls.timer = QBasicTimer();
+        # cls.step = 0
+        # cls.pb.hide()
         # *****************定义 OtTool相关属性****************************************
         self.Config = ""
 
@@ -315,16 +315,16 @@ class DTCDefine_SYMWidget(QWidget):
 
         self.FltMonrConfig_Excel = ""
         self.DTC_OutPut = ""
-        # self.DTCDefine_Ts = ""
-        # self.VeoneerName_Ts = ""
-        # self.ErrorDefinition_Excel = ""
+        # cls.DTCDefine_Ts = ""
+        # cls.VeoneerName_Ts = ""
+        # cls.ErrorDefinition_Excel = ""
 
         self.PBCT_SheetList = ["IP Fixed Calibration:IP","Vehicle Fixed Calibration","Algo Calibration Variant 1","Algo Calibration Variant 2:A2","Algo Calibration Variant 3:A3"]
 
         self.PBCT_Excel = ""
         self.EEPROM_Trans_Excel = ""
         self.SYM_OutPut = ""
-        # self.SYM_OutPut_Folder = ""
+        # cls.SYM_OutPut_Folder = ""
 
 
 
@@ -334,14 +334,14 @@ class DTCDefine_SYMWidget(QWidget):
             self.Config = QSettings('./ini/DTCDefine_SYMWidget.ini', QSettings.IniFormat)
             self.LoadConfig()
 
-    # def timerEvent(self, e) -> None:
-    #     if self.step >=100:
-    #         self.time.stop()
+    # def timerEvent(cls, e) -> None:
+    #     if cls.step >=100:
+    #         cls.time.stop()
     #         return
-    #     self.step +=1
-    #     self.pb.setValue(self.step)
+    #     cls.step +=1
+    #     cls.pb.setValue(cls.step)
 
-    # def doAction(self,value):
+    # def doAction(cls,value):
 
     # 定义错误提示框
     def WarningMessage(self,str):
@@ -359,7 +359,7 @@ class DTCDefine_SYMWidget(QWidget):
         self.DTC_OutPut = self.Config.value("CONFIG/DTC_OutPut")
         self.PBCT_Excel = self.Config.value("CONFIG/PBCT_Excel")
         self.PBCT_SheetList = self.Config.value("CONFIG/PBCT_SheetList")
-        # print(self.PBCT_SheetList)
+        # print(cls.PBCT_SheetList)
         self.EEPROM_Trans_Excel = self.Config.value("CONFIG/EEPROM_Trans_Excel")
         self.SYM_OutPut = self.Config.value("CONFIG/SYM_OutPut")
         self.__ui.LE_Project.setText(self.Project)
@@ -391,13 +391,13 @@ class DTCDefine_SYMWidget(QWidget):
     @pyqtSlot(str)
     def on_LE_Project_textChanged(self,str):
         self.Project = self.__ui.LE_Project.text()
-        # print(self.Project)
+        # print(cls.Project)
 
     #2 .设置LE_SWVersion
     @pyqtSlot(str)
     def on_LE_SWVersion_textChanged(self,str):
         self.SWVersion = self.__ui.LE_SWVersion.text()
-        # print(self.SWVersion)
+        # print(cls.SWVersion)
 
     #3。 设置BT_FltMonrConfig
     @pyqtSlot()
@@ -412,7 +412,7 @@ class DTCDefine_SYMWidget(QWidget):
         self.FltMonrConfig_Excel = self.__ui.LE_FltMonrConfig.text()
         path = self.FltMonrConfig_Excel
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
-        # print(self.FltMonrConfig_Excel)
+        # print(cls.FltMonrConfig_Excel)
 
     #4 。 设置BT_DTC_OutPut
     @pyqtSlot()
@@ -422,7 +422,7 @@ class DTCDefine_SYMWidget(QWidget):
                                                       self.CurrentPath)  # 起始路径
         self.__ui.LE_DTC_OutPut.setText(FolderName)
         self.DTC_OutPut = self.__ui.LE_DTC_OutPut.text()
-        # print(self.DTC_OutPut)
+        # print(cls.DTC_OutPut)
         path = self.DTC_OutPut
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
@@ -431,7 +431,7 @@ class DTCDefine_SYMWidget(QWidget):
     def on_BT_Generate_DTCDefine_clicked(self):
         try:
             DTCDefine_List = Get_Df_DTCDefine(self.FltMonrConfig_Excel)
-            # Generate_DTCDefine(self.Project,self.SWVersion,self.DTC_OutPut,DTCDefine_List);
+            # Generate_DTCDefine(cls.Project,cls.SWVersion,cls.DTC_OutPut,DTCDefine_List);
             args = {"Project":self.Project,"SWVersion":self.SWVersion,
                     "DTC_OutPut":self.DTC_OutPut,"DTCDefine_List":DTCDefine_List}
             Generate_DTCDefine(**args)
@@ -456,7 +456,7 @@ class DTCDefine_SYMWidget(QWidget):
             ExcelAPP.Quit()
             self.WarningMessage(str(err))
 
-        # self.WarningMessage("Aria need Xlsm format, so please changed the format manually")
+        # cls.WarningMessage("Aria need Xlsm format, so please changed the format manually")
 
     # 11
     @pyqtSlot()
@@ -493,7 +493,7 @@ class DTCDefine_SYMWidget(QWidget):
                                                          "Excel(*.xlsx *.xlsm)")
         self.__ui.LE_PBCT.setText(FileName)
         self.PBCT_Excel = self.__ui.LE_PBCT.text()
-        # print(self.PBCT_Excel)
+        # print(cls.PBCT_Excel)
         path = self.PBCT_Excel
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
@@ -507,7 +507,7 @@ class DTCDefine_SYMWidget(QWidget):
                                                          "Excel(*.xlsx *.xlsm)")
         self.__ui.LE_EEPROM_Trans.setText(FileName)
         self.EEPROM_Trans_Excel = self.__ui.LE_EEPROM_Trans.text()
-        # print(self.EEPROM_Trans_Excel)
+        # print(cls.EEPROM_Trans_Excel)
 
         path = self.EEPROM_Trans_Excel
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
@@ -519,9 +519,9 @@ class DTCDefine_SYMWidget(QWidget):
                                                       "Please the symfiles.sym output path",
                                                       self.CurrentPath)  # 起始路径
         self.__ui.LE_SYM_OutPut.setText(FolderName)
-        # self.SYM_OutPut_Folder = self.__ui.LE_SYM_OutPut.text()
+        # cls.SYM_OutPut_Folder = cls.__ui.LE_SYM_OutPut.text()
         self.SYM_OutPut = self.__ui.LE_SYM_OutPut.text()
-        # print(self.SYM_OutPut)
+        # print(cls.SYM_OutPut)
         path = self.SYM_OutPut
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
@@ -548,16 +548,16 @@ class DTCDefine_SYMWidget(QWidget):
 
         self.__ui.BT_Generate_SYM.setEnabled(True)
         self.pb.hide()
-    # def Pb_Thread(self):
-    #     self.timer.start(100, self)
+    # def Pb_Thread(cls):
+    #     cls.timer.start(100, cls)
 
     # @pyqtSlot()
-    # def on_BT_Generate_SYM_clicked(self):
-    #     self.__ui.BT_Generate_SYM.setEnabled(False)
-    #     self.pb.show()
+    # def on_BT_Generate_SYM_clicked(cls):
+    #     cls.__ui.BT_Generate_SYM.setEnabled(False)
+    #     cls.pb.show()
     #     try:
-    #         self.Thread = Generate_Thread(self.Generate_Sym)
-    #         self.Thread.run()
+    #         cls.Thread = Generate_Thread(cls.Generate_Sym)
+    #         cls.Thread.run()
     #     except Exception as err:
     #         print(err)
     # # 14

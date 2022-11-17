@@ -64,9 +64,9 @@ class SmartEDRWidget(QWidget):
                                                          "SSDS(*.xlsx)")
         self.__ui.LE_SSDS.setText(FileName)
         self.SSDS_Path = self.__ui.LE_SSDS.text()
-        # print(self.SSDS_Path)
-        # path = self.SSDS_Path
-        # self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
+        # print(cls.SSDS_Path)
+        # path = cls.SSDS_Path
+        # cls.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
 
 
@@ -96,9 +96,9 @@ class SmartEDRWidget(QWidget):
         self.DID_Dict_Path = self.__ui.LE_DID_Dict.text()
 
         self.DID_Dict = DID_SmartEDR.GetDID_Dict(self.DID_Dict_Path)
-        # print(self.DID_Dict_Path)
-        # path = self.DID_Dict_Path
-        # self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
+        # print(cls.DID_Dict_Path)
+        # path = cls.DID_Dict_Path
+        # cls.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
     @pyqtSlot()
     def on_BT_TXT_clicked(self):
@@ -115,10 +115,10 @@ class SmartEDRWidget(QWidget):
         self.TXT += FileNames
         #
         # try:
-        #     path = self.TXT[0]
-        #     self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
+        #     path = cls.TXT[0]
+        #     cls.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
         # except Exception as err:
-        #     self.WarningMessage("please txt files")
+        #     cls.WarningMessage("please txt files")
     @pyqtSlot()
     def on_BT_Generate_clicked(self):
         Excel_Files = []

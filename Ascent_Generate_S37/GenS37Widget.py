@@ -147,7 +147,7 @@ class GenS37Widget(QWidget):
             args = {"BaseAEFPath":self.GenS37_BaseAEF,"AEFFiles": self.GenS37_Files_InTextB,"AEFOutPut":self.GenS37_AEFOutput}
             GenS37_New_AEFFiles = AEFGen.GenerateAEF(**args)
             # (GenerateAEF(BaseAEFPath,AEFFiles,AEFOutPut)
-            # self.DoneMessage("Generate AEF files successfully")
+            # cls.DoneMessage("Generate AEF files successfully")
         except Exception as err:
             self.WarningMessage(str(err))
         return GenS37_New_AEFFiles
@@ -172,7 +172,7 @@ class GenS37Widget(QWidget):
         self.GenS37_AliasPath = "C:\\Users\\Public\\Veoneer\\Ascent\\Projects\\" + self.GenS37_OEM + "\\Common\\" + self.GenS37_SWVersion + "\\OemInputs\\"
         self.__ui.LE_GenS37_Alias.setText(self.GenS37_AliasPath + "FixedCal_AliasMaster.xlsx")
         self.__ui.LE_GenS37_PBCfg.setText(self.GenS37_AliasPath + "FltMonr_PBCfg.h")
-       # print(self.GenS37_OEM)
+       # print(cls.GenS37_OEM)
 
     #2设置GenS37_SWVersion
     @pyqtSlot(str)
@@ -181,7 +181,7 @@ class GenS37Widget(QWidget):
         self.GenS37_AliasPath = "C:\\Users\\Public\\Veoneer\\Ascent\\Projects\\" + self.GenS37_OEM + "\\Common\\" + self.GenS37_SWVersion + "\\OemInputs\\"
         self.__ui.LE_GenS37_Alias.setText(self.GenS37_AliasPath + "FixedCal_AliasMaster.xlsx")
         self.__ui.LE_GenS37_PBCfg.setText(self.GenS37_AliasPath + "FltMonr_PBCfg.h")
-        # print(self.GenS37_SWVersion)
+        # print(cls.GenS37_SWVersion)
 
     #1 .定义BT_GenS37_Alias
     @pyqtSlot()
@@ -192,8 +192,8 @@ class GenS37Widget(QWidget):
                                                          self.CurrentPath,
                                                          "Alias_Excel(*.xlsx *.xlsm)")
         self.__ui.LE_GenS37_Alias.setText(FileName)
-        # self.GenS37_Alias = self.__ui.LE_GenS37_Alias.text()
-        # self.GenS37_Json["ApplicationAlias"] = self.GenS37_Alias
+        # cls.GenS37_Alias = cls.__ui.LE_GenS37_Alias.text()
+        # cls.GenS37_Json["ApplicationAlias"] = cls.GenS37_Alias
         self.CheckPathContainSpace(FileName)
         path = FileName
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
@@ -223,19 +223,19 @@ class GenS37Widget(QWidget):
         self.AddElf()
         # TempList = []
         # #处理Releaase Folder 添加elf名字到CB_GenS37_SWPart 里面去
-        # for MainFolder,SubFolder,File_List in os.walk(self.GenS37_Release):
+        # for MainFolder,SubFolder,File_List in os.walk(cls.GenS37_Release):
         #     for File in File_List:
         #         if File.endswith(".elf"):
         #             TempList.append(File.split(".")[0])
         # for Temp in TempList:
-        #     if Temp not in self.GenS37_SWPart_List:
-        #         self.GenS37_SWPart_List.append(Temp)
-        #         self.__ui.CB_GenS37_SWPart.addItem(Temp)
+        #     if Temp not in cls.GenS37_SWPart_List:
+        #         cls.GenS37_SWPart_List.append(Temp)
+        #         cls.__ui.CB_GenS37_SWPart.addItem(Temp)
 
         path = self.GenS37_Release
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
-        # self.GenS37_Json["ElfFiles"] = [self.GenS37_Release + elf for elf in self.GenS37_ElfList]
-        # self.GenS37_Json["PatchingFiles"][0]["ElfFile"] = self.GenS37_Release + "\\" + self.GenS37_SWPart + ".elf"
+        # cls.GenS37_Json["ElfFiles"] = [cls.GenS37_Release + elf for elf in cls.GenS37_ElfList]
+        # cls.GenS37_Json["PatchingFiles"][0]["ElfFile"] = cls.GenS37_Release + "\\" + cls.GenS37_SWPart + ".elf"
 
     # 1 .定义GenS37_BaseAEF
     @pyqtSlot()
@@ -256,22 +256,22 @@ class GenS37Widget(QWidget):
     def on_CheckB_GenS37_BaseAEF_stateChanged(self):
         self.GenS37_BaseAEF_Check = self.__ui.CheckB_GenS37_BaseAEF.isChecked()
         if self.GenS37_BaseAEF_Check:
-            # if not os.path.exists(self.GenS37_BaseAEF):
+            # if not os.path.exists(cls.GenS37_BaseAEF):
             self.WarningMessage("Please select the base AEF files,I will generate AEF firstly, then generate S37 after you clicked the GenerateS37 button")
-        # print("Check box " + str(self.GenS37_BaseAEF_Check))
+        # print("Check box " + str(cls.GenS37_BaseAEF_Check))
 
     # 设置CB_GenS37_FileType
     @pyqtSlot(str)
     def on_CB_GenS37_FileType_currentTextChanged(self,str):
         self.GenS37_FileType = self.__ui.CB_GenS37_FileType.currentText()
-        # print(self.GenS37_FileType)
+        # print(cls.GenS37_FileType)
 
     # 设置CB_GenS37_SWPart
     @pyqtSlot(str)
     def on_CB_GenS37_SWPart_currentTextChanged(self,str):
         self.GenS37_SWPart = self.__ui.CB_GenS37_SWPart.currentText()
-        # self.GenS37_Json["PatchingFiles"][0]["ElfFile"] = self.GenS37_Release + "\\" + self.GenS37_SWPart + ".elf"
-        # print(self.GenS37_SWPart)
+        # cls.GenS37_Json["PatchingFiles"][0]["ElfFile"] = cls.GenS37_Release + "\\" + cls.GenS37_SWPart + ".elf"
+        # print(cls.GenS37_SWPart)
 
 
     #3设置BT_GenS37__Files
@@ -286,7 +286,7 @@ class GenS37Widget(QWidget):
         # print(FileNames)
         for file in FileNames:
             self.__ui.TextB_GenS37_Files.append(file)
-        # print(self.__ui.TextB_GenS37_Files.text())
+        # print(cls.__ui.TextB_GenS37_Files.text())
         self.GenS37_Files += FileNames
         self.GenS37_Files_InTextB = self.GenS37_Files[:]
         #当时为啥加了一个变量 GenS37_Files_InTextB 和 GenS37_Files 有啥去吧
@@ -317,7 +317,7 @@ class GenS37Widget(QWidget):
         self.GenS37_Json["ApplicationAlias"] = self.GenS37_Alias
         self.GenS37_PBCfg = self.__ui.LE_GenS37_PBCfg.text()
         self.GenS37_Json["FltMonr_PBCFg"] = self.GenS37_PBCfg
-        # self.GenS37_Json["ElfFiles"] = [self.GenS37_Release + elf for elf in self.GenS37_ElfList]
+        # cls.GenS37_Json["ElfFiles"] = [cls.GenS37_Release + elf for elf in cls.GenS37_ElfList]
         self.GenS37_Json["ElfFiles"] = [self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf"]
         self.GenS37_Json["PatchingFiles"][0]["ElfFile"] = self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf"
         # 如果生成AEF文件的复选框被选中，则先生成AEF文件，并把新AEF文件赋值给self.GenS37_Files

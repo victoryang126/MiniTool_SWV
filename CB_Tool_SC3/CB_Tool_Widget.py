@@ -6,44 +6,82 @@ import win32com
 from win32com.client import Dispatch
 from CB_Tool_SC3.HandleTestRun import  *
 from CB_Tool_SC3.HandleTestRun import *
-from CB_Tool_SC3.HandleCodebeamer import *
 from CB_Tool_SC3.Ui_CB_Tool import Ui_CBTool
+from CB_Tool_SC3.Ui_WorkingSet import Ui_WorkingSet
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QDialog, QFileDialog
-from PyQt5.QtCore import pyqtSlot,Qt
+from PyQt5.QtCore import pyqtSlot,Qt,QThread,pyqtSignal,QObject
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QPalette
+from CB_Tool_SC3.CodeBeamer import CodeBeamer
+from CB_Tool_SC3.WorkingSet_Widget import WorkingSet_Widget
+from CB_Tool_SC3.CB_Tool import CB_Tool
+from CB_Tool_SC3.TestSpec_Widget import TestSpec_Widget
+
 import numpy as np
 
-class CB_Tool_Widget(QWidget):
+# class BackgoundThread(QThread,CB_Tool):
+#     # ui_value = ""
+#     # attr_value = ""
+#     update_release = pyqtSignal(str)
+#     update_casefolderid = pyqtSignal(str)
+#     update_casetrackerid = pyqtSignal(str)
+#     def run(self):
+#         while True:
+#         #     # print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+#             if CB_Tool.Release != "" and :
+#                 print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$", CB_Tool.Release,
+#                       CB_Tool.CaseFolderID)
+#                 self.update_release.emit(CB_Tool.Release)
+#             if CB_Tool.CaseFolderID != "":
+#
+#                 self.update_casefolderid.emit(CB_Tool.CaseFolderID)
+#             if CB_Tool.CaseTrackerID != "":
+#                     self.update_casetrackerid.emit(CB_Tool.CaseTrackerID)
 
-    CurrentPath = os.getcwd()
-    TestRun_Link_Prefix = "https://codebeamer.corp.int/cb/issue/"
+def Bind(objectName,propertyName):
+    def getter(self):
+        return self.findChild(QObject,objectName).property(propertyName)
+
+    def setter(self,value):
+        return self.findChild(QObject, objectName).SetProperty(propertyName,value)
+    return property(getter,setter)
+
+class CB_Tool_Widget(QWidget,CB_Tool):
+
+    # CB_Tool = CB_Tool()
+    # Release = Bind("LE_Release","text")
+
 
     def __init__(self):
         super().__init__()
         self.__ui = Ui_CBTool()
         self.__ui.setupUi(self)
+        # self.SubThread = BackgoundThread()
+        # self.SubThread.update_release.connect(self.__ui.LE_Release.setText)
+        # self.SubThread.update_casetrackerid.connect(self.__ui.LE_CaseTrackerID.setText)
+        # self.SubThread.update_casefolderid.connect(self.__ui.LE_CB_Spec_Folder_ID.setText)
+        # self.SubThread.start()
+        # WorkingSet = WorkingSet_Widget()
+        Spec_Widget = TestSpec_Widget()
+        self.__ui.CodeBeamer.addTab(Spec_Widget,"Test Spec SC3")
+        # self.__ui.CodeBeamer.addTab(WorkingSet, "WorkingSet")
+        # cls.__ui.CodeBeamer.setTabText()
 
 
         ##########定义相关属性########################
-        self.PTC_Spec = ""
-        self.PTC_Result = ""
-        self.Release = ""
-        self.CaseTrackerID = ""
-        self.CaseFolderID = ""
-        self.TestRun_TrackerName = ""
-        self.WorkingSet = ""
 
-        self.CB_Spec_FromCB = ""
-        self.FinalCBSpec = ""
-
-        self.TestRun_ID = ""
-        self.TestRun_Link = ""
-        self.TestRun_Report = ""
-        self.TestRun_Status = ""
-        self.TestRun_Result = ""
-
-        self.PTC_Result_List = []
+        #
+        # cls.PTC_Spec = ""
+        # cls.PTC_Result = ""
+        # cls.CB_Spec_FromCB = ""
+        # cls.FinalCBSpec = ""
+        #
+        # cls.TestRun_Link = ""
+        # cls.TestRun_Report = ""
+        # cls.TestRun_Status = ""
+        # cls.TestRun_Result = ""
+        #
+        # cls.PTC_Result_List = []
 
 
     # 定义错误提示框
@@ -68,12 +106,12 @@ class CB_Tool_Widget(QWidget):
             GreenCOlor = QPalette()
             GreenCOlor.setColor(QPalette.Window, Qt.green)
 
-            if self.TestRun_Result == "PASSED":
+            if CB_Tool.TestRun_Result == "PASSED":
                 self.__ui.TestRun_Result.setPalette(GreenCOlor)
             else:
                 self.__ui.TestRun_Result.setPalette(RedColor)
 
-            if self.TestRun_Status == "FINIShED":
+            if CB_Tool.TestRun_Status == "FINIShED":
                 self.__ui.TestRun_Status.setPalette(GreenCOlor)
             else:
                 self.__ui.TestRun_Status.setPalette(RedColor)
@@ -86,65 +124,74 @@ class CB_Tool_Widget(QWidget):
             WhiteColor.setColor(QPalette.Window, Qt.white)
             self.__ui.TestRun_Result.setPalette(WhiteColor)
             self.__ui.TestRun_Status.setPalette(WhiteColor)
-    def check_testrun_tackename(self):
-        # print(self.TestRun_TrackerName == np.nan,self.TestRun_TrackerName)
+    def check_testrun_trackername(self):
+        # print(cls.TestRun_TrackerName == np.nan,cls.TestRun_TrackerName)
         print("test")
         # 如果是老版本的excel，没有TestRun_TrackName 这个单元格则为空，数据必须用工具界面填写的部分，否则使用工具里面的
 
-        if isinstance(self.TestRun_TrackerName,str):
-            self.__ui.LE_TestRun_TrackerName.setText(self.TestRun_TrackerName)
+        if isinstance(CB_Tool.TestRun_TrackerName,str):
+            self.__ui.LE_TestRun_TrackerName.setText(CB_Tool.TestRun_TrackerName)
         else:
-            self.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
-        if not self.TestRun_TrackerName:
+            CB_Tool.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
+        if not CB_Tool.TestRun_TrackerName:
             raise Exception("TestRun_TrackerName can't be empty")
 
     ########################Test Run ################################
+
+    @pyqtSlot()
+    def on_BT_PTC_Spec_clicked(self):
+        self.__ui.LE_PTC_Spec.clear()
+        file,filetype = QFileDialog.getOpenFileName(self,
+                                          "Please the PTC Test Spec ",
+                                          CB_Tool.CurrentPath,
+                                          "Excel(*.xlsx *.xlsm)")  # 起始路径
+
+        self.__ui.LE_PTC_Spec.setText(file)
+        CB_Tool.PTC_Spec = file
+        print(CB_Tool.PTC_Spec)
+        CB_Tool.CB_Spec_ExportPath = os.path.dirname(CB_Tool.PTC_Spec)
+        CB_Tool.CurrentPath = os.path.abspath(file) if os.path.isdir(file) else os.path.dirname(file)
+
     @pyqtSlot()
     def on_BT_PTC_Result_clicked(self):
         self.__ui.LE_PTC_Result.clear()
         file,filetype = QFileDialog.getOpenFileName(self,
                                           "Please the PTC Test Result ",
-                                          self.CurrentPath,
+                                          CB_Tool.CurrentPath,
                                           "Excel(*.xlsx *.xlsm)")  # 起始路径
 
         self.__ui.LE_PTC_Result.setText(file)
-        self.PTC_Result = file
-        self.CurrentPath = os.path.abspath(file) if os.path.isdir(file) else os.path.dirname(file)
+        CB_Tool.PTC_Result = file
+        CB_Tool.CurrentPath = os.path.abspath(file) if os.path.isdir(file) else os.path.dirname(file)
 
     @pyqtSlot()
     def on_BT_Init_Upload_TestRun_clicked(self):
         ### 后期加函数处理
         self.set_status_result(False)
         try:
-            Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.TestRun_TrackerName = ReadResult_TableOfContent(
-                self.PTC_Result)
+            Df_Result  = ReadResult_TableOfContent(
+                CB_Tool.PTC_Result,CB_Tool)
 
-            # if self.CaseTrackerID or self.CB_Spec_Folder_ID or self.Release:
+            # if cls.CaseTrackerID or cls.CB_Spec_Folder_ID or cls.Release:
             #     raise Exception("CaseTrackerID or CB_Spec_Folder_ID or Release can't be empty")
-            print(self.CaseTrackerID)
-            print(self.CaseFolderID)
-            print(self.Release)
-            # print(self.TestRun_TrackerName)
-            self.check_testrun_tackename()
-            self.__ui.LE_CaseTrackerID.setText(self.CaseTrackerID)
-            self.__ui.LE_CB_Spec_Folder_ID.setText(self.CaseFolderID)
-            self.__ui.LE_Release.setText(self.Release)
+
+            # print(cls.TestRun_TrackerName)
+            self.check_testrun_trackername()
+            self.__ui.LE_CaseTrackerID.setText(CB_Tool.CaseTrackerID)
+            self.__ui.LE_CB_Spec_Folder_ID.setText(CB_Tool.CaseFolderID)
+            self.__ui.LE_Release.setText(CB_Tool.Release)
 
 
             args = {
-                "CaseTrackerID": self.CaseTrackerID,
-                "CaseFolderID": self.CaseFolderID,
-                "WokingSet": self.WorkingSet,
-                "Test_Run_Folder": self.CurrentPath,
-                "TestRun_TrackerName": self.TestRun_TrackerName,
+                "Test_Run_Folder": CB_Tool.CurrentPath,
                 "Df_Result": Df_Result,
-                "Release": self.Release
+
             }
-            self.TestRun_Report, self.TestRun_ID, self.TestRun_Status,self.TestRun_Result = CreateTestRun_UpdateResult(**args)
-            self.__ui.LE_TestRun_Report.setText(self.TestRun_Report)
-            self.__ui.LE_TestRun_ID.setText(self.TestRun_ID)
-            self.__ui.TestRun_Status.setText(self.TestRun_Status)
-            self.__ui.TestRun_Result.setText(self.TestRun_Result)
+            CB_Tool.TestRun_Report, CB_Tool.TestRun_Status,CB_Tool.TestRun_Result = CB_Tool.CreateTestRun_UpdateResult(**args)
+            self.__ui.LE_TestRun_Report.setText(CB_Tool.TestRun_Report)
+            self.__ui.LE_TestRun_ID.setText(CB_Tool.TestRun_ID)
+            self.__ui.TestRun_Status.setText(CB_Tool.TestRun_Status)
+            self.__ui.TestRun_Result.setText(CB_Tool.TestRun_Result)
             #根据结果设置颜色
             self.set_status_result(True)
         except Exception as err:
@@ -153,70 +200,68 @@ class CB_Tool_Widget(QWidget):
     @pyqtSlot(str)
     def on_LE_TestRun_TrackerName_textChanged(self):
         if self.__ui.LE_TestRun_TrackerName.text():
-            self.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
+            CB_Tool.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
 
 
     @pyqtSlot(str)
     def on_LE_WorkingSet_textChanged(self):
-        self.WorkingSet = self.__ui.LE_WorkingSet.text()
+        CB_Tool.WorkingSet = self.__ui.LE_WorkingSet.text()
 
 
 
     @pyqtSlot(str)
     def on_LE_TestRun_ID_textChanged(self):
         if self.__ui.LE_TestRun_ID.text():
-
-            self.TestRun_ID = self.__ui.LE_TestRun_ID.text()
-            print(self.TestRun_ID)
-            self.TestRun_Link = self.TestRun_Link_Prefix + self.TestRun_ID
-            url = u'<a href=' + self.TestRun_Link + u'>' + u'<b>' + "Test Run" u'</b></a>'
+            CB_Tool.TestRun_ID = self.__ui.LE_TestRun_ID.text()
+            print(CB_Tool.TestRun_ID)
+            CB_Tool.TestRun_Link = CB_Tool.TestRun_Url_Prefix + CB_Tool.TestRun_ID
+            url = u'<a href=' + CB_Tool.TestRun_Link + u'>' + u'<b>' + "Test Run" u'</b></a>'
             self.__ui.Label_TestRun_Url.setOpenExternalLinks(True)
             self.__ui.Label_TestRun_Url.setText(url)
 
     #
     # @pyqtSlot()
-    # def on_BT_SelectTestRunReport_clicked(self):
-    #     file,filetype = QFileDialog.getOpenFileName(self,
+    # def on_BT_SelectTestRunReport_clicked(cls):
+    #     file,filetype = QFileDialog.getOpenFileName(cls,
     #                                       "Please the PTC Test Result ",
-    #                                       self.CurrentPath,
+    #                                       cls.CurrentPath,
     #                                       "Excel(*.xlsx *.xlsm)")  # 起始路径
-    #     self.__ui.LE_TestRun_Report.setText(file)
-    #     self.TestRun_Report = file
-    #     self.CurrentPath = os.path.abspath(file) if os.path.isdir(file) else os.path.dirname(file)
+    #     cls.__ui.LE_TestRun_Report.setText(file)
+    #     cls.TestRun_Report = file
+    #     cls.CurrentPath = os.path.abspath(file) if os.path.isdir(file) else os.path.dirname(file)
 
     def Debug(self):
-        # self.CaseTrackerID = "10574131"
-        # self.CaseFolderID = "15704840"
-        # self.Release = "CHERY_T26&M1E_Release P10"
-        # self.TestRun_TrackerName = "TR_SHR_TestRuns"
+        # cls.CaseTrackerID = "10574131"
+        # cls.CaseFolderID = "15704840"
+        # cls.Release = "CHERY_T26&M1E_Release P10"
+        # cls.TestRun_TrackerName = "TR_SHR_TestRuns"
         pass
 
     @pyqtSlot()
     def on_BT_Restart_TestRun_clicked(self):
         self.set_status_result(False)
         try:
-            Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.TestRun_TrackerName = ReadResult_TableOfContent(
-                self.PTC_Result)
+            Df_Result = ReadResult_TableOfContent(
+                CB_Tool.PTC_Result,CB_Tool)
 
-            # if self.CaseTrackerID or self.CB_Spec_Folder_ID or self.Release:
+            # if cls.CaseTrackerID or cls.CB_Spec_Folder_ID or cls.Release:
             #     raise Exception("CaseTrackerID or CB_Spec_Folder_ID or Release can't be empty")
             self.Debug()
-            self.__ui.LE_CaseTrackerID.setText(self.CaseTrackerID)
-            self.__ui.LE_CB_Spec_Folder_ID.setText(self.CaseFolderID)
-            self.__ui.LE_Release.setText(self.Release)
+            self.__ui.LE_CaseTrackerID.setText(CB_Tool.CaseTrackerID)
+            self.__ui.LE_CB_Spec_Folder_ID.setText(CB_Tool.CaseFolderID)
+            self.__ui.LE_Release.setText(CB_Tool.Release)
             #为了 让旧模板的人通过填写TestRun的方式，而不是在Excel里填写
-            self.check_testrun_tackename()
+            self.check_testrun_trackername()
             args = {
-                "Test_Run_ID": self.TestRun_ID,
-                "Test_Run_Folder": self.CurrentPath,
+                "Test_Run_Folder": CB_Tool.CurrentPath,
                 "Df_Result": Df_Result,
             }
 
-            self.TestRun_Report, self.TestRun_ID, self.TestRun_Status, self.TestRun_Result = Restart_TestRun( **args)
-            self.__ui.LE_TestRun_Report.setText(self.TestRun_Report)
-            self.__ui.LE_TestRun_ID.setText(self.TestRun_ID)
-            self.__ui.TestRun_Status.setText(self.TestRun_Status)
-            self.__ui.TestRun_Result.setText(self.TestRun_Result)
+            CB_Tool.TestRun_Report, CB_Tool.TestRun_Status, CB_Tool.TestRun_Result = CB_Tool.Restart_TestRun( **args)
+            self.__ui.LE_TestRun_Report.setText(CB_Tool.TestRun_Report)
+            self.__ui.LE_TestRun_ID.setText(CB_Tool.TestRun_ID)
+            self.__ui.TestRun_Status.setText(CB_Tool.TestRun_Status)
+            self.__ui.TestRun_Result.setText(CB_Tool.TestRun_Result)
 
             # 根据结果设置颜色
             self.set_status_result(True)
@@ -226,47 +271,43 @@ class CB_Tool_Widget(QWidget):
 
     @pyqtSlot()
     def on_BT_PTC_Results_clicked(self):
-        self.PTC_Result_List = []
+        CB_Tool.PTC_Result_List = []
         self.__ui.textBrowser_TestResults.clear()
         Files, filetype = QFileDialog.getOpenFileNames(self,
                                                            "Select Test Result files",
-                                                           self.CurrentPath,
+                                                           CB_Tool.CurrentPath,
                                                            "Excel(*.xlsm *.xlsx)")
         # print(FileNames)
         for file in Files:
             self.__ui.textBrowser_TestResults.append(file)
-            self.PTC_Result_List = Files[:]
+            CB_Tool.PTC_Result_List = Files[:]
         if Files:
-            self.CurrentPath =  os.path.abspath(Files[0]) if os.path.isdir(Files[0]) else os.path.dirname(Files[0])
+            CB_Tool.CurrentPath =  os.path.abspath(Files[0]) if os.path.isdir(Files[0]) else os.path.dirname(Files[0])
 
     @pyqtSlot()
     def on_BT_Init_Upload_TestRuns_clicked(self):
-        for ptc_result in self.PTC_Result_List:
+        for ptc_result in CB_Tool.PTC_Result_List:
             try:
-                Df_Result, self.CaseTrackerID, self.CaseFolderID, self.Release, self.TestRun_TrackerName = ReadResult_TableOfContent(
-                    ptc_result)
+                Df_Result = ReadResult_TableOfContent(
+                    ptc_result,CB_Tool)
 
-                # if self.CaseTrackerID or self.CB_Spec_Folder_ID or self.Release:
+                # if cls.CaseTrackerID or cls.CB_Spec_Folder_ID or cls.Release:
                 #     raise Exception("CaseTrackerID or CB_Spec_Folder_ID or Release can't be empty")
-                self.check_testrun_tackename()
+                self.check_testrun_trackername()
                 args = {
-                    "CaseTrackerID": self.CaseTrackerID,
-                    "CaseFolderID": self.CaseFolderID,
-                    "WokingSet":self.WorkingSet,
-                    "Test_Run_Folder": self.CurrentPath,
-                    "TestRun_TrackerName": self.TestRun_TrackerName,
+                    "Test_Run_Folder": CB_Tool.CurrentPath,
                     "Df_Result": Df_Result,
-                    "Release": self.Release
+
                 }
-                self.TestRun_Report, self.TestRun_ID, self.TestRun_Status, self.TestRun_Result = CreateTestRun_UpdateResult(
+                CB_Tool.TestRun_Report, CB_Tool.TestRun_Status, CB_Tool.TestRun_Result = CB_Tool.CreateTestRun_UpdateResult(
                     **args)
-                print("### Upload" + ptc_result + " to test run,TestRun_Status:" + self.TestRun_Status + "TestRun_Result: " + self.TestRun_Result)
-                # self.__ui.LE_TestRun_Report.setText(self.TestRun_Report)
-                # self.__ui.LE_TestRun_ID.setText(self.TestRun_ID)
-                # self.__ui.TestRun_Status.setText(self.TestRun_Status)
-                # self.__ui.TestRun_Result.setText(self.TestRun_Result)
+                print("### Upload" + ptc_result + " to test run,TestRun_Status:" + CB_Tool.TestRun_Status + "TestRun_Result: " + CB_Tool.TestRun_Result)
+                # cls.__ui.LE_TestRun_Report.setText(cls.TestRun_Report)
+                # cls.__ui.LE_TestRun_ID.setText(cls.TestRun_ID)
+                # cls.__ui.TestRun_Status.setText(cls.TestRun_Status)
+                # cls.__ui.TestRun_Result.setText(cls.TestRun_Result)
                 # 根据结果设置颜色
-                # self.set_status_result(True)
+                # cls.set_status_result(True)
             except Exception as err:
                 self.WarningMessage(err)
 
@@ -274,6 +315,7 @@ class CB_Tool_Widget(QWidget):
 
 
 if __name__ == '__main__':
+
     app = QApplication(sys.argv)
     baseWidget = CB_Tool_Widget()
     baseWidget.show()

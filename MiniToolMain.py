@@ -17,14 +17,14 @@ from Ascent_Generate_S37 import GenS37Widget
 from DTCDefine_SymFile import DTCDefine_SYMWidget
 from Diagnostic_Parameter import CANDWidget
 from VBFGenerate import VBFGenerateWidget
-from CB_Spec_Tool import CB_Spec_Tool_Widget
+
 from GenerateScript import GenerateScriptsWidget
-from CB_Tool_SC3 import CB_Tool_Widget
+from CB_Server_API.CB_Tool_Widget import CB_Tool_Widget
 
 class MiniTool(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('MiniTool V1.15.3')
+        self.setWindowTitle('MiniTool V1.15.6')
         self.setWindowIcon(QIcon('./Images/title.ico'))
         self.setGeometry(150,150,1300,680)
 
@@ -32,22 +32,22 @@ class MiniTool(QMainWindow):
         self.list = QListWidget()
         self.list.insertItem(0,'Regression')
         self.list.insertItem(1,'GenS37')
-        # self.list.insertItem(2,'OtTool')
+        # cls.list.insertItem(2,'OtTool')
         self.list.insertItem(3, 'DTCDefine_SYM')
         self.list.insertItem(4, 'CAND')
         self.list.insertItem(5, 'VBFGenerate')
-        self.list.insertItem(6, 'CB_Spec_Tool')
+        # self.list.insertItem(6, 'CB_Spec_Tool')
         self.list.insertItem(7, 'GenerateScript')
-        self.list.insertItem(8, 'CB_Tool_SC3')
+        self.list.insertItem(8, 'Codebeamer_Tool')
         # 右边StackedWidget
         self.stack = QStackedWidget()
         self.stack.addWidget(RegressionWidget())
         self.stack.addWidget(GenS37Widget())
-        # self.stack.addWidget(OtToolWidget())
+        # cls.stack.addWidget(OtToolWidget())
         self.stack.addWidget(DTCDefine_SYMWidget())
         self.stack.addWidget(CANDWidget())
         self.stack.addWidget(VBFGenerateWidget())
-        self.stack.addWidget(CB_Spec_Tool_Widget())
+        # self.stack.addWidget(CB_Spec_Tool_Widget())
         self.stack.addWidget(GenerateScriptsWidget())
         self.stack.addWidget(CB_Tool_Widget())
         hbox = QHBoxLayout()
@@ -56,8 +56,8 @@ class MiniTool(QMainWindow):
         hbox.addWidget(self.stack)
         hbox.setStretchFactor(self.list,1)
         hbox.setStretchFactor(self.stack,10)
-        # self.setLayout(hbox)
-        # self.setCentralWidget(hbox)
+        # cls.setLayout(hbox)
+        # cls.setCentralWidget(hbox)
         BaseWidget = QWidget();
         BaseWidget.setLayout(hbox)
         self.setCentralWidget(BaseWidget)

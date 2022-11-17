@@ -47,7 +47,7 @@ def GenS37(GenS37_Ascent,GenS37_OEM,GenS37_SWVersion,GenS37_Json,GenS37_Files,Ge
         json.dump(GenS37_Json,f,indent = 4)
         f.close()
         # 往bat写入command line命令
-        # Command_Line = self.GenS37_Ascent + ' -OEM ' + self.GenS37_OEM + ' -FT GenerateS37 -SV ' + self.GenS37_SWVersion + ' -IN  ' + Txt_CWD + " -OUT " + self.GenS37_Output + " -PRE " + NamePara
+        # Command_Line = cls.GenS37_Ascent + ' -OEM ' + cls.GenS37_OEM + ' -FT GenerateS37 -SV ' + cls.GenS37_SWVersion + ' -IN  ' + Txt_CWD + " -OUT " + cls.GenS37_Output + " -PRE " + NamePara
         # file.write('\n')
         Command_Line = "AscentBatch.exe" + ' -OEM ' + GenS37_OEM + ' -FT GenerateS37FromElf -SV ' + GenS37_SWVersion + ' -IN  ' + JsonFile + " -OUT " + GenS37_Output + "/" + S37Name + ".s37"
         CmdFile.write('\n')

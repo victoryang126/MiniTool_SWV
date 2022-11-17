@@ -206,7 +206,7 @@ def ReadSpec_ReplaceDoorsID(Spec,Df_LoopUp):
     Df_spec = Df_spec.fillna("")
 
     Df_spec['_VerifiesDOORSRequirements_SW'] = Df_spec['_VerifiesDOORSRequirements_SW'].apply(ReplaceCellValue,Df_LoopUp = Df_LoopUp)
-    # print(Df_spec)
+    # print(Df_PTC_Spec)
     Df_spec.set_index("Test Case Name", inplace=True)
     #获取行数
     RowSize = len(Df_spec.index)
@@ -317,7 +317,7 @@ if __name__ == '__main__':
 # ExcelPath = r"E:\GitHub\MiniTool\DataSource\CHT_SWV_GWM_P0102_2S_IMU_Test Result.xlsm"
 # LoopUP = "..\DataSource/P05CBID.txt"
 # Df_LoopUp = ReadLoopUp(LoopUP)
-# Df_spec,LastSheet_Name,RowSize = ReadSpec_ReplaceDoorsID(Spec,Df_LoopUp)
+# Df_PTC_Spec,LastSheet_Name,RowSize = ReadSpec_ReplaceDoorsID(Spec,Df_LoopUp)
 #     ExcelAPP = win32com.client.DispatchEx('Excel.Application')
 #     ExcelAPP.Visible = 0
 #     ExcelAPP.DisplayAlerts = 0

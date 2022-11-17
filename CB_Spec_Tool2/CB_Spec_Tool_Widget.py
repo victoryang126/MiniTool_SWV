@@ -115,8 +115,8 @@ class CB_Spec_Tool_Widget(QWidget):
         self.__ui.LE_LookUp.setText(FileName)
         self.LookUp = self.__ui.LE_LookUp.text()
         print(self.LookUp)
-        # path = self.SSDS_Path
-        # self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
+        # path = cls.SSDS_Path
+        # cls.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
 
     #2.设置BT_Test_Spec
     @pyqtSlot()
@@ -173,7 +173,7 @@ class CB_Spec_Tool_Widget(QWidget):
 
         Excel_Files = []
         try:
-            # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
+            # Df_LoopUp = CB_Tool.ReadLoopUp(cls.LookUp)
             for Test_Spec in self.Test_Spec_List:
                 # print(Test_Spec)
                 Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
@@ -269,12 +269,12 @@ class CB_Spec_Tool_Widget(QWidget):
     @pyqtSlot(str)
     def on_LE_CaseTrackerID_textChanged(self, str):
         self.CaseTrackerID  = self.__ui.LE_CaseTrackerID.text()
-        # print(self.CaseTrackerID)
+        # print(cls.CaseTrackerID)
 
     @pyqtSlot(str)
     def on_LE_CB_Spec_Folder_ID_textChanged(self, str):
         self.CB_Spec_Folder_ID = self.__ui.LE_CB_Spec_Folder_ID.text()
-        # print(self.CB_Spec_Folder_ID)
+        # print(cls.CB_Spec_Folder_ID)
 
     @pyqtSlot()
     def on_BT_DownloadCBSpec_clicked(self):
@@ -282,7 +282,7 @@ class CB_Spec_Tool_Widget(QWidget):
             self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
             return
         try:
-            # print(self.FinalCBSpec)
+            # print(cls.FinalCBSpec)
             # DownLoadSpecFromCB(CaseTrackerID, CB_Spec_Folder, CaseFolderID):
             CB_Spec_DownloadFromCB = DownLoadSpecFromCB(self.CaseTrackerID, self.CB_Spec_ExportPath,self.CB_Spec_Folder_ID )
             self.DoneMessage("Download Succesfully")
@@ -298,7 +298,7 @@ class CB_Spec_Tool_Widget(QWidget):
             self.WarningMessage("CaseTrackerID or CB_Spec_Folder_ID can't be empty")
             return
         try:
-            # print(self.FinalCBSpec)
+            # print(cls.FinalCBSpec)
             InitCaseList = CB_Tool.GetInitCaseList(self.FinalCBSpec)
             ReturnValue = UploadSpec2CB(self.CaseTrackerID, self.FinalCBSpec, self.CB_Spec_Folder_ID, InitCaseList)
             if ReturnValue:
@@ -316,7 +316,7 @@ class CB_Spec_Tool_Widget(QWidget):
             return
         Excel_Files = []
         try:
-            # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
+            # Df_LoopUp = CB_Tool.ReadLoopUp(cls.LookUp)
             for Test_Spec in self.Test_Spec_List:
                 # print(Test_Spec)
                 Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
@@ -350,7 +350,7 @@ class CB_Spec_Tool_Widget(QWidget):
         #先重新生成
         print("1st Generate")
         try:
-            # Df_LoopUp = CB_Tool.ReadLoopUp(self.LookUp)
+            # Df_LoopUp = CB_Tool.ReadLoopUp(cls.LookUp)
             for Test_Spec in self.Test_Spec_List:
                 # print(Test_Spec)
                 Df_spec = CB_Tool.ReadSpec_TableOfContent(Test_Spec)
@@ -392,7 +392,7 @@ class CB_Spec_Tool_Widget(QWidget):
                         self.FinalCBSpec = Excel_Files[0]
 
                         print(self.FinalCBSpec)
-                        # self.WarningMessage("T")
+                        # cls.WarningMessage("T")
                         self.__ui.LE_FinalCBSpec.setText(self.FinalCBSpec)
                         NotOK_Files = [Excel_File for Excel_File in Excel_Files if not os.path.exists(Excel_File)]
                         if len(NotOK_Files):

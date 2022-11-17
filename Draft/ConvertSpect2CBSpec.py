@@ -51,7 +51,7 @@ def ReadSpec_LastSheet_ReplaceDoorsID(Spec, Df_LoopUp):
     Df_spec['_VerifiesDOORSRequirements_SW'] = Df_spec['_VerifiesDOORSRequirements_SW'].apply(ReplaceCellValue,Df_LoopUp = Df_LoopUp)
     Df_spec['_VerifiesNonDOORSRequirements'] = Df_spec['_VerifiesNonDOORSRequirements'].apply(ReplaceCellValue,Df_LoopUp = Df_LoopUp)
 
-    # print(Df_spec)
+    # print(Df_PTC_Spec)
     Df_spec.set_index("Test Case Name", inplace=True)
     #获取行数
     RowSize = len(Df_spec.index)
@@ -75,7 +75,7 @@ def ReadSpec_LastSheet_ReplaceDoorsID(Spec, Df_LoopUp):
 #
 # # '''
 # # # 可以重新建立一个独立的进程
-# def RepaceDoorsID_SaveMacroEcel(Spec,Df_spec,LastSheet_Name,RowSize):
+# def RepaceDoorsID_SaveMacroEcel(Spec,Df_PTC_Spec,LastSheet_Name,RowSize):
 #
 #     w = win32com.client.DispatchEx('Excel.Application')
 #     w.Visible = 0
@@ -86,9 +86,9 @@ def ReadSpec_LastSheet_ReplaceDoorsID(Spec, Df_LoopUp):
 #     try:
 #         sht = wb.Worksheets(LastSheet_Name)
 #         for i in range(8,RowSize + 8):
-#             if sht.Cells(i, "B").Value in Df_spec.index:
+#             if sht.Cells(i, "B").Value in Df_PTC_Spec.index:
 #                 # print(sht.Cells(i, "B").Value)
-#                 sht.Cells(i, "M").Value = Df_spec.loc[sht.Cells(i, "B").Value,"_VerifiesDOORSRequirements_SW"]
+#                 sht.Cells(i, "M").Value = Df_PTC_Spec.loc[sht.Cells(i, "B").Value,"_VerifiesDOORSRequirements_SW"]
 #     except:
 #         pass
 #     wb.Close(SaveChanges=1)
@@ -141,10 +141,10 @@ def ReadSpec_TableOfContent(Spec):
     Df_spec = Df_spec.drop(['_VerifiesDOORSRequirements'], axis=1).join(Df_ReqID)
 
 
-    # print(Df_spec.head(6))
+    # print(Df_PTC_Spec.head(6))
     #没有数据的时候填充空白
     Df_spec.fillna("", inplace=True)
-    # Df_spec.set
+    # Df_PTC_Spec.set
     return Df_spec
     #NA
 
@@ -156,8 +156,8 @@ def ReadSpec_TableOfContent_SWTD(Spec):
     # ColumnsList = ["TestCaseName","TC ID", "Requirement ID"]
     ColumnsList = ["TestCaseName", "Requirement ID"]
     Df_spec = Df_spec[ColumnsList]
-    # Df_spec = Df_spec.iloc[7:,:]
-    # Df_spec.dropna(subset = ["Object Text"],inplace = True)
+    # Df_PTC_Spec = Df_PTC_Spec.iloc[7:,:]
+    # Df_PTC_Spec.dropna(subset = ["Object Text"],inplace = True)
 
     Df_spec["Requirement ID"] = Df_spec["Requirement ID"].str.rstrip("/")
     print(Df_spec)
@@ -181,7 +181,7 @@ def ReadSpec_TableOfContent_SWTD(Spec):
     print(Df_spec.head(30))
     #没有数据的时候填充空白
     Df_spec.fillna("", inplace=True)
-    # Df_spec.set
+    # Df_PTC_Spec.set
     return Df_spec
 
 #2.读取loop up table
@@ -232,7 +232,7 @@ def ReadLoopUp_SWTD(LoopUP):
     #NA
 
 # # 3.生成表格
-# def GenerateSpec_CB(Df_spec,Df_LoopUp,SpecCB):
+# def GenerateSpec_CB(Df_PTC_Spec,Df_LoopUp,SpecCB):
 #     # ColumnsList = ["ID", "Priority","Name","Description","Pre-Action","Post-Action","Test Steps.Action","Test Steps.Expected result","Test Steps.Critical","Test Parameters","Verifies","Status","Type"]
 #     ColumnsList = ["ID", "Parent", "Priority", "Name", "Description", "Pre-Action", "Post-Action",
 #                    "Test Steps.Action", "Test Steps.Expected result",
@@ -245,15 +245,15 @@ def ReadLoopUp_SWTD(LoopUP):
 #     # print(df_SpecCB)
 #     # ColumnsList_Temp = ["Name","Verifies"]
 #
-#     Df_spec['_VerifiesDOORSRequirements'] = Df_spec['_VerifiesDOORSRequirements'].apply(lambda x:x if x not in Df_LoopUp.index else "[ISSUE:" + Df_LoopUp.loc[x,"CBID"] + "]")
+#     Df_PTC_Spec['_VerifiesDOORSRequirements'] = Df_PTC_Spec['_VerifiesDOORSRequirements'].apply(lambda x:x if x not in Df_LoopUp.index else "[ISSUE:" + Df_LoopUp.loc[x,"CBID"] + "]")
 #
-#     Df_spec.columns = ["Name","Verifies"]
+#     Df_PTC_Spec.columns = ["Name","Verifies"]
 #
 #     # print(Df_LoopUp.loc["undefined","CBID"])
-#     df_SpecCB = df_SpecCB.append(Df_spec)
+#     df_SpecCB = df_SpecCB.append(Df_PTC_Spec)
 #     #
 #     # print(df_SpecCB)
-#     # print(Df_spec)
+#     # print(Df_PTC_Spec)
 #     #CB格式要求，前面加三个空格
 #     df_SpecCB["Name"] = "   " + df_SpecCB["Name"]
 #     df_SpecCB.to_excel(SpecCB, sheet_name="Export", index=False)
@@ -278,7 +278,7 @@ def to_excel_auto_column_weight(df, writer, sheet_name):
         # openpyxl引擎设置字符宽度时会缩水0.5左右个字符，所以干脆+2使左右都空出一个字宽。
         worksheet.column_dimensions[get_column_letter(i)].width = width + 2
 
-# def GenerateSpec_CB_Init(Df_spec, Df_LoopUp, SpecCB):
+# def GenerateSpec_CB_Init(Df_PTC_Spec, Df_LoopUp, SpecCB):
 def GenerateSpec_CB_Init(Df_spec, SpecCB):
     # ColumnsList = ["ID", "Priority","Name","Description","Pre-Action","Post-Action","Test Steps.Action","Test Steps.Expected result","Test Steps.Critical","Test Parameters","Verifies","Status","Type"]
     ColumnsList = ["ID", "Parent", "Priority", "Name", "Description", "Pre-Action", "Post-Action",
@@ -399,6 +399,6 @@ if __name__ == '__main__':
 
     GenerateSpec_CB_Init_SWTD(Df_spec, SpecCB_Generate,Df_LoopUp)
     #
-    # df_SpecCB_Generate = GenerateSpec_CB_Init(Df_spec, Df_LoopUp, SpecCB_Generate)
-    # df_SpecCB_FromCB,Df_ID_Case_FromCB = ReadSpecCB_FromCB(SpecCB_FromCB)
+    # df_SpecCB_Generate = GenerateSpec_CB_Init(Df_PTC_Spec, Df_LoopUp, SpecCB_Generate)
+    # df_SpecCB_FromCB,Df_ID_Case_FromCB = ReadSpecCB_FromCB(Spec_FromCB)
     # GenerateSpec_CB_Modify(df_SpecCB_Generate, Df_ID_Case_FromCB, SpecCB_Modify)

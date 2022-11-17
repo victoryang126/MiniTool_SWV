@@ -224,6 +224,10 @@ def GetInfoFromTxt(txt):
         ResponseValue = TmpF.read().strip("\n")
     print(ResponseValue)
     return DataRecordExcel,DID,ResponseValue,
+
+def sum(a,b):
+    return a+b
+
 # '''
 if __name__ == '__main__':
     # DID = "204F"
@@ -236,12 +240,14 @@ if __name__ == '__main__':
 
     txt = "C:\Python\GitHub\Minitool\DataSource\FrontLevel_1_FA15.txt";
     # DataRecordExcel = os.path.split(txt)[1].split(".")[0]  # 获取文件的名字，不包含路径
-    DataRecordExcel,DID, ResponseValue = GetInfoFromTxt(txt)
+    # DataRecordExcel,DID, ResponseValue = GetInfoFromTxt(txt)
+    #
+    # DID_Dict = GetDIDObjectFromSSDS(ExcelDir,SheetName,OutPut)
+    #
+    # DataRecordDict = GetDataRecordDetail2(ResponseValue, DID_Dict, DID)
+    #
+    # GenerateDataRecordExcel(DataRecordDict, DataRecordExcel, DID)
 
-    DID_Dict = GetDIDObjectFromSSDS(ExcelDir,SheetName,OutPut)
+    sum(1,2)
 
-    DataRecordDict = GetDataRecordDetail2(ResponseValue, DID_Dict, DID)
-
-    GenerateDataRecordExcel(DataRecordDict, DataRecordExcel, DID)
-
-
+    print(sum(1,5))
