@@ -86,10 +86,10 @@ def read_table_of_content(ptc_excel):
     column_list = ["Object Text", "_VerificationStatus", "_VerifiesDOORSRequirements", "_Comment","Test Method"]
     excel_info = {}
     excel_info["test_information"]= df_ptc.iloc[0, 4]
-    excel_info["testrun_trackerid"] = df_ptc.iloc[1, 4]
-    excel_info["testcase_trackerid"] = df_ptc.iloc[2, 4]
-    excel_info["testcase_folderid"] = df_ptc.iloc[3, 4]
-    excel_info["release"] = df_ptc.iloc[4, 4]
+    excel_info["testrun_trackerid"] = df_config.iloc[24, 3]
+    excel_info["testcase_trackerid"] = df_config.iloc[21, 3]
+    excel_info["testcase_folderid"] = df_config.iloc[22, 3]
+    excel_info["release"] = df_config.iloc[23, 3]
     excel_info["AAU"] = df_config.iloc[7,3]
 
 
@@ -172,37 +172,9 @@ def generate_cb_case(df_ptc,testcase_list):
 
 if __name__ == '__main__':
     pass
-  #   Spec = r"C:\Users\victor.yang\Desktop\Work\CB\SpecTemplate\CHT_SWV_Project_FunctionName_Test Specification_Template_SC3.xlsm"
-  #   # # Df_PTC_Spec,CaseTrackerID,CB_Spec_Folder_ID,Release,TestRun_TrackerName= ReadSpec_TableOfContent(Spec)
-  #   # SpecCB = r"C:\Users\victor.yang\Desktop\Work\CB\SpecTemplate\SpecToCB.xlsx"
-  #   # SpecCB_FromCB = r"C:\Users\victor.yang\Desktop\Work\CB\84194_GWM_D30_RCS_SC2_2S - TC_L30_DES_SW_Test_Cases (4).xlsx"
-  #   # CB_Spec_Generate = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer.xlsx"
-  #   # CodeBeamer_Obj = CodeBeamer()
-  #   # print("Before" + CodeBeamer_Obj.TestRun_TrackerName)
-  #   df_ptc,excel_info = read_table_of_content(Spec)
-  #   testcases = [
-  #   {
-  #     "id": 19997581,
-  #     "name": "Test Case  - A",
-  #     "type": "TrackerItemReference"
-  #   },
-  #       {
-  #           "id": 19997586,
-  #           "name": "Test Case  - B",
-  #           "type": "TrackerItemReference"
-  #       },
-  #   {
-  #     "id": 19997586,
-  #     "name": "Test Case  - C",
-  #     "type": "TrackerItemReference"
-  #   }
-  # ]
-  #   generate_cb_case(df_ptc,testcases)
-  #   # print("After" + CodeBeamer_Obj.TestRun_TrackerName)
-  #   # GenerateSpec_CB_Init(Df_Spec, SpecCB,CodeBeamer_Obj)
-  #   # # ReadSpec_TableOfContent_0925(Spec)
-  #   # GenerateSpec_CB_Init(Df_PTC_Spec,Release,CB_Spec_Generate)
-  #   # df_SpecCB_FromCB, Df_ID_Case_FromCB =  ReadSpecCB_FromCB2(Spec_FromCB)
+    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\SpecTemplate\CHT_SWV_Project_FunctionName_Test Specification_Template_SC3.xlsm"
+    df_SpecCB_FromCB, excel_info =  read_table_of_content(Spec)
+    print(excel_info)
   #   # df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")
   #   # SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer_Modify.xlsx"
   #   #

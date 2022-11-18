@@ -45,13 +45,19 @@ def bind(objectName,propertyName):
     """
     def getter(self):
         # print("getter")
+        # try:
+        #     func = self.findChild(QObject,objectName).property(propertyName)
+        # except Exception as err:
+        #     print(err)
         return self.findChild(QObject,objectName).property(propertyName)
 
     def setter(self,value):
+        # print(dir(self.findChild(QObject, objectName)))
         # print("setter")
-        # print(self.findChild(QObject, objectName).objectName())
         # try:
-        #     # a = self.findChild(QObject, objectName).setText(value)
+        #     func = self.findChild(QObject, objectName).setProperty(propertyName,value)
+        # except Exception as err:
+        #     print(err)
         #     # a = self.findChild(QObject, objectName).setProperty(value)
         return self.findChild(QObject, objectName).setProperty(propertyName,value)
 
@@ -72,6 +78,8 @@ class CB_Tool_Widget(QWidget):
     __server = bind("LE_Server","text")
     user = bind("LE_User","text")
     pwd = bind("LE_Pwd","text")
+    ptc_excels =  [] #bind("textBrowser_PTC_Excels","plainText") #plainText
+
     #下面是API的介绍
     server_api_link = "https://codebeamer.corp.int/cb/v3/swagger/editor.spr#/Traceability"
 
@@ -145,9 +153,56 @@ class CB_Tool_Widget(QWidget):
 
     ########################Test Run ################################
 
+
+    def upload_testcase(self,ptc_excel):
+        df_ptc, excel_info = read_table_of_content(ptc_excel)
+        testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
+        release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
+        df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
+        self.exract_value(excel_info)
+        args = {
+            "df_cbcase": df_cbcase,
+            "testcase_trackerid": self.testcase_trackerid,
+            "testcase_folderid": self.testcase_folderid,
+            "release_dict": release_dict
+        }
+        self.server.upload_testcases(**args)
+
+    def upload_testrun(self,ptc_excel):
+        df_ptc, excel_info = read_table_of_content(ptc_excel)
+        testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
+        release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
+        df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
+        self.exract_value(excel_info)
+        args = {
+            "df_cbcase": df_cbcase, "testrun_trackerid": self.testrun_trackerid, "name": self.aau,
+            "test_information": self.test_information, "release_dict": release_dict
+        }
+        self.testrunid = self.server.create_test_run_baseon_testcases(**args)
+        self.server.update_test_run_result(df_cbcase, self.testrunid)
+
+
+    def set_upload_results(self,err):
+        self.__ui.textBrowser_UploadResults.append(err)
+
+    def clear_upload_results(self):
+        self.__ui.textBrowser_UploadResults.clear()
+
+    @pyqtSlot()
+    def on_checkBox_Lock_clicked(self):
+        #将LE_Server的属性设置是否只读，默认是只读的
+        print(self.__ui.checkBox_Lock.isChecked())
+        if self.__ui.checkBox_Lock.isChecked():
+            self.__ui.LE_Server.setReadOnly(True)
+        else:
+            self.__ui.LE_Server.setReadOnly(False)
+
+
+    @pyqtSlot()
     def on_BT_Login_clicked(self):
         try:
             self.server.update_codebeamer(self.__server,self.user,self.pwd)
+            self.DoneMessage("Login Done")
         except Exception as err:
             print(err)
 
@@ -165,20 +220,21 @@ class CB_Tool_Widget(QWidget):
     def on_BT_Upload_TestCase_clicked(self):
 
         try:
-            df_ptc, excel_info = read_table_of_content(self.ptc_excel)
-            testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
-            release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
-            df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
-            print(1)
-            self.exract_value(excel_info)
-            print(2)
-            args = {
-                "df_cbcase":df_cbcase,
-                "testcase_trackerid":self.testcase_trackerid,
-                "testcase_folderid":self.testcase_folderid,
-                "release_dict":release_dict
-            }
-            self.server.upload_testcases(**args)
+            self.upload_testcase(self.ptc_excel)
+            # df_ptc, excel_info = read_table_of_content(self.ptc_excel)
+            # testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
+            # release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
+            # df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
+            # print(1)
+            # self.exract_value(excel_info)
+            # print(2)
+            # args = {
+            #     "df_cbcase":df_cbcase,
+            #     "testcase_trackerid":self.testcase_trackerid,
+            #     "testcase_folderid":self.testcase_folderid,
+            #     "release_dict":release_dict
+            # }
+            # self.server.upload_testcases(**args)
             self.DoneMessage("Upload_TestCase Done")
         except Exception as err:
             self.WarningMessage(err)
@@ -192,16 +248,17 @@ class CB_Tool_Widget(QWidget):
 
         # self.set_status_result(False)
         try:
-            df_ptc, excel_info = read_table_of_content(self.ptc_excel)
-            testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
-            release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
-            df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
-            self.exract_value(excel_info)
-            args = {
-                "df_cbcase":df_cbcase, "testrun_trackerid":self.testrun_trackerid, "name":self.aau, "test_information":self.test_information, "release_dict":release_dict
-            }
-            self.testrunid = self.server.create_test_run_baseon_testcases(**args)
-            self.server.update_test_run_result(df_cbcase,self.testrunid)
+            self.upload_testrun(self.ptc_excel)
+            # df_ptc, excel_info = read_table_of_content(self.ptc_excel)
+            # testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
+            # release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
+            # df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
+            # self.exract_value(excel_info)
+            # args = {
+            #     "df_cbcase":df_cbcase, "testrun_trackerid":self.testrun_trackerid, "name":self.aau, "test_information":self.test_information, "release_dict":release_dict
+            # }
+            # self.testrunid = self.server.create_test_run_baseon_testcases(**args)
+            # self.server.update_test_run_result(df_cbcase,self.testrunid)
             self.DoneMessage("Init_Upload_TestRun Done")
         except Exception as err:
             self.WarningMessage(err)
@@ -237,16 +294,47 @@ class CB_Tool_Widget(QWidget):
 
 
     @pyqtSlot(str)
-    def on_LE_TestRun_ID_textChanged(self):
-        if self.__ui.LE_TestRun_ID.text():
+    def on_LE_TestRunID_textChanged(self):
+        if self.__ui.LE_TestRunID.text():
             TestRun_Link = f"https://codebeamer.corp.int/cb/issue/{self.testrunid}"
             url = u'<a href=' + TestRun_Link + u'>' + u'<b>' + "Test Run" u'</b></a>'
             self.__ui.Label_TestRun_Url.setOpenExternalLinks(True)
             self.__ui.Label_TestRun_Url.setText(url)
 
-    #
 
+    @pyqtSlot()
+    def on_BT_PTC_Excels_clicked(self):
+        self.__ui.textBrowser_PTC_Excels.clear()
+        self.ptc_excels = []
+        filenames, filetype = QFileDialog.getOpenFileNames(self,
+                                                           "Please select the excels (spec or result)",
+                                                           self.currentpath,
+                                                            "Excel(*.xlsx *.xlsm)")
+        # self.ptc_excels = filenames
+        for file in filenames:
+            self.__ui.textBrowser_PTC_Excels.append(file + ";")
+            self.ptc_excels.append(file)
+        print(self.ptc_excels)
 
+    @pyqtSlot()
+    def on_BT_Upload_TestCases_clicked(self):
+        self.clear_upload_results()
+        for ptc_excel in self.ptc_excels:
+            try:
+                self.upload_testcase(ptc_excel)
+            except Exception as err:
+                self.set_upload_results(f"upload testcase for {ptc_excel} failed" )
+        self.DoneMessage("Upload_TestCases Done")
+
+    @pyqtSlot()
+    def on_BT_Upload_TestRuns_clicked(self):
+        self.clear_upload_results()
+        for ptc_excel in self.ptc_excels:
+            try:
+                self.upload_testrun(ptc_excel)
+            except Exception as err:
+                self.set_upload_results(f"upload testrun for {ptc_excel} failed" )
+        self.DoneMessage("Upload_TestRuns Done")
 
 if __name__ == '__main__':
 
