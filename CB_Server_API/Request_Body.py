@@ -235,7 +235,7 @@ class Post_TestCase_Body:
         None
         """
         self.status = Value_Id(6, "Obsolete", Field_Type.ChoiceOptionReference).__dict__
-        self.customFields = []
+        # self.customFields = []
 
 
 # @dataclasses

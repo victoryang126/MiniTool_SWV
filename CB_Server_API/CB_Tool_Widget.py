@@ -9,7 +9,6 @@ from PyQt5.QtCore import pyqtSlot,Qt,QThread,pyqtSignal,QObject
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QPalette
 from CB_Server_API.Ui_CB_Tool import  Ui_CBTool
-from CB_Server_API.TestSpec_Widget import TestSpec_Widget
 from CB_Server_API.CodeBeamer_Swagger import *
 
 import numpy as np
@@ -82,13 +81,14 @@ class CB_Tool_Widget(QWidget):
 
     #下面是API的介绍
     server_api_link = "https://codebeamer.corp.int/cb/v3/swagger/editor.spr#/Traceability"
+    server_api = "https://codebeamer.corp.int/cb/api/v3"
 
     def __init__(self):
         super().__init__()
         self.__ui = Ui_CBTool()
         self.__ui.setupUi(self)
-        self.server = CodeBeamer(self.__server,"UserName","Password")
-        # self.server = CodeBeamer(self.__server, "victor.yang", "Mate40@VY20082021")
+        # self.server = CodeBeamer(self.__server,"UserName","Password")
+        self.server = CodeBeamer(self.__server, "victor.yang", "Mate40@VY20082021")
 
         ##########定义相关属性########################
 
