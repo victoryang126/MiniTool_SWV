@@ -469,7 +469,7 @@ class CodeBeamer():
 if __name__ == "__main__":
     pass
 
-    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@VY20222021")
+    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@111")
     url = 'https://codebeamer.corp.int/cb/api/v3/trackers/14988648/fields'
 
     resp = Cb.get(url)

@@ -52,7 +52,7 @@
       </font>
      </property>
      <property name="readOnly">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="placeholderText">
       <string>The TestCase TrackerID in CodeBearmer</string>
@@ -157,7 +157,7 @@
       </font>
      </property>
      <property name="readOnly">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="placeholderText">
       <string>the Release version in CodeBeamer</string>
@@ -439,6 +439,9 @@
            <pointsize>12</pointsize>
           </font>
          </property>
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
          <property name="placeholderText">
           <string>Test Run ID created by test cases</string>
          </property>
@@ -664,7 +667,7 @@
       </font>
      </property>
      <property name="readOnly">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="placeholderText">
       <string>The Test Case Folder ID</string>
