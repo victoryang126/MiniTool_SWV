@@ -53,6 +53,7 @@ def get_check_resp(resp):
     #####Note 后面考虑对异常的数据回复，根据curl和json数据dump 到本地作为时候分析的数据
     if resp.status_code != 200:
         print(resp.text)
+        print(resp.json())
         if resp.status_code == 401:
             raise Exception(f"Access denied code 401 when execute url::{resp.url} ::{resp.text}")
         elif resp.status_code == 400:
@@ -402,6 +403,7 @@ class CodeBeamer():
         #
         print("##########create_test_run_baseon_testcases")
         if True in df_cbcase["id"].isin([""]).values:
+            print(df_cbcase)
             raise Exception("create_test_run_baseon_testcases found new case which not been update to test cases tracker")
 
 
@@ -466,11 +468,12 @@ class CodeBeamer():
 
 if __name__ == "__main__":
     pass
-    # User.login = ("victor.yang","Mate40@VY20082021")
-    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@VY20082021")
-    url = 'https://codebeamer.corp.int/cb/api/v3/trackers/14937781/items?parentItemId=12649519'
 
-    # resp = Cb.post(url,dj)
+    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@VY20222021")
+    url = 'https://codebeamer.corp.int/cb/api/v3/trackers/14988648/fields'
+
+    resp = Cb.get(url)
+    print(resp.json())
     # Cb.get_tracker_fileds(14937781)
     # Cb.get_verfies_testmethod(20451445)
     # Cb.get_verfies_testmethod(20108756)

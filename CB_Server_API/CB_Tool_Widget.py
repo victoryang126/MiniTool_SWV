@@ -88,15 +88,17 @@ class CB_Tool_Widget(QWidget):
         self.__ui = Ui_CBTool()
         self.__ui.setupUi(self)
         # self.server = CodeBeamer(self.__server,"UserName","Password")
-        self.server = CodeBeamer(self.__server, "victor.yang", "Mate40@VY20082021")
+        self.server = CodeBeamer(self.__server, "victor.yang", "Mate40@VY20222021")
 
         ##########定义相关属性########################
 
 
     def exract_value(self,excel_info):
 
-        self.test_information =  excel_info["test_information"]
-        self.testrun_trackerid =  excel_info["testrun_trackerid"]
+        if isinstance(excel_info["test_information"], str):
+            self.test_information =  excel_info["test_information"]
+        if isinstance(excel_info["testrun_trackerid"], str): # 如果从Excel 里面能获取到数据，则使用Excel的数据，否则使用lineedit 里面的数据
+            self.testrun_trackerid =  excel_info["testrun_trackerid"]
         self.testcase_trackerid = excel_info["testcase_trackerid"]
         self.testcase_folderid =  excel_info["testcase_folderid"]
         self.release =  excel_info["release"]

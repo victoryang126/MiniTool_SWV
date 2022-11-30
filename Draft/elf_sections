@@ -1,0 +1,79 @@
+C:\Python39\python.exe C:/PyCharmProject/MiniTool_SWV/Draft/ReadElf.py
+0:******************************
+0x0 0x0
+Container({'sh_name': 0, 'sh_type': 'SHT_NULL', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 0, 'sh_size': 0, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+1:******************************
+shstrtab
+0x0 0xa3 .shstrtab
+Container({'sh_name': 153, 'sh_type': 'SHT_STRTAB', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 266633, 'sh_size': 163, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+2:******************************
+strtab
+0x0 0x4d9 .strtab
+Container({'sh_name': 145, 'sh_type': 'SHT_STRTAB', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 265392, 'sh_size': 1241, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+3:******************************
+symtab
+0x0 0x350 .symtab
+Container({'sh_name': 131, 'sh_type': 'SHT_SYMTAB', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 220044, 'sh_size': 848, 'sh_link': 2, 'sh_info': 8, 'sh_addralign': 0, 'sh_entsize': 16})
+4:******************************
+0x8003c000 0x7c1c .rodata.CalHndler_Lcfg.Cal_AlgoVar1DataConfig
+Container({'sh_name': 6, 'sh_type': 'SHT_PROGBITS', 'sh_flags': 536870914, 'sh_addr': 2147729408, 'sh_offset': 628, 'sh_size': 31772, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 4, 'sh_entsize': 0})
+5:******************************
+debug_line
+0x0 0x1692 .debug_line
+Container({'sh_name': 57, 'sh_type': 'SHT_PROGBITS', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 32400, 'sh_size': 5778, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 1, 'sh_entsize': 0})
+6:******************************
+debug_abbrev
+0x0 0x1a4 .debug_abbrev
+Container({'sh_name': 74, 'sh_type': 'SHT_PROGBITS', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 38178, 'sh_size': 420, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+7:******************************
+0x0 0x2c4c3 .debug_info
+Container({'sh_name': 93, 'sh_type': 'SHT_PROGBITS', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 38598, 'sh_size': 181443, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+8:******************************
+0x80000000 0x8000
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147483648, 'sh_offset': 0, 'sh_size': 32768, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+9:******************************
+0x80008000 0xfffc
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147516416, 'sh_offset': 0, 'sh_size': 65532, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+10:******************************
+0x80017ffc 0x4
+Container({'sh_name': 117, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147581948, 'sh_offset': 0, 'sh_size': 4, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+11:******************************
+0x80018000 0x4000
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147581952, 'sh_offset': 0, 'sh_size': 16384, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+12:******************************
+0x80048000 0xbffc
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147778560, 'sh_offset': 0, 'sh_size': 49148, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+13:******************************
+0x80053ffc 0x4
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147827708, 'sh_offset': 0, 'sh_size': 4, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+14:******************************
+0x80047ffc 0x4
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147778556, 'sh_offset': 0, 'sh_size': 4, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+15:******************************
+0x80054000 0xbffc
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147827712, 'sh_offset': 0, 'sh_size': 49148, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+16:******************************
+0x8005fffc 0x4
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147876860, 'sh_offset': 0, 'sh_size': 4, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+17:******************************
+0x80060000 0x11fffc
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147876864, 'sh_offset': 0, 'sh_size': 1179644, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+18:******************************
+0x8017fffc 0x4
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2149056508, 'sh_offset': 0, 'sh_size': 4, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+19:******************************
+0x80180000 0x80000
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2149056512, 'sh_offset': 0, 'sh_size': 524288, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+20:******************************
+0x8001c000 0x20000
+Container({'sh_name': 110, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 2147598336, 'sh_offset': 0, 'sh_size': 131072, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+21:******************************
+0x1000 csa_tc0
+0xd0004000 0x1000 csa_tc0
+Container({'sh_name': 123, 'sh_type': 'SHT_NOBITS', 'sh_flags': 1610612739, 'sh_addr': 3489677312, 'sh_offset': 0, 'sh_size': 4096, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 64, 'sh_entsize': 0})
+22:******************************
+note
+0x0 0xadd4 .note
+Container({'sh_name': 139, 'sh_type': 'SHT_NOTE', 'sh_flags': 0, 'sh_addr': 0, 'sh_offset': 220892, 'sh_size': 44500, 'sh_link': 0, 'sh_info': 0, 'sh_addralign': 0, 'sh_entsize': 0})
+
+
