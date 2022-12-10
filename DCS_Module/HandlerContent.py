@@ -93,7 +93,7 @@ def return_compareresultdefine(deepth, fault_info):
         compare_fault_action.append(
             "\t" * deepth + "var FaultInfo_Arr = GetFaultInfo_Arr(TestObject_Str,Fault,\""  +  ",".join(temp_list[1:]) +  "\",G_DCSCrossC_SelectObj))\n")
         compare_fault_action.append(
-            "\t" * deepth + "var FaultInfo_Return = SetSuffixToFaultInfoSystem(FaultInfo_Arr.toString()\n")
+            "\t" * deepth + "var FaultInfo_Return = SetSuffixToFaultInfoSystem(FaultInfo_Arr.toString())\n")
         compare_fault_action.append(
             "\t" * deepth + "CompareResultsDefine(Ret,FaultInfo_Return[1],FaultInfo_Return[0])\n")
     return compare_fault_action

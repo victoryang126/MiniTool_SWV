@@ -262,7 +262,8 @@ class CodeBeamer():
         field_id_list = [field["id"] for field in tracker_fileds if field["name"] == field_name]
         print(f"{field_name} id: {str(field_id_list)}" )
         if len(field_id_list) == 0:
-            raise Exception(f"{field_name} not exist in related tracker, please contact Milly du to ask system engineer update config")
+            return None # 如果没有Test Method的filed则返回None
+            # raise Exception(f"{field_name} not exist in related tracker, please contact Milly du to ask system engineer update config")
         elif len(field_id_list) == 1:
             return field_id_list[0]
         else:
@@ -354,7 +355,6 @@ class CodeBeamer():
         testcase_obj.update_verifies(verifies)
         testcase_obj.update_testmethod(testmethods)
         #######
-
         testcase_obj.update_versions(release_dict)
         testcase_obj.delete_testcase()
         request_body = obj_to_dict(testcase_obj)

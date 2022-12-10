@@ -145,6 +145,7 @@ def generate_cb_case(df_ptc,testcase_list):
         # 将testcase字典的list转换为df，
         print("Update case")
         casevalue_list = [list(x.values())[0:-1] for x in testcase_list]
+        print(casevalue_list)
         df_testcase = pd.DataFrame(np.array(casevalue_list),columns=['id','name'])
         df_testcase.set_index("name",inplace=True,drop= False)
         # print(df_testcase)

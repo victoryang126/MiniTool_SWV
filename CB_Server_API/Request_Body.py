@@ -173,48 +173,70 @@ class Post_TestCase_Body:
     上传Test case的
     其中，修改Inciden ID, Test Method，Verifies的方式待定
     """
+    testmethod_indx = 0 # 在customFields 的位置
+    verifies_indx = 1
     testmethod_id = 1035
+    verifies_id = 17
+    customFields = [
+        Field_Values(testmethod_id, "Test Method", [], Field_Type.ChoiceFieldValue).__dict__,  # Test Method
+        Field_Values(verifies_id, "Verifies", [], Field_Type.ChoiceFieldValue).__dict__  # Verifies
+    ]
     def __init__(self,name):
         self.name = name
         self.descriptionFormat = Value_Mapping.descriptionFormat
-        self.customFields = [  #Field_Values(1027,"Incident ID",[],Field_Type.ChoiceFieldValue).__dict__, # Incident Id
-                             Field_Values(self.testmethod_id, "Test Method", [], Field_Type.ChoiceFieldValue).__dict__,  # Test Method
-                             Field_Values(17, "Verifies", [], Field_Type.ChoiceFieldValue).__dict__ # Verifies
-
-                             ]
+        # self.customFields = [
+        #                      Field_Values(self.testmethod_id, "Test Method", [], Field_Type.ChoiceFieldValue).__dict__,  # Test Method
+        #                      Field_Values(self.verifies_id, "Verifies", [], Field_Type.ChoiceFieldValue).__dict__ # Verifies
+        #                      ]
+        self.customFields = self.customFields
         self.status = Value_Id(1, "Init", Field_Type.ChoiceOptionReference).__dict__
         self.versions = []
         self.typeName = Field_Type.Testcase
 
     @classmethod
     def update_testmethod_id(cls,testmethod_id):
-        cls.testmethod_id = testmethod_id
-
-    # def update_incidentid(self,incidentid_list):
-    #     if len(incidentid_list)== 0:
-    #         #不处理，继续为空
-    #         pass
-    #     else:
-    #         incidentid_obj_list = [IncidentId(incidentid).__dict__ for incidentid in incidentid_list]
-    #         self.customFields[0]["values"].extend(incidentid_obj_list)
+        if testmethod_id == None:#2022/12/10增加处理逻辑，表示改属性不存在，可以直接删除掉
+            if len(cls.customFields) == 1:  # 如果已经删除了，则不处理
+                pass
+            else:  # 否则，将verifies_indx 设置为0，且抛弃TestMethod 属性
+                cls.verifies_indx = 0;
+                cls.customFields.pop(0)  # 删除TestMethod的属性
+        else:
+            cls.testmethod_id = testmethod_id
+            # 2022/12/10增加处理逻辑，如果testmethod 被删除过，则需要重新赋值
+            # cls.customFields
+            if len(cls.customFields) == 1: #如果TestMethod 在之前的运行中删除了，则重新赋值
+                cls.testmethod_indx = 0
+                cls.verifies_indx = 1
+                cls.customFields.insert(0,Field_Values(cls.testmethod_id, "Test Method", [], Field_Type.ChoiceFieldValue).__dict__)
+            else:
+                cls.customFields =  [
+                    Field_Values(cls.testmethod_id, "Test Method", [], Field_Type.ChoiceFieldValue).__dict__,  # Test Method
+                    Field_Values(cls.verifies_id, "Verifies", [], Field_Type.ChoiceFieldValue).__dict__  # Verifies
+                ]
+    @classmethod
+    def del_testmethod(cls):
+        if len(cls.customFields) == 1:# 如果已经删除了，则不处理
+           pass
+        else:   # 否则，将verifies_indx 设置为0，且抛弃TestMethod 属性
+            cls.verifies_indx = 0;
+            cls.customFields.pop(0) # 删除TestMethod的属性
 
     def update_testmethod(self,testmethodid_list):
-
         if len(testmethodid_list) == 0:
+            pass
+        elif len(self.customFields) == 1: # 2022/12/10 如果Test Method 被删除了，则也不处理
             pass
         else:
             testmethod_obj_list = [TestMethod(testmethodid).__dict__ for testmethodid in testmethodid_list]
-            self.customFields[0]["values"].extend(testmethod_obj_list)
-
-
-
+            self.customFields[self.testmethod_indx]["values"].extend(testmethod_obj_list)
 
     def update_verifies(self,verifiesid_list):
         if len(verifiesid_list) == 0:
             pass
         else:
             verifies_obj_list = [Verifies(verifiesid).__dict__ for verifiesid in verifiesid_list]
-            self.customFields[1]["values"].extend(verifies_obj_list)
+            self.customFields[self.verifies_indx]["values"].extend(verifies_obj_list)
 
     def update_versions(self,versions_dict):
         """
@@ -246,15 +268,25 @@ class TestRunMoel:
     Version待定
     """
     test_information_id = 10003
-    def __init__(self,name,tracker,test_information):
+
+    test_information_indx = 0
+    test_cases_indx = 1
+    customFields = [
+        # Field(10002, "Run only Accepted TestCases", Value_Mapping.flase, Field_Type.BoolFieldValue).__dict__,  # Run only Accepted TestCases
+        Field(test_information_id, "Test Information", "undefined", Field_Type.TextFieldValue).__dict__,
+        # Test Information
+        Field_Values(1000000, "Test Cases", [[]], Field_Type.TableFieldValue).__dict__,  # Test Cases
+    ]
+    def __init__(self,name,tracker):
         self.name = name
         self.descriptionFormat = Value_Mapping.descriptionFormat
         self.tracker = Value_Id(tracker,"",Field_Type.TrackerReference).__dict__ #Value_Id的对象
-        self.customFields = [
-            Field(10002, "Run only Accepted TestCases", Value_Mapping.flase, Field_Type.BoolFieldValue).__dict__,  # Run only Accepted TestCases
-            Field(self.test_information_id, "Test Information",test_information , Field_Type.TextFieldValue).__dict__, # Test Information
-            Field_Values(1000000, "Test Cases", [[]], Field_Type.TableFieldValue).__dict__, #Test Cases
-        ]
+        # self.customFields = [
+        #     # Field(10002, "Run only Accepted TestCases", Value_Mapping.flase, Field_Type.BoolFieldValue).__dict__,  # Run only Accepted TestCases
+        #     Field(self.test_information_id, "Test Information",test_information , Field_Type.TextFieldValue).__dict__, # Test Information
+        #     Field_Values(1000000, "Test Cases", [[]], Field_Type.TableFieldValue).__dict__, #Test Cases
+        # ]
+        self.customFields  = self.customFields
         self.status =TestRun_Status(7).__dict__
         self.formality = Value_Id(1, "Regular", Field_Type.ChoiceOptionReference).__dict__
         self.versions = []
@@ -262,7 +294,31 @@ class TestRunMoel:
 
     @classmethod
     def update_test_inforamtion_id(cls,test_inforamtion_id):
-        cls.test_information_id = test_inforamtion_id
+        if test_inforamtion_id == None: # 如果没找到对应的id表示删除了对应的属性
+            if len(cls.customFields) == 1: #如果已经删除，则不处理
+                pass
+            else:
+                cls.test_cases_indx = 0
+                cls.customFields.pop(0) #
+        else:
+            cls.test_information_id = test_inforamtion_id
+            if len(cls.customFields) == 1:# 如果在之前的运行中删除了，则需要重新添加
+                cls.test_information_indx = 0
+                cls.test_cases_indx = 1
+                cls.customFields.insert(0,Field(cls.test_information_id, "Test Information", "undefined", Field_Type.TextFieldValue).__dict__)
+            else:
+                cls.customFields = [
+                    # Field(10002, "Run only Accepted TestCases", Value_Mapping.flase, Field_Type.BoolFieldValue).__dict__,  # Run only Accepted TestCases
+                    Field(cls.test_information_id, "Test Information", "undefined", Field_Type.TextFieldValue).__dict__,
+                    # Test Information
+                    Field_Values(1000000, "Test Cases", [[]], Field_Type.TableFieldValue).__dict__,  # Test Cases
+                ]
+    @classmethod
+    def update_test_information(cls,test_information):
+        if len(cls.customFields) == 1: # 如果Test information 属性被删除了， 则不处理
+            pass
+        else:
+            cls.customFields[cls.test_information_indx] =  Field(cls.test_information_id, "Test Information",test_information , Field_Type.TextFieldValue).__dict__
 
 class Post_TestRun_Body:
     """
@@ -270,24 +326,22 @@ class Post_TestRun_Body:
     """
     def __init__(self,testcases,name,tracker,test_information):
         self.testCaseIds = [testcase.__dict__ for testcase in testcases] # test case 必须是Value_Id_Refer_Data的对象数组
-        self.testRunModel = TestRunMoel(name,tracker,test_information).__dict__
-
+        TestRunMoel.update_test_information(test_information)
+        self.testRunModel = TestRunMoel(name,tracker).__dict__
 
         for indx,testcase in enumerate(testcases): # 在Test Cass 里面添加 Test Case
-            self.testRunModel['customFields'][2]['values'][0].append(Field_Values(1000001 + indx , "Test Case", [testcase.__dict__], Field_Type.ChoiceFieldValue).__dict__)
+            self.testRunModel['customFields'][TestRunMoel.test_cases_indx]['values'][0].append(Field_Values(1000001 + indx , "Test Case", [testcase.__dict__], Field_Type.ChoiceFieldValue).__dict__)
         # print(self.testRunModel['customFields'][1])
 
 
     def update_versions(self,versions_dict):
         """
-
         Args:
             versions_dict:
 
         Returns:
 
         """
-
         self.testRunModel["versions"].append(Value_Id(**versions_dict).__dict__)
 
 
@@ -370,8 +424,14 @@ if __name__ == "__main__":
     name = "Test Run"
     tracker = 10574133
     test_information = "ARiA4.11"
-    testrun = TestRunMoel(name,tracker,test_information)
-    TestRunMoel.update_test_inforamtion_id(1223)
+    testrun = TestRunMoel(name,tracker)
+    # TestRunMoel.update_test_inforamtion_id(None)
+    TestRunMoel.update_test_inforamtion_id(3344)
     print(testrun.__dict__)
     Post_TestRun = Post_TestRun_Body(testcases,name,tracker,test_information)
+    # Post_TestCase_Body.update_testmethod_id(None)
+    # # Post_TestCase_Body.update_testmethod_id(1036)
+    # testcase = Post_TestCase_Body("Test")
+    # testcase.update_testmethod([1,2])
+    # testcase.update_verifies([11, 22])
     print(Post_TestRun.__dict__)

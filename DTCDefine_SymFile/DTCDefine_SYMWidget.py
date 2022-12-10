@@ -135,9 +135,11 @@ def Get_Df_DTCDefine(FltMonr_Excel):
     :return:DTCDefine_List "VeonnerCodeName","DTCRecord","VeoneerCode_Dec","VeoneerCode_Hex","WL","Permanent_Latched","Latched_KeyCycle"的列表
     """
     # 去读ACCT Autoliv Faults参数信息
+    print("$$$$$$$$$$$$$$$$$$$$$$Get_Df_DTCDefine")
     # *******************************************************************
     df_VeoneerCode = pd.read_excel(FltMonr_Excel, "ACCT Autoliv Faults", dtype='str', header=0)
     df_VeoneerCode = df_VeoneerCode.iloc[2:,[0,3,4]]
+    # print("$$$$$$$$$$$$$$$$$$$$$$ read ACCT Autoliv Faults Finished")
     # print(df_VeoneerCode.info())
     df_VeoneerCode.columns = ["VeonnerCodeName","VeoneerCode_Dec","VeoneerCode_Hex"]
 
@@ -154,6 +156,7 @@ def Get_Df_DTCDefine(FltMonr_Excel):
     # *******************************************************************
     # df_DTCDefine = df_VeoneerCode.join(df_Data)
     df_DTCDefine = pd.merge(df_VeoneerCode,df_Data,on = "VeonnerCodeName",how = "left")
+    # print("$$$$$$$$$$$$$$$$$$$$$$Merage DATA  and ACCT Autoliv Faults")
     df_DTCDefine = df_DTCDefine[["VeonnerCodeName","DTCRecord","VeoneerCode_Dec","VeoneerCode_Hex","WL","Permanent_Latched","Latched_KeyCycle"]]
     df_DTCDefine["VeonnerCodeName"] = df_DTCDefine["VeonnerCodeName"] + "_0"
     # df_DTCDefine.set_index("VeonnerCodeName", inplace=True, drop=False)
@@ -161,6 +164,7 @@ def Get_Df_DTCDefine(FltMonr_Excel):
 
     DTCDefine_Dict = df_DTCDefine.to_dict(orient="split")
     DTCDefine_List = DTCDefine_Dict["data"]
+    print("$$$$$$$$$$$$$$$$$$$$$$Get_Df_DTCDefine Finished")
     return DTCDefine_List;
 
 def Generate_DTCDefine(Project,SWVersion,DTC_OutPut,DTCDefine_List):
@@ -175,9 +179,10 @@ def Generate_DTCDefine(Project,SWVersion,DTC_OutPut,DTCDefine_List):
                             "VeonnerCodeName","DTCRecord","VeoneerCode_Dec","VeoneerCode_Hex","WL","Permanent_Latched","Latched_KeyCycle"的列表
     :return:NONE
     """
-
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Generate_DTCDefine")
     DTCDefine = DTC_OutPut + "/AA_" + Project + "_DTCDefine_" + SWVersion + ".ts"
     VeoneerCode_Function = DTC_OutPut + "/AA_" + Project + "_InterpreteVeoneerCode_function_" + SWVersion + ".ts"
+
     # 生成DTCDefine
     # *******************************************************************
     DTCDefine_File = open(DTCDefine,'w')
@@ -198,6 +203,7 @@ def Generate_DTCDefine(Project,SWVersion,DTC_OutPut,DTCDefine_List):
     DTCDefine_File.write(DTCDefine_Start)
     VeoneerCode_Function_File.write(VeoneerCode_Function_Start)
     for temp in DTCDefine_List:
+        print(temp)
         DTCDefine_TempStr = ("var " + temp[0] + "_define = " + '"' + temp[1] + ","
                             + temp[3] + "," + temp[0] + "," + temp[4] + "," + temp[5] + "," + temp[6] +  '";\n')
         VeoneerCode_Function_TempStr = ("\t"*2 + "case " + temp[2] + " :\n" + "\t"*3 +
@@ -211,6 +217,7 @@ def Generate_DTCDefine(Project,SWVersion,DTC_OutPut,DTCDefine_List):
     VeoneerCode_Function_File.write(VeoneerCode_Function_End)
     DTCDefine_File.close();
     VeoneerCode_Function_File.close()
+    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Generate_DTCDefine Finished")
 
 
 
