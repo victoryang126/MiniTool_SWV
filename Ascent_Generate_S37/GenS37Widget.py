@@ -21,6 +21,7 @@ class GenS37Widget(QWidget):
     #     return cls.instance
     # *****************定义 类相关属性****************************************
     CurrentPath = os.getcwd()
+
     def __init__(self):
         super().__init__()  # 调用父类构造函数，创建QWidget窗口
         self.__ui = Ui_GenS37()  # 创建UI对象

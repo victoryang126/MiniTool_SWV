@@ -9,7 +9,7 @@ from win32com.client import Dispatch
 
 from DTCDefine_SymFile.Ui_DTCDefine_SYM import Ui_DTCDefine_SYM
 from PyQt5.QtWidgets import QWidget, QApplication,QMessageBox,QFileDialog,QLabel
-from PyQt5.QtCore import  pyqtSlot
+from PyQt5.QtCore import pyqtSlot,Qt,QThread,pyqtSignal,QObject
 from PyQt5.QtCore import  QSettings,QThread,QMutex
 import openpyxl
 
@@ -22,7 +22,7 @@ class Generate_Thread(QThread):
         # Generate_SYM(Project, SWVersion, PBCT_Excel, EPPROM_Trans_Excel, SYM_OutPut, SheetList)
 
 
-def SaveErrorDefinitionFromFltMonr_Configurator(FltMonr_Configurator,ErrorDefinition):
+def SaveErrorDefinitionFromFltMonr_Configurator(FltMonr_Configurator,ErrorDefinition,Internal_Fault_Sheet_Name):
     """
     使用 win32com.client.DispatchEx('Excel.Application') 将从FltMonr_Configurator 生成ErrorDefinition文件
     注意，这个文件路径必须用os.path.abspath 处理，否则会报错误
@@ -36,7 +36,7 @@ def SaveErrorDefinitionFromFltMonr_Configurator(FltMonr_Configurator,ErrorDefini
     wb = ExcelAPP.Workbooks.Open(os.path.abspath(FltMonr_Configurator))
     for sheetObj in wb.Worksheets:
         # print(sheetObj.Name)
-        if sheetObj.Name == "ACCT Autoliv Faults":
+        if sheetObj.Name == Internal_Fault_Sheet_Name:
             sheetObj.Name = "Errors"
         else:
             # pass
@@ -46,7 +46,7 @@ def SaveErrorDefinitionFromFltMonr_Configurator(FltMonr_Configurator,ErrorDefini
     ExcelAPP.Quit()
 
 
-def SaveErrorDefinitionFromFltMonr_Configurator(ExcelAPP,FltMonr_Configurator,ErrorDefinition):
+def SaveErrorDefinitionFromFltMonr_Configurator(ExcelAPP,FltMonr_Configurator,ErrorDefinition,Internal_Fault_Sheet_Name):
     """
     使用 win32com.client.DispatchEx('Excel.Application') 将从FltMonr_Configurator 生成ErrorDefinition文件
     注意，这个文件路径必须用os.path.abspath 处理，否则会报错误
@@ -58,7 +58,7 @@ def SaveErrorDefinitionFromFltMonr_Configurator(ExcelAPP,FltMonr_Configurator,Er
     wb = ExcelAPP.Workbooks.Open(os.path.abspath(FltMonr_Configurator))
     for sheetObj in wb.Worksheets:
         # print(sheetObj.Name)
-        if sheetObj.Name == "ACCT Autoliv Faults":
+        if sheetObj.Name == Internal_Fault_Sheet_Name:
             sheetObj.Name = "Errors"
         else:
             # pass
@@ -99,7 +99,7 @@ def Str2Hex(Int_Str,ByteSize):
     return Str_Hex
 
 
-def Generate_ErrorDefinition(ExcelAPP,Project,SWVersion,DTC_OutPut,FltMonr_Excel):
+def Generate_ErrorDefinition(ExcelAPP,Project,SWVersion,DTC_OutPut,FltMonr_Excel,Internal_Fault_Sheet_Name):
     """
     提取FltMonr_Configurator的ACCT Autoliv Faults的信息
     保存到另外一个文件中，sheet 名字为Errors ，供Aria解析内外部错误
@@ -111,7 +111,7 @@ def Generate_ErrorDefinition(ExcelAPP,Project,SWVersion,DTC_OutPut,FltMonr_Excel
     :return:
     """
     ErrorDefintion = DTC_OutPut + "/error_definition_" + Project + "_" + SWVersion + ".xlsm"
-    SaveErrorDefinitionFromFltMonr_Configurator(ExcelAPP,FltMonr_Excel,ErrorDefintion)
+    SaveErrorDefinitionFromFltMonr_Configurator(ExcelAPP,FltMonr_Excel,ErrorDefintion,Internal_Fault_Sheet_Name)
 
     # # 去读ACCT Autoliv Faults参数信息
     # # *******************************************************************
@@ -127,7 +127,7 @@ def Generate_ErrorDefinition(ExcelAPP,Project,SWVersion,DTC_OutPut,FltMonr_Excel
 ######### ACCT Autoliv Faults sheet 从第四行才开始有数据
 ######### Data 从第五行才开始有数据
 ######### 列是通过index 抓的，一旦位置变化，函数就需要变化
-def Get_Df_DTCDefine(FltMonr_Excel):
+def Get_Df_DTCDefine(FltMonr_Excel,Internal_Fault_Sheet_Name):
     """
     提取FltMonr_Configurator的ACCT Autoliv Faults的信息 和 Data sheet的信息
     获取外部DTC ，内部Veoneer Code 和名字的列表
@@ -135,9 +135,10 @@ def Get_Df_DTCDefine(FltMonr_Excel):
     :return:DTCDefine_List "VeonnerCodeName","DTCRecord","VeoneerCode_Dec","VeoneerCode_Hex","WL","Permanent_Latched","Latched_KeyCycle"的列表
     """
     # 去读ACCT Autoliv Faults参数信息
-    print("$$$$$$$$$$$$$$$$$$$$$$Get_Df_DTCDefine")
+    # Veoneer Faults
+    # print("$$$$$$$$$$$$$$$$$$$$$$Get_Df_DTCDefine")
     # *******************************************************************
-    df_VeoneerCode = pd.read_excel(FltMonr_Excel, "ACCT Autoliv Faults", dtype='str', header=0)
+    df_VeoneerCode = pd.read_excel(FltMonr_Excel, Internal_Fault_Sheet_Name, dtype='str', header=0)
     df_VeoneerCode = df_VeoneerCode.iloc[2:,[0,3,4]]
     # print("$$$$$$$$$$$$$$$$$$$$$$ read ACCT Autoliv Faults Finished")
     # print(df_VeoneerCode.info())
@@ -288,6 +289,35 @@ def Generate_SYM(Project,SWVersion,PBCT_Excel,EPPROM_Trans_Excel,SYM_OutPut,Shee
         f.write(SYM_Str)
     return SYM_OutPut
 
+def bind(objectName,propertyName):
+    """
+    数据绑定函数，例如，将Line_edit的text属性和对象属性绑定起来，任何一个变化，都能传递过去
+    Args:
+        objectName: ui object的对象名称
+        propertyName: ui object 的对象属性
+
+    Returns:
+
+    """
+    def getter(self):
+        print("getter")
+        # try:
+        #     func = self.findChild(QObject,objectName).property(propertyName)
+        # except Exception as err:
+        #     print(err)
+        return self.findChild(QObject,objectName).property(propertyName)
+
+    def setter(self,value):
+        # print(dir(self.findChild(QObject, objectName)))
+        print("setter")
+        # try:
+        #     func = self.findChild(QObject, objectName).setProperty(propertyName,value)
+        # except Exception as err:
+        #     print(err)
+        #     # a = self.findChild(QObject, objectName).setProperty(value)
+        return self.findChild(QObject, objectName).setProperty(propertyName,value)
+
+    return property(getter,setter)
 
 class DTCDefine_SYMWidget(QWidget):
 
@@ -296,24 +326,15 @@ class DTCDefine_SYMWidget(QWidget):
     #         cls.instance = super(MinToolWidget, cls).__new__(cls)
     #     return cls.instance
     # *****************定义 类相关属性****************************************
+    Internal_Fault_Sheet_Name = bind("comboBox_InternalFaultSheet", "currentText")
+    # Internal_Fault_Sheet_Names = ["ACCT Autoliv Faults","Veoneer Faults"]
     CurrentPath = os.getcwd()
     def __init__(self):
         super().__init__()  # 调用父类构造函数，创建QWidget窗口
         self.__ui = Ui_DTCDefine_SYM()  # 创建UI对象
         self.__ui.setupUi(self)  # 构造UI界面
 
-        # font = cls.font()
-        # font.setPixelSize(20)
-        # cls.pb = QLabel(cls)
-        # cls.pb.setGeometry(400,400,400,55)
-        # cls.pb.setFont(font)
-        # # cls.pb.setStyleSheet('font-size:44px;')
-        # cls.pb.setStyleSheet("background-color:cornflowerBlue")
-        # cls.pb.setText("^-^ Generating file,Please wait for moment")
-        # cls.pb.hide()
-        # cls.timer = QBasicTimer();
-        # cls.step = 0
-        # cls.pb.hide()
+
         # *****************定义 OtTool相关属性****************************************
         self.Config = ""
 
@@ -321,6 +342,7 @@ class DTCDefine_SYMWidget(QWidget):
         self.SWVersion = ""
 
         self.FltMonrConfig_Excel = ""
+        # self.Internal_Fault_Sheet_Name = "ACCT Autoliv Faults"
         self.DTC_OutPut = ""
         # cls.DTCDefine_Ts = ""
         # cls.VeoneerName_Ts = ""
@@ -365,7 +387,9 @@ class DTCDefine_SYMWidget(QWidget):
         self.FltMonrConfig_Excel = self.Config.value("CONFIG/FltMonrConfig_Excel")
         self.DTC_OutPut = self.Config.value("CONFIG/DTC_OutPut")
         self.PBCT_Excel = self.Config.value("CONFIG/PBCT_Excel")
-        self.PBCT_SheetList = self.Config.value("CONFIG/PBCT_SheetList")
+        if self.Config.value("CONFIG/PBCT_SheetList") != None:
+            self.PBCT_SheetList = self.Config.value("CONFIG/PBCT_SheetList")
+        # self.Internal_Fault_Sheet_Name = self.Config.value("CONFIG/Internal_Fault_Sheet_Names")
         # print(cls.PBCT_SheetList)
         self.EEPROM_Trans_Excel = self.Config.value("CONFIG/EEPROM_Trans_Excel")
         self.SYM_OutPut = self.Config.value("CONFIG/SYM_OutPut")
@@ -373,13 +397,17 @@ class DTCDefine_SYMWidget(QWidget):
         self.__ui.LE_SWVersion.setText(self.SWVersion)
         self.__ui.LE_FltMonrConfig.setText(self.FltMonrConfig_Excel)
 
+        # self.__ui.comboBox_InternalFaultSheet.clear()
+        # print(self.Internal_Fault_Sheet_Names)
+
+
         self.__ui.CB_SheetConfig.clear()
         self.__ui.CB_SheetConfig.addItems(self.PBCT_SheetList)
 
         self.__ui.LE_PBCT.setText(self.PBCT_Excel)
         self.__ui.LE_EEPROM_Trans.setText(self.EEPROM_Trans_Excel)
         self.__ui.LE_SYM_OutPut.setText(self.SYM_OutPut)
-
+        # self.update_internal_fault_sheet()
 
     def SaveConfig(self):
         self.Config = QSettings('./ini/DTCDefine_SYMWidget.ini', QSettings.IniFormat)
@@ -387,6 +415,9 @@ class DTCDefine_SYMWidget(QWidget):
         self.Config.setValue("CONFIG/Project",self.Project)
         self.Config.setValue("CONFIG/SWVersion", self.SWVersion)
         self.Config.setValue("CONFIG/FltMonrConfig_Excel", self.FltMonrConfig_Excel)
+
+        # self.Config.setValue("CONFIG/Internal_Fault_Sheet_Name", self.Internal_Fault_Sheet_Name)
+
         self.Config.setValue("CONFIG/DTC_OutPut", self.DTC_OutPut)
         self.Config.setValue("CONFIG/PBCT_SheetList",self.PBCT_SheetList)
         self.Config.setValue("CONFIG/PBCT_Excel", self.PBCT_Excel)
@@ -394,6 +425,30 @@ class DTCDefine_SYMWidget(QWidget):
         self.Config.setValue("CONFIG/SYM_OutPut", self.SYM_OutPut)
 
     #*******************************设置槽函数******************************
+
+    def update_internal_fault_sheet(self):
+
+        # wb = openpyxl.load_workbook(self.FltMonrConfig_Excel)
+        # sheet_names = wb.sheetnames
+        # wb.close()
+        df = pd.read_excel(self.FltMonrConfig_Excel,sheet_name=None)
+        sheet_names = list(df)
+        print(sheet_names)
+        # self.__ui.comboBox_InternalFaultSheet.clear()
+        # self.Internal_Fault_Sheet_Names = []
+        for sheet_name in sheet_names:
+            if "Faults" in sheet_name:
+                print(1)
+                # self.Internal_Fault_Sheet_Names.insert(0,sheet_name)
+
+                self.__ui.comboBox_InternalFaultSheet.insertItem(0,sheet_name)
+                self.Internal_Fault_Sheet_Name = sheet_name
+        # if len(self.Internal_Fault_Sheet_Names) == 0: # 如果没有找到相关fault名字
+        #     raise "Not sheet name with end with \"Faults\" "
+        # self.Internal_Fault_Sheet_Name = self.Internal_Fault_Sheet_Names[0]
+
+
+
     # 1 设置LE_Project
     @pyqtSlot(str)
     def on_LE_Project_textChanged(self,str):
@@ -405,6 +460,11 @@ class DTCDefine_SYMWidget(QWidget):
     def on_LE_SWVersion_textChanged(self,str):
         self.SWVersion = self.__ui.LE_SWVersion.text()
         # print(cls.SWVersion)
+
+    @pyqtSlot()
+    def on_BT_UpdateSheetName_clicked(self):
+        self.__ui.comboBox_InternalFaultSheet.insertItem(0, self.__ui.LE_InternalFaultSheet.text())
+        self.Internal_Fault_Sheet_Name = self.__ui.LE_InternalFaultSheet.text()
 
     #3。 设置BT_FltMonrConfig
     @pyqtSlot()
@@ -419,6 +479,8 @@ class DTCDefine_SYMWidget(QWidget):
         self.FltMonrConfig_Excel = self.__ui.LE_FltMonrConfig.text()
         path = self.FltMonrConfig_Excel
         self.CurrentPath = os.path.abspath(path) if os.path.isdir(path) else os.path.dirname(path)
+        self.update_internal_fault_sheet()
+        # self.update_internal_fault_sheet()
         # print(cls.FltMonrConfig_Excel)
 
     #4 。 设置BT_DTC_OutPut
@@ -436,8 +498,9 @@ class DTCDefine_SYMWidget(QWidget):
     #5。
     @pyqtSlot()
     def on_BT_Generate_DTCDefine_clicked(self):
+        print(self.Internal_Fault_Sheet_Name)
         try:
-            DTCDefine_List = Get_Df_DTCDefine(self.FltMonrConfig_Excel)
+            DTCDefine_List = Get_Df_DTCDefine(self.FltMonrConfig_Excel,self.Internal_Fault_Sheet_Name)
             # Generate_DTCDefine(cls.Project,cls.SWVersion,cls.DTC_OutPut,DTCDefine_List);
             args = {"Project":self.Project,"SWVersion":self.SWVersion,
                     "DTC_OutPut":self.DTC_OutPut,"DTCDefine_List":DTCDefine_List}
@@ -455,7 +518,8 @@ class DTCDefine_SYMWidget(QWidget):
             ExcelAPP.Visible = 0
             ExcelAPP.DisplayAlerts = 0
             args = {"ExcelAPP":ExcelAPP,"Project":self.Project,"SWVersion":self.SWVersion,
-                    "DTC_OutPut":self.DTC_OutPut,"FltMonr_Excel":self.FltMonrConfig_Excel}
+                    "DTC_OutPut":self.DTC_OutPut,"FltMonr_Excel":self.FltMonrConfig_Excel,
+                    "Internal_Fault_Sheet_Name": self.Internal_Fault_Sheet_Name}
             Generate_ErrorDefinition(**args)
             self.DoneMessage("Generate ErrorDefinition successfully")
             self.SaveConfig()
