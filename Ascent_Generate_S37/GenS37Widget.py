@@ -1,16 +1,46 @@
 import sys
 import os
 
-from PyQt5.QtWidgets import QWidget, QApplication,QMessageBox,QFileDialog
-from PyQt5.QtCore import  pyqtSlot
-from PyQt5.QtCore import  QSettings
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import  *
+from PyQt5.QtCore import  *
 
 from Ascent_Generate_S37 import  GenS37
 from Ascent_Generate_S37.Ui_GenS37 import  Ui_GenS37
 from CommonFunction import AEFGen
+from Ascent_Generate_S37.Ui_ElfAddress import *
+from Ascent_Generate_S37.ElfAddressDiaglog import *
 
 
+def bind(objectName,propertyName):
+    """
+    数据绑定函数，例如，将Line_edit的text属性和对象属性绑定起来，任何一个变化，都能传递过去
+    Args:
+        objectName: ui object的对象名称
+        propertyName: ui object 的对象属性
 
+    Returns:
+
+    """
+    def getter(self):
+        # print("getter")
+        # try:
+        #     func = self.findChild(QObject,objectName).property("isChecked")
+        #     print(func +"Name")
+        # except Exception as err:
+        #     print(err)
+        return self.findChild(QObject,objectName).property(propertyName)
+    def setter(self,value):
+        # print(dir(self.findChild(QObject, objectName)))
+        # print("setter")
+        # try:
+        #     func = self.findChild(QObject, objectName).setProperty(propertyName,value)
+        # except Exception as err:
+        #     print(err)
+        #     # a = self.findChild(QObject, objectName).setProperty(value)
+        return self.findChild(QObject, objectName).setProperty(propertyName,value)
+
+    return property(getter,setter)
 
 
 class GenS37Widget(QWidget):
@@ -21,6 +51,7 @@ class GenS37Widget(QWidget):
     #     return cls.instance
     # *****************定义 类相关属性****************************************
     CurrentPath = os.getcwd()
+    Ascent27Version = bind("checkBox_Ascent27","checked")
 
     def __init__(self):
         super().__init__()  # 调用父类构造函数，创建QWidget窗口
@@ -45,6 +76,11 @@ class GenS37Widget(QWidget):
         self.GenS37_AEFOutput = ""
         self.GenS37_ElfList = ["\\IPFixedCal.elf","\\VehFixedCal.elf","\\AlgoVar1FixedCal.elf","\\AlgoVar2FixedCal.elf","\\AlgoVar3FixedCal.elf"]
         self.GenS37_SWPart_List = ["VehFixedCal","IPFixedCal","AlgoVar1FixedCal","AlgoVar2FixedCal","AlgoVar3FixedCal"]
+        self.Gens37_Efl_StartAddress = []
+        self.Gens37_Efl_EndAddress = []
+        for i,elf in enumerate(self.GenS37_SWPart_List):
+            self.Gens37_Efl_StartAddress.append("0x")
+            self.Gens37_Efl_EndAddress.append("0x")
         self.GenS37_Json = {
             "PlatformAlias": "",
             "ApplicationAlias": "",
@@ -100,6 +136,11 @@ class GenS37Widget(QWidget):
         self.GenS37_PBCfg = self.Config.value("CONFIG/GenS37_PBCfg")
         self.GenS37_Release = self.Config.value("CONFIG/GenS37_Release")
 
+        if self.Config.value("CONFIG/Gens37_Efl_StartAddress") != None:
+            self.GenS37_SWPart_List = self.Config.value("CONFIG/GenS37_SWPart_List")
+            self.Gens37_Efl_StartAddress = self.Config.value("CONFIG/Gens37_Efl_StartAddress")
+            self.Gens37_Efl_EndAddress = self.Config.value("CONFIG/Gens37_Efl_EndAddress")
+
         self.__ui.LE_GenS37_Ascent.setText(self.GenS37_Ascent)
         self.__ui.LE_GenS37_OEM.setText(self.GenS37_OEM)
         self.__ui.LE_GenS37_SWVersion.setText(self.GenS37_SWVersion)
@@ -118,7 +159,9 @@ class GenS37Widget(QWidget):
         self.Config.setValue("CONFIG/GenS37_Alias", self.GenS37_Alias)
         self.Config.setValue("CONFIG/GenS37_PBCfg", self.GenS37_PBCfg)
         self.Config.setValue("CONFIG/GenS37_Release", self.GenS37_Release)
-
+        self.Config.setValue("CONFIG/GenS37_SWPart_List", self.GenS37_SWPart_List)
+        self.Config.setValue("CONFIG/Gens37_Efl_StartAddress", self.Gens37_Efl_StartAddress)
+        self.Config.setValue("CONFIG/Gens37_Efl_EndAddress", self.Gens37_Efl_EndAddress)
     # 根据elf文件夹里面的文件，添加elf类型选择的列表
     def AddElf(self):
         #处理Releaase Folder 添加elf名字到CB_GenS37_SWPart 里面去
@@ -274,6 +317,41 @@ class GenS37Widget(QWidget):
         # cls.GenS37_Json["PatchingFiles"][0]["ElfFile"] = cls.GenS37_Release + "\\" + cls.GenS37_SWPart + ".elf"
         # print(cls.GenS37_SWPart)
 
+    @pyqtSlot()
+    def on_BT_Config_Elf_Addr_clicked(self):
+        diaglog = ElfAddressQdiaglog()
+        def SaveConfig_Diaglog():
+            # print(diaglog.tableWidget.rowCount())
+            row_count = diaglog.tableWidget.rowCount()
+            self.GenS37_SWPart_List.clear()
+            self.Gens37_Efl_StartAddress.clear()
+            self.Gens37_Efl_EndAddress.clear()
+            for i in range(row_count):
+                # print(i)
+                self.GenS37_SWPart_List.append(diaglog.tableWidget.item(i,0).text())
+                self.Gens37_Efl_StartAddress.append(diaglog.tableWidget.item(i,1).text())
+                self.Gens37_Efl_EndAddress.append(diaglog.tableWidget.item(i,2).text())
+            self.SaveConfig()
+            # print(diaglog.tableWidget.size())
+
+        diaglog.BT_SaveConfig.clicked.connect(SaveConfig_Diaglog)
+        diaglog.BT_LoadConfig.clicked.connect(self.LoadConfig)
+        # diaglog.BT_SaveConfig.clicked.connect(self.SaveConfig)
+        diaglog.tableWidget.setRowCount(len(self.GenS37_SWPart_List))
+
+        for i, elf in enumerate(self.GenS37_SWPart_List):
+            elf_item = QTableWidgetItem(elf)
+            diaglog.tableWidget.setItem(i, 0, elf_item)
+            startaddress_item = QTableWidgetItem(self.Gens37_Efl_StartAddress[i])
+            diaglog.tableWidget.setItem(i, 1, startaddress_item)
+            endtaddress_item = QTableWidgetItem(self.Gens37_Efl_EndAddress[i])
+            diaglog.tableWidget.setItem(i, 2, endtaddress_item)
+        # diaglog.tableWidget.resizeColumnToContents()
+        diaglog.show()
+        diaglog.exec_()
+
+
+
 
     #3设置BT_GenS37__Files
     @pyqtSlot()
@@ -318,7 +396,15 @@ class GenS37Widget(QWidget):
         self.GenS37_Json["ApplicationAlias"] = self.GenS37_Alias
         self.GenS37_PBCfg = self.__ui.LE_GenS37_PBCfg.text()
         self.GenS37_Json["FltMonr_PBCFg"] = self.GenS37_PBCfg
-        # cls.GenS37_Json["ElfFiles"] = [cls.GenS37_Release + elf for elf in cls.GenS37_ElfList]
+
+
+            # cls.GenS37_Json["ElfFiles"] = [cls.GenS37_Release + elf for elf in cls.GenS37_ElfList]
+        if self.Ascent27Version:
+            self.GenS37_Json["StartEndAddressesPerElf"] = [
+                self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf",
+                self.Gens37_Efl_StartAddress[self.GenS37_SWPart_List.index(self.GenS37_SWPart)],
+                self.Gens37_Efl_EndAddress[self.GenS37_SWPart_List.index(self.GenS37_SWPart)]
+            ]
         self.GenS37_Json["ElfFiles"] = [self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf"]
         self.GenS37_Json["PatchingFiles"][0]["ElfFile"] = self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf"
         # 如果生成AEF文件的复选框被选中，则先生成AEF文件，并把新AEF文件赋值给self.GenS37_Files

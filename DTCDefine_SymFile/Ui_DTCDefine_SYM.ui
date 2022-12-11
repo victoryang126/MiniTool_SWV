@@ -278,6 +278,9 @@
            <pointsize>12</pointsize>
           </font>
          </property>
+         <property name="toolTip">
+          <string>Clicked this button to update Internal Fault sheet name</string>
+         </property>
          <property name="text">
           <string>Update Sheet Name</string>
          </property>
