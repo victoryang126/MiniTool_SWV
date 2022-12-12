@@ -251,7 +251,6 @@ class TestRunMoel:
         self.descriptionFormat = Value_Mapping.descriptionFormat
         self.tracker = Value_Id(tracker,"",Field_Type.TrackerReference).__dict__ #Value_Id的对象
         self.customFields = [
-            Field(10002, "Run only Accepted TestCases", Value_Mapping.flase, Field_Type.BoolFieldValue).__dict__,  # Run only Accepted TestCases
             Field(self.test_information_id, "Test Information",test_information , Field_Type.TextFieldValue).__dict__, # Test Information
             Field_Values(1000000, "Test Cases", [[]], Field_Type.TableFieldValue).__dict__, #Test Cases
         ]

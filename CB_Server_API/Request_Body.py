@@ -223,15 +223,18 @@ class Post_TestCase_Body:
             cls.customFields.pop(0) # 删除TestMethod的属性
 
     def update_testmethod(self,testmethodid_list):
-        if len(testmethodid_list) == 0:
+        if len(self.customFields) == 1:
             pass
-        elif len(self.customFields) == 1: # 2022/12/10 如果Test Method 被删除了，则也不处理
+        elif len(testmethodid_list) == 0:
+            self.customFields[self.testmethod_indx]["values"].clear()
             pass
         else:
+            self.customFields[self.testmethod_indx]["values"].clear()
             testmethod_obj_list = [TestMethod(testmethodid).__dict__ for testmethodid in testmethodid_list]
             self.customFields[self.testmethod_indx]["values"].extend(testmethod_obj_list)
 
     def update_verifies(self,verifiesid_list):
+        self.customFields[self.verifies_indx]["values"].clear()
         if len(verifiesid_list) == 0:
             pass
         else:
@@ -240,7 +243,6 @@ class Post_TestCase_Body:
 
     def update_versions(self,versions_dict):
         """
-
         Args:
             versions_dict:
 
@@ -320,6 +322,12 @@ class TestRunMoel:
         else:
             cls.customFields[cls.test_information_indx] =  Field(cls.test_information_id, "Test Information",test_information , Field_Type.TextFieldValue).__dict__
 
+    @classmethod
+    def clear_testcases(cls):
+        cls.customFields[cls.test_cases_indx]["values"] = [[]]
+
+
+
 class Post_TestRun_Body:
     """
     暂定为上传test Run 需要用的元素
@@ -327,12 +335,12 @@ class Post_TestRun_Body:
     def __init__(self,testcases,name,tracker,test_information):
         self.testCaseIds = [testcase.__dict__ for testcase in testcases] # test case 必须是Value_Id_Refer_Data的对象数组
         TestRunMoel.update_test_information(test_information)
+        TestRunMoel.clear_testcases()
         self.testRunModel = TestRunMoel(name,tracker).__dict__
 
         for indx,testcase in enumerate(testcases): # 在Test Cass 里面添加 Test Case
             self.testRunModel['customFields'][TestRunMoel.test_cases_indx]['values'][0].append(Field_Values(1000001 + indx , "Test Case", [testcase.__dict__], Field_Type.ChoiceFieldValue).__dict__)
         # print(self.testRunModel['customFields'][1])
-
 
     def update_versions(self,versions_dict):
         """
@@ -427,11 +435,15 @@ if __name__ == "__main__":
     testrun = TestRunMoel(name,tracker)
     # TestRunMoel.update_test_inforamtion_id(None)
     TestRunMoel.update_test_inforamtion_id(3344)
-    print(testrun.__dict__)
+    # print(testrun.__dict__)
     Post_TestRun = Post_TestRun_Body(testcases,name,tracker,test_information)
     # Post_TestCase_Body.update_testmethod_id(None)
     # # Post_TestCase_Body.update_testmethod_id(1036)
-    # testcase = Post_TestCase_Body("Test")
-    # testcase.update_testmethod([1,2])
-    # testcase.update_verifies([11, 22])
-    print(Post_TestRun.__dict__)
+    testcase = Post_TestCase_Body("Test")
+    testcase.update_testmethod([1,2])
+    testcase.update_verifies([11, 22])
+    print(testcase.__dict__)
+    testcase2 = Post_TestCase_Body("Test2")
+    testcase2.update_testmethod([3, 4])
+    testcase2.update_verifies([5, 6])
+    print(testcase2.__dict__)

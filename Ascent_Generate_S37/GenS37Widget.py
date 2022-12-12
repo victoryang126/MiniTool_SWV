@@ -76,11 +76,11 @@ class GenS37Widget(QWidget):
         self.GenS37_AEFOutput = ""
         self.GenS37_ElfList = ["\\IPFixedCal.elf","\\VehFixedCal.elf","\\AlgoVar1FixedCal.elf","\\AlgoVar2FixedCal.elf","\\AlgoVar3FixedCal.elf"]
         self.GenS37_SWPart_List = ["VehFixedCal","IPFixedCal","AlgoVar1FixedCal","AlgoVar2FixedCal","AlgoVar3FixedCal"]
-        self.Gens37_Efl_StartAddress = []
-        self.Gens37_Efl_EndAddress = []
+        self.Gens37_Elf_StartAddress = []
+        self.Gens37_Elf_EndAddress = []
         for i,elf in enumerate(self.GenS37_SWPart_List):
-            self.Gens37_Efl_StartAddress.append("0x")
-            self.Gens37_Efl_EndAddress.append("0x")
+            self.Gens37_Elf_StartAddress.append("hex value without 0x")
+            self.Gens37_Elf_EndAddress.append("hex value without 0x")
         self.GenS37_Json = {
             "PlatformAlias": "",
             "ApplicationAlias": "",
@@ -135,11 +135,11 @@ class GenS37Widget(QWidget):
         self.GenS37_Alias = self.Config.value("CONFIG/GenS37_Alias")
         self.GenS37_PBCfg = self.Config.value("CONFIG/GenS37_PBCfg")
         self.GenS37_Release = self.Config.value("CONFIG/GenS37_Release")
-
-        if self.Config.value("CONFIG/Gens37_Efl_StartAddress") != None:
+        self.Ascent27Version = self.Config.value("CONFIG/Ascent27Version")
+        if self.Config.value("CONFIG/Gens37_Elf_StartAddress") != None:
             self.GenS37_SWPart_List = self.Config.value("CONFIG/GenS37_SWPart_List")
-            self.Gens37_Efl_StartAddress = self.Config.value("CONFIG/Gens37_Efl_StartAddress")
-            self.Gens37_Efl_EndAddress = self.Config.value("CONFIG/Gens37_Efl_EndAddress")
+            self.Gens37_Elf_StartAddress = self.Config.value("CONFIG/Gens37_Elf_StartAddress")
+            self.Gens37_Elf_EndAddress = self.Config.value("CONFIG/Gens37_Elf_EndAddress")
 
         self.__ui.LE_GenS37_Ascent.setText(self.GenS37_Ascent)
         self.__ui.LE_GenS37_OEM.setText(self.GenS37_OEM)
@@ -156,16 +156,18 @@ class GenS37Widget(QWidget):
         self.Config.setValue("CONFIG/GenS37_Ascent",self.GenS37_Ascent)
         self.Config.setValue("CONFIG/GenS37_OEM", self.GenS37_OEM)
         self.Config.setValue("CONFIG/GenS37_SWVersion", self.GenS37_SWVersion)
+        self.Config.setValue("CONFIG/Ascent27Version", self.Ascent27Version)
         self.Config.setValue("CONFIG/GenS37_Alias", self.GenS37_Alias)
         self.Config.setValue("CONFIG/GenS37_PBCfg", self.GenS37_PBCfg)
         self.Config.setValue("CONFIG/GenS37_Release", self.GenS37_Release)
         self.Config.setValue("CONFIG/GenS37_SWPart_List", self.GenS37_SWPart_List)
-        self.Config.setValue("CONFIG/Gens37_Efl_StartAddress", self.Gens37_Efl_StartAddress)
-        self.Config.setValue("CONFIG/Gens37_Efl_EndAddress", self.Gens37_Efl_EndAddress)
+        self.Config.setValue("CONFIG/Gens37_Elf_StartAddress", self.Gens37_Elf_StartAddress)
+        self.Config.setValue("CONFIG/Gens37_Elf_EndAddress", self.Gens37_Elf_EndAddress)
     # 根据elf文件夹里面的文件，添加elf类型选择的列表
     def AddElf(self):
         #处理Releaase Folder 添加elf名字到CB_GenS37_SWPart 里面去
         TempList = []
+        combox_values = []
         for MainFolder,SubFolder,File_List in os.walk(self.GenS37_Release):
             for File in File_List:
                 if File.endswith(".elf"):
@@ -173,7 +175,16 @@ class GenS37Widget(QWidget):
         for Temp in TempList:
             if Temp not in self.GenS37_SWPart_List:
                 self.GenS37_SWPart_List.append(Temp)
+                self.Gens37_Elf_StartAddress.append("Hex value without 0x")
+                self.Gens37_Elf_EndAddress.append("Hex value without 0x")
                 self.__ui.CB_GenS37_SWPart.addItem(Temp)
+        for i in range(self.__ui.CB_GenS37_SWPart.count()):
+            combox_values.append(self.__ui.CB_GenS37_SWPart.itemText(i))
+
+        for Temp in TempList:
+            if Temp not in combox_values:
+                self.__ui.CB_GenS37_SWPart.addItem(Temp)
+
 
     # 检擦 路径是否包含空格
     def CheckPathContainSpace(self, Path):
@@ -319,36 +330,41 @@ class GenS37Widget(QWidget):
 
     @pyqtSlot()
     def on_BT_Config_Elf_Addr_clicked(self):
-        diaglog = ElfAddressQdiaglog()
-        def SaveConfig_Diaglog():
-            # print(diaglog.tableWidget.rowCount())
-            row_count = diaglog.tableWidget.rowCount()
-            self.GenS37_SWPart_List.clear()
-            self.Gens37_Efl_StartAddress.clear()
-            self.Gens37_Efl_EndAddress.clear()
-            for i in range(row_count):
-                # print(i)
-                self.GenS37_SWPart_List.append(diaglog.tableWidget.item(i,0).text())
-                self.Gens37_Efl_StartAddress.append(diaglog.tableWidget.item(i,1).text())
-                self.Gens37_Efl_EndAddress.append(diaglog.tableWidget.item(i,2).text())
-            self.SaveConfig()
-            # print(diaglog.tableWidget.size())
+        try:
+            diaglog = ElfAddressQdiaglog()
+            def SaveConfig_Diaglog():
+                # print(diaglog.tableWidget.rowCount())
+                row_count = diaglog.tableWidget.rowCount()
+                self.GenS37_SWPart_List.clear()
+                self.Gens37_Elf_StartAddress.clear()
+                self.Gens37_Elf_EndAddress.clear()
+                for i in range(row_count):
+                    # print(i)
+                    self.GenS37_SWPart_List.append(diaglog.tableWidget.item(i,0).text())
+                    self.Gens37_Elf_StartAddress.append(diaglog.tableWidget.item(i, 1).text())
+                    self.Gens37_Elf_EndAddress.append(diaglog.tableWidget.item(i, 2).text())
+                self.SaveConfig()
+                # print(diaglog.tableWidget.size())
 
-        diaglog.BT_SaveConfig.clicked.connect(SaveConfig_Diaglog)
-        diaglog.BT_LoadConfig.clicked.connect(self.LoadConfig)
-        # diaglog.BT_SaveConfig.clicked.connect(self.SaveConfig)
-        diaglog.tableWidget.setRowCount(len(self.GenS37_SWPart_List))
+            diaglog.BT_SaveConfig.clicked.connect(SaveConfig_Diaglog)
+            diaglog.BT_LoadConfig.clicked.connect(self.LoadConfig)
+            # diaglog.BT_SaveConfig.clicked.connect(self.SaveConfig)
+            print(self.GenS37_SWPart_List)
+            diaglog.tableWidget.setRowCount(len(self.GenS37_SWPart_List))
 
-        for i, elf in enumerate(self.GenS37_SWPart_List):
-            elf_item = QTableWidgetItem(elf)
-            diaglog.tableWidget.setItem(i, 0, elf_item)
-            startaddress_item = QTableWidgetItem(self.Gens37_Efl_StartAddress[i])
-            diaglog.tableWidget.setItem(i, 1, startaddress_item)
-            endtaddress_item = QTableWidgetItem(self.Gens37_Efl_EndAddress[i])
-            diaglog.tableWidget.setItem(i, 2, endtaddress_item)
-        # diaglog.tableWidget.resizeColumnToContents()
-        diaglog.show()
-        diaglog.exec_()
+            for i, elf in enumerate(self.GenS37_SWPart_List):
+                print(elf)
+                elf_item = QTableWidgetItem(elf)
+                diaglog.tableWidget.setItem(i, 0, elf_item)
+                startaddress_item = QTableWidgetItem(self.Gens37_Elf_StartAddress[i])
+                diaglog.tableWidget.setItem(i, 1, startaddress_item)
+                endtaddress_item = QTableWidgetItem(self.Gens37_Elf_EndAddress[i])
+                diaglog.tableWidget.setItem(i, 2, endtaddress_item)
+            # diaglog.tableWidget.resizeColumnToContents()
+            diaglog.show()
+            diaglog.exec_()
+        except Exception as err:
+            self.WarningMessage(err)
 
 
 
@@ -399,13 +415,15 @@ class GenS37Widget(QWidget):
 
 
             # cls.GenS37_Json["ElfFiles"] = [cls.GenS37_Release + elf for elf in cls.GenS37_ElfList]
-        if self.Ascent27Version:
-            self.GenS37_Json["StartEndAddressesPerElf"] = [
-                self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf",
-                self.Gens37_Efl_StartAddress[self.GenS37_SWPart_List.index(self.GenS37_SWPart)],
-                self.Gens37_Efl_EndAddress[self.GenS37_SWPart_List.index(self.GenS37_SWPart)]
-            ]
+
         self.GenS37_Json["ElfFiles"] = [self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf"]
+        if self.Ascent27Version:
+            self.GenS37_Json["StartEndAddressesPerElf"] = {
+                self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf":
+               [ self.Gens37_Elf_StartAddress[self.GenS37_SWPart_List.index(self.GenS37_SWPart)],
+                self.Gens37_Elf_EndAddress[self.GenS37_SWPart_List.index(self.GenS37_SWPart)]
+                 ]
+            }
         self.GenS37_Json["PatchingFiles"][0]["ElfFile"] = self.GenS37_Release + "/" + self.GenS37_SWPart + ".elf"
         # 如果生成AEF文件的复选框被选中，则先生成AEF文件，并把新AEF文件赋值给self.GenS37_Files
         if self.GenS37_BaseAEF_Check:

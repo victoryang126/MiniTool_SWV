@@ -88,7 +88,7 @@ class CB_Tool_Widget(QWidget):
         self.__ui = Ui_CBTool()
         self.__ui.setupUi(self)
         self.server = CodeBeamer(self.__server,"UserName","Password")
-        # self.server = CodeBeamer(self.__server, "victor.yang", "Mate40@VY11")
+        # self.server = CodeBeamer(self.__server, "victor.yang", "Mat")
 
         ##########定义相关属性########################
 

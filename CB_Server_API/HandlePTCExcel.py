@@ -112,6 +112,7 @@ def read_table_of_content(ptc_excel):
 
     # for indx in df_ptc.index:
     #     print(df_ptc.loc[indx])
+    print(df_ptc[["name","Verifies"]])
     return df_ptc, excel_info
 
 

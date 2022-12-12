@@ -259,6 +259,7 @@ class CodeBeamer():
         tracker_fileds = self.get_tracker_fileds(trackerid)
         # for field in tracker_fileds:
         #     print(field["name"], field["id"])
+        # print(1)
         field_id_list = [field["id"] for field in tracker_fileds if field["name"] == field_name]
         print(f"{field_name} id: {str(field_id_list)}" )
         if len(field_id_list) == 0:
@@ -403,7 +404,7 @@ class CodeBeamer():
         #
         print("##########create_test_run_baseon_testcases")
         if True in df_cbcase["id"].isin([""]).values:
-            print(df_cbcase)
+            print(df_cbcase[["name","id"]])
             raise Exception("create_test_run_baseon_testcases found new case which not been update to test cases tracker")
 
 
