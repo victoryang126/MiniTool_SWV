@@ -88,7 +88,7 @@ class CB_Tool_Widget(QWidget):
         self.__ui = Ui_CBTool()
         self.__ui.setupUi(self)
         self.server = CodeBeamer(self.__server,"UserName","Password")
-        # self.server = CodeBeamer(self.__server, "victor.yang", "Mat")
+        # self.server = CodeBeamer(self.__server, "victor.yang", "Mate")
 
         ##########定义相关属性########################
 
@@ -223,20 +223,6 @@ class CB_Tool_Widget(QWidget):
 
         try:
             self.upload_testcase(self.ptc_excel)
-            # df_ptc, excel_info = read_table_of_content(self.ptc_excel)
-            # testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
-            # release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
-            # df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
-            # print(1)
-            # self.exract_value(excel_info)
-            # print(2)
-            # args = {
-            #     "df_cbcase":df_cbcase,
-            #     "testcase_trackerid":self.testcase_trackerid,
-            #     "testcase_folderid":self.testcase_folderid,
-            #     "release_dict":release_dict
-            # }
-            # self.server.upload_testcases(**args)
             self.DoneMessage("Upload_TestCase Done")
         except Exception as err:
             self.WarningMessage(err)
@@ -251,16 +237,6 @@ class CB_Tool_Widget(QWidget):
         # self.set_status_result(False)
         try:
             self.upload_testrun(self.ptc_excel)
-            # df_ptc, excel_info = read_table_of_content(self.ptc_excel)
-            # testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
-            # release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
-            # df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
-            # self.exract_value(excel_info)
-            # args = {
-            #     "df_cbcase":df_cbcase, "testrun_trackerid":self.testrun_trackerid, "name":self.aau, "test_information":self.test_information, "release_dict":release_dict
-            # }
-            # self.testrunid = self.server.create_test_run_baseon_testcases(**args)
-            # self.server.update_test_run_result(df_cbcase,self.testrunid)
             self.DoneMessage("Init_Upload_TestRun Done")
         except Exception as err:
             self.WarningMessage(err)
@@ -274,24 +250,13 @@ class CB_Tool_Widget(QWidget):
             df_ptc, excel_info = read_table_of_content(self.ptc_excel)
             testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
             df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
-            print(2)
             self.exract_value(excel_info)
-            print(1)
             self.server.update_test_run_result(df_cbcase, self.testrunid)
             self.DoneMessage("Restart_TestRun Done")
         except Exception as err:
             self.WarningMessage(err)
 
-    #
-    # @pyqtSlot(str)
-    # def on_LE_TestRun_TrackerName_textChanged(self):
-    #     if self.__ui.LE_TestRun_TrackerName.text():
-    #         CB_Tool.TestRun_TrackerName = self.__ui.LE_TestRun_TrackerName.text()
-    #
-    #
-    # @pyqtSlot(str)
-    # def on_LE_WorkingSet_textChanged(self):
-    #     CB_Tool.WorkingSet = self.__ui.LE_WorkingSet.text()
+
 
 
 

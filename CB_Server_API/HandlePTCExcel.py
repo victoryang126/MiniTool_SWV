@@ -7,6 +7,7 @@ import re
 def get_cb_id_fromdf(x, df):
 
     if x.strip() in df.index:
+        print(x.strip(),df.loc[x.strip(), "id"])
         return df.loc[x.strip(), "id"]
     else:
         return ""
@@ -110,8 +111,11 @@ def read_table_of_content(ptc_excel):
     df_ptc["Incident ID"] = df_ptc["Incident ID"].apply(convert_id_inexcel_to_cbid_and_nonecbid, cbid_flag=True)
     # print(df_ptc)
 
-    # for indx in df_ptc.index:
-    #     print(df_ptc.loc[indx])
+    #检查是否有case名称重复
+    df_case_duplicated = df_ptc.duplicated(subset=['name'])
+    if True in df_case_duplicated.values:
+        print(df_ptc.loc[df_case_duplicated]["name"])
+        raise Exception("Duplicated test case name, Please check table of content sheet")
     print(df_ptc[["name","Verifies"]])
     return df_ptc, excel_info
 
@@ -137,6 +141,7 @@ def generate_cb_case(df_ptc,testcase_list):
         "id" 根据名称匹配cb文件夹下面case 的id
 
     """
+    pd.set_option('display.max_rows', None)
     print("##################generate_cb_case ")
     if len(testcase_list) == 0: #如果casefodlder下面没有case表示是新的数据全部重新上传即可
         df_ptc["id"] = ""
@@ -146,7 +151,7 @@ def generate_cb_case(df_ptc,testcase_list):
         # 将testcase字典的list转换为df，
         print("Update case")
         casevalue_list = [list(x.values())[0:-1] for x in testcase_list]
-        print(casevalue_list)
+        # print(casevalue_list)
         df_testcase = pd.DataFrame(np.array(casevalue_list),columns=['id','name'])
         df_testcase.set_index("name",inplace=True,drop= False)
         # print(df_testcase)
@@ -165,7 +170,7 @@ def generate_cb_case(df_ptc,testcase_list):
             df_ptc = pd.concat([df_ptc,df_obsolete])
 
         df_ptc.reset_index(inplace=True,drop=True)
-
+        # print(df_ptc)
         return df_ptc
 
 

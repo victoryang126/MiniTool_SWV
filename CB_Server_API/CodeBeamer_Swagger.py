@@ -408,11 +408,14 @@ class CodeBeamer():
             raise Exception("create_test_run_baseon_testcases found new case which not been update to test cases tracker")
 
 
+        print(df_cbcase)
         #抓取结果为pass和failed 的case。仅仅用这个部分上传testcase
         df_result = df_cbcase.loc[df_cbcase["status"].isin(["PASSED","FAILED"]) , ['id', 'name']]
         print(df_result)
         result_list = [list(df_result.loc[x].values) for x in df_result.index]
 
+        print("##########Result list")
+        print(result_list)
 
 
         testcases_in_testrun = [TestCase_In_TestRun(*x) for x in result_list]
