@@ -85,7 +85,7 @@ def GetSensorObject(ExcelDir, ObjectType, FaultTemplate, NormalTemplate, G_RegPa
             StatusColEnd = HeaderKeyDict["StatusColEnd"]
             # print(StatusStart,StatusEnd,HeaderKeyDict['RowStart'])
             # print(dfDataTemp.loc[HeaderKeyDict['RowStart']:, StatusStart:StatusEnd])
-            Status = dfDataTemp.loc[HeaderKeyDict['RowStart'], StatusColStart:StatusColEnd].to_list()
+            Status = dfDataTemp.loc[HeaderKeyDict['RowStart'], StatusColStart:StatusColEnd].to_list() #【Buckled.UnBuckled]
         # print("Status ->%s"%Status)
         # '''
         # 4. ********** 获取支持的Fault有哪些
