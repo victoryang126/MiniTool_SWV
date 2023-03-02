@@ -9,8 +9,8 @@ from PyQt5.QtCore import pyqtSlot,Qt,QThread,pyqtSignal,QObject
 from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QPalette
 from CB_Server_API.Ui_CB_Tool import  Ui_CBTool
-from CB_Server_API.CodeBeamer_Swagger import *
-
+# from CB_Server_API.CodeBeamer_Swagger import *
+from CB_Server_API.CodeBeamer import *
 import numpy as np
 
 # class BackgoundThread(QThread,CB_Tool):
@@ -87,8 +87,8 @@ class CB_Tool_Widget(QWidget):
         super().__init__()
         self.__ui = Ui_CBTool()
         self.__ui.setupUi(self)
-        self.server = CodeBeamer(self.__server,"UserName","Password")
-        # self.server = CodeBeamer(self.__server, "victor.yang", "Mate")
+        # self.server = CodeBeamer(self.__server,"UserName","Password")
+        self.server = CodeBeamer(self.__server, "victor.yang", "Mate40@VY20222021")
 
         ##########定义相关属性########################
 
