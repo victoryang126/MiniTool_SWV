@@ -191,11 +191,11 @@ class CodeBeamer():
         return resp
 
     @func_monitor
-    def get_verfies_testmethod(self,itemid):
+    def get_verfies_testmethod(self,itemid,test_method_id):
         print("################# get_verfies_testmethod")
         resp = self.get_data_from_item(itemid)
 
-        testmethod_id = Post_TestCase_Body.testmethod_id #
+        # testmethod_id = 1035 #
 
         #遍历customFields
         testmethod_dict = {}
@@ -203,7 +203,7 @@ class CodeBeamer():
 
         for fields in customFileds:
             # print(fields["fieldId"] == testmethod_id)
-            if fields["fieldId"] == testmethod_id:
+            if fields["fieldId"] == test_method_id:
                 testmethod_dict = fields
                 # {'fieldId': 1035, 'name': 'Test Method',
                 #  'values': [{'id': 1, 'name': 'Others', 'type': 'ChoiceOptionReference'}], 'type': 'ChoiceFieldValue'}
@@ -334,7 +334,7 @@ class CodeBeamer():
         request_body = to_json(test_case_body)
 
         Debug_Logger.debug(request_body)
-
+        url = self.server + f"/items/{itemid}"
         resp = self.put(url, request_body)
         return resp
 
@@ -357,7 +357,7 @@ class CodeBeamer():
         test_case_body = Post_TestCase_Body(pandas_series["name"])
 
         ######  2022/11/21新增加逻辑，当status为obsolete的时候，从服务器拉数据填充，否则会因为设置obsolete导致属性丢失
-        testmethods, verifies = self.get_verfies_testmethod(itemid)
+        testmethods, verifies = self.get_verfies_testmethod(itemid,test_method_id)
         test_case_body.update_verifies(verifies)
         test_case_body.update_test_method(test_method_id,testmethods)
         #######

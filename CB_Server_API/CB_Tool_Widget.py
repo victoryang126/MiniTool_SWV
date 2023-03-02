@@ -108,12 +108,14 @@ class CB_Tool_Widget(QWidget):
         DigTitle = "Warning Message"
         StrInfo = Err
         # print(str)
+        analyze_exception()
         QMessageBox.warning(self, DigTitle, str(Err))
 
     def DoneMessage(self, str):
         DigTitle = "Information Message"
         StrInfo = str
         QMessageBox.information(self, DigTitle, StrInfo)
+        clear_log()
 
     def set_status_result(self,flag):
         if flag:

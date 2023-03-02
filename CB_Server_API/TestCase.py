@@ -57,17 +57,25 @@ class Post_TestCase_Body:
     #    [ ChoiceFieldValue(fieldId=17, name= "Verifies", type= "ChoiceFieldValue"),
     #     ChoiceOptionReference(fieldId=1035,name= "Test Method",type= "ChoiceFieldValue")]
     # )
+    subjects:List[Any] = field(default_factory=list)
     status:TestCaseStatus = TestCaseStatus()
     versions:List[AbstractReference] = field(default_factory=list)
     typeName:str =  "Testcase"
 
-    def update_verifies(self,ids:list):
-        self.customFields.append(ChoiceFieldValue(fieldId=17, name= "Verifies"))
+    def update_verifies(self, ids: list):
         if len(ids) == 0:
             pass
         else:
-            verifies = [TrackerItemReference(id= id) for id in ids]
-            self.customFields[len(self.customFields) -1].values.extend(verifies)
+            verifies = [TrackerItemReference(id=id) for id in ids]
+            self.subjects.extend(verifies)
+
+    # def update_verifies(self,ids:list):
+    #     self.customFields.append(ChoiceFieldValue(fieldId=17, name= "Verifies"))
+    #     if len(ids) == 0:
+    #         pass
+    #     else:
+    #         verifies = [TrackerItemReference(id= id) for id in ids]
+    #         self.customFields[len(self.customFields) -1].values.extend(verifies)
 
     def update_test_method(self,test_method_id,ids:list):
         if test_method_id == None or len(ids) == 0 :
