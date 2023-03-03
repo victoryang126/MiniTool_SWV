@@ -9,7 +9,6 @@ from CB_Server_API.Abstract import *
 class TestCase_In_TestRun(TrackerItemReference):
     pass
 
-
 @dataclass
 class TestRun_Status(ChoiceOptionReference):
     id: int = 1
@@ -80,6 +79,40 @@ class Post_TestRun_Body:
     testRunModel:TestRunModel = TestRunModel()
 
 @dataclass
+class Restart_TestRun_Body:
+    name: str = None
+    descriptionFormat: str = "Wiki"
+    customFields: List[Any] = field(default_factory=list)
+    status: TestRun_Status = TestRun_Status(1)
+    versions: List[AbstractReference] = field(default_factory=list)
+    formality = ChoiceOptionReference(1, "Regular")
+    typeName: str = "Testrun"
+
+
+    def update_test_information(self, test_information_id, test_information):
+        if test_information_id == None:
+            pass
+        else:
+            test_infomation_filed = TextFieldValue(test_information_id, "Test Information", test_information)
+            self.customFields.append(test_infomation_filed)
+
+    def update_working_set(self, working_set_id, working_set_dict):
+        if working_set_id == None:
+            pass
+        else:
+            working_set_field = ChoiceFieldValue(fieldId=working_set_id, name="Working Set",
+                                                 values=[ChoiceOptionReference(**working_set_dict)])
+            self.customFields.append(working_set_field)
+
+    def update_versions(self, versions_dict):
+        """
+        Args:
+            versions_dict:
+        Returns:
+        """
+        self.versions.append(AbstractReference(**versions_dict))
+
+@dataclass
 class TestCaseReference:
     testCaseReference:TestCase_In_TestRun = TestCase_In_TestRun(0)
     result:str = None
@@ -95,7 +128,6 @@ class TestCaseReference:
         else:
             incidents = [IncidentId(id) for id in ids]
             self.reportedBugReferences.extend(incidents)
-
 
 @dataclass
 class Put_TestRun_Body:

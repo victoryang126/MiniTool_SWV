@@ -53,8 +53,13 @@ def get_check_resp(resp):
     """
     #####Note 后面考虑对异常的数据回复，根据curl和json数据dump 到本地作为时候分析的数据
     if resp.status_code != 200:
-        print(resp.text)
-        print(resp.json())
+        # print(resp.text)
+        # print(resp.json())
+        # print(dir(resp))
+        # print(resp.headers)
+        # print(resp.request)
+        # # print(resp.raise_for_status())
+        # print(resp.content())
         if resp.status_code == 401:
             raise Exception(f"Access denied code 401 when execute url::{resp.url} ::{resp.text}")
         elif resp.status_code == 400:
@@ -557,6 +562,55 @@ class CodeBeamer():
         print(resp.json())
         return resp.json()["id"]
 
+
+    @func_monitor
+    def restart_test_run(self, testrun_trackerid, testrun_item_id, name, test_information, release_dict, working_set_name):
+        """
+        2023/3/3 added
+        Args:
+            df_cbcase:
+            testrun_item_id:
+            name:
+            test_information:
+            release_dict:
+            working_set: the working set name,add for smart project
+
+        Returns:
+            AAU的TestRun ID
+        """
+        #
+
+
+
+
+
+        url = self.server + f"/items/{testrun_item_id}"
+        # testcases, name, tracker, test_information
+        current_time = str(datetime.date.today()).replace("-","_")
+        name = f"{name}_{current_time}"
+
+
+        #判断Test Information 是否存在，并赋值新的id
+
+        restart_testRun = Restart_TestRun_Body(name = name)
+        test_information_id = self.check_get_field_id(testrun_trackerid, "Test Information")
+        restart_testRun.update_versions(release_dict)
+        restart_testRun.update_test_information(test_information_id, test_information)
+        #2023/3/3 added
+        if is_nan(working_set_name):
+            pass
+        else:
+            working_set_id = self.check_get_field_id(testrun_trackerid, "Working Set")
+            working_set_config_options = self.get_tracker_field_options(testrun_trackerid,working_set_id)
+            working_set_option = self.validate_and_return_field_option(working_set_config_options,working_set_name)
+            restart_testRun.update_working_set(working_set_id,working_set_option)
+
+        request_body = to_json(restart_testRun)
+        Debug_Logger.debug(request_body)
+        resp = self.put(url, request_body)
+        print(resp.json())
+        return resp.json()["id"]
+
     @func_monitor
     def update_test_run_result(self,df_cbcase,testrun_id):
         print("##########update_test_run_result")
@@ -592,7 +646,7 @@ class CodeBeamer():
 if __name__ == "__main__":
     pass
 
-    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@VY20222021")
+    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@22")
     url = 'https://codebeamer.corp.int/cb/api/v3/trackers/1908978/fields'
 
     options = Cb.get_tracker_field_options(1908978,1000)

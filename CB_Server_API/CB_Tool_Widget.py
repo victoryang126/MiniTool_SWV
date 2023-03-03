@@ -186,6 +186,9 @@ class CB_Tool_Widget(QWidget):
         self.server.update_test_run_result(df_cbcase, self.testrunid)
 
 
+
+
+
     def set_upload_results(self,err):
         self.__ui.textBrowser_UploadResults.append(err)
 
@@ -249,7 +252,20 @@ class CB_Tool_Widget(QWidget):
 
         # self.set_status_result(False)
         try:
+
+
+
             df_ptc, excel_info = read_table_of_content(self.ptc_excel)
+
+            release_dict = self.server.get_release(excel_info["testcase_trackerid"], excel_info["release"])
+            self.exract_value(excel_info)
+            args = {
+                "testrun_item_id": self.testrunid, "testrun_trackerid": self.testrun_trackerid, "name": self.aau,
+                "test_information": self.test_information, "release_dict": release_dict,
+                "working_set_name": excel_info["working_set"]
+            }
+            self.server.restart_test_run(**args)
+
             testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
             df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
             self.exract_value(excel_info)

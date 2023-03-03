@@ -79,29 +79,17 @@ class AbstractFieldValue:
     name: str = None
     # type:str = None
 
-
-
-# @dataclass
-# class Field_Values(AbstractFieldValue):
-#     values: List[Any] = field(default_factory=list)
-#
-#
-# @dataclass
-# class Field_Value(AbstractFieldValue):
-#     value: Any = None
+@dataclass
+class AbstractReference:
+    id: int
+    name: str = None
+    type: str = None
 
 
 @dataclass
 class ChoiceFieldValue(AbstractFieldValue):
     values: List[Any] = field(default_factory=list)
     type: str = "ChoiceFieldValue"
-
-
-@dataclass
-class BoolFieldValue(AbstractFieldValue):
-    value: Any = None
-    type: str = "BoolFieldValue"
-
 
 @dataclass
 class TableFieldValue(AbstractFieldValue):
@@ -115,10 +103,14 @@ class TextFieldValue(AbstractFieldValue):
     type: str = "TextFieldValue"
 
 @dataclass
-class AbstractReference:
-    id: int
-    name: str = None
-    type: str = None
+class BoolFieldValue(AbstractFieldValue):
+    value: Any = None
+    type: str = "BoolFieldValue"
+
+
+
+
+
 
 
 @dataclass
@@ -138,7 +130,6 @@ class TrackerReference(AbstractReference):
 @dataclass
 class TrackerItemReference(AbstractReference):
     type: str = "TrackerItemReference"
-    # referenceData: ReferenceData = ReferenceData("DO_NOT_PROPAGATE") this data is not necessary currently, so will not add this
 
 @dataclass
 class ChoiceOptionReference(AbstractReference):
