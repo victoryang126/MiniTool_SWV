@@ -530,17 +530,11 @@ class CodeBeamer():
         current_time = str(datetime.date.today()).replace("-","_")
         name = f"{name}_{current_time}"
 
-        # testcases = [TestCase_In_TestRun(id) for id in testcase_ids]
-        # testrun = TestRunModel(name = "TestRun for victor",tracker = TrackerReference(id =10574133))
-        # testrun.update_test_case(testcases)
-        # testrun.update_versions(versions_dict)
-        # testrun.update_test_information(10003, "Test")
-        # create_testrun_body = Post_TestRun_Body(testcases,testrun)
 
         #判断Test Information 是否存在，并赋值新的id
         testcases_in_testrun = [TestCase_In_TestRun(*x) for x in result_list]
-        # testrun_model = TestRunModel(name = name,tracker = TrackerReference(id =testrun_trackerid))
-        testrun_model = TestRunModel(tracker=TrackerReference(id=testrun_trackerid))
+        testrun_model = TestRunModel(name = name,tracker = TrackerReference(id =testrun_trackerid))
+        # testrun_model = TestRunModel(tracker=TrackerReference(id=testrun_trackerid))
         test_information_id = self.check_get_field_id(testrun_trackerid, "Test Information")
         testrun_model.update_test_case(testcases_in_testrun)
         testrun_model.update_versions(release_dict)

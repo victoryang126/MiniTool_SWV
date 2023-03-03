@@ -111,6 +111,8 @@ def read_table_of_content(ptc_excel):
         raise Exception(f"testcase_folderid is empty")
     if is_nan(excel_info["testrun_trackerid"]):
         raise Exception(f"testrun_trackerid is empty")
+    if is_nan(excel_info["release"]):
+        raise Exception(f"release is empty")
 
     df_ptc = df_ptc[column_list]
     df_ptc = df_ptc.iloc[7:, :]

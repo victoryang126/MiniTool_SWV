@@ -180,9 +180,9 @@ class CB_Tool_Widget(QWidget):
         self.exract_value(excel_info)
         args = {
             "df_cbcase": df_cbcase, "testrun_trackerid": self.testrun_trackerid, "name": self.aau,
-            "test_information": self.test_information, "release_dict": release_dict
+            "test_information": self.test_information, "release_dict": release_dict,"working_set_name":excel_info["working_set"]
         }
-        self.testrunid = self.server.create_test_run_baseon_testcases(**args)
+        self.testrunid = self.server.create_test_run_baseon_testcases_workingset(**args)
         self.server.update_test_run_result(df_cbcase, self.testrunid)
 
 
