@@ -81,9 +81,14 @@ class Post_TestCase_Body:
         if test_method_id == None or len(ids) == 0 :
             pass
         else:
-            self.customFields.append(ChoiceFieldValue(fieldId=test_method_id, name="Test Method"))
             test_methods = [TestMethod(id) for id in ids]
-            self.customFields[len(self.customFields) -1].values.extend(test_methods)
+            test_method_field = ChoiceFieldValue(fieldId=test_method_id, name="Test Method",
+                                                 values=test_methods)
+            self.customFields.append(test_method_field)
+
+            # self.customFields.append(ChoiceFieldValue(fieldId=test_method_id, name="Test Method"))
+            # test_methods = [TestMethod(id) for id in ids]
+            # self.customFields[len(self.customFields) -1].values.extend(test_methods)
 
     def update_versions(self, versions_dict):
         """

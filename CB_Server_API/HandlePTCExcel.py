@@ -11,7 +11,15 @@ def get_cb_id_fromdf(x, df):
         return df.loc[x.strip(), "id"]
     else:
         return ""
-
+#2023/3/2 add to check if the value is nan
+def is_nan(value):
+    if isinstance(value,float):
+        if np.isnan(value):
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 def is_cb_id(ID):
@@ -86,13 +94,23 @@ def read_table_of_content(ptc_excel):
 
     column_list = ["Object Text", "_VerificationStatus", "_VerifiesDOORSRequirements", "_Comment","Test Method"]
     excel_info = {}
+
     excel_info["test_information"]= df_ptc.iloc[0, 4]
+
     excel_info["testrun_trackerid"] = df_config.iloc[24, 3]
     excel_info["testcase_trackerid"] = df_config.iloc[21, 3]
     excel_info["testcase_folderid"] = df_config.iloc[22, 3]
     excel_info["release"] = df_config.iloc[23, 3]
     excel_info["AAU"] = df_config.iloc[7,3]
+    excel_info["working_set"] =df_config.iloc[25, 3] #2023/3/3 add working set for smart project
 
+    #2023/3/3 Add logic to check if  related id  is not nan,or will raise exception
+    if is_nan(excel_info["testcase_trackerid"]):
+        raise Exception(f"testcase_trackerid is empty")
+    if is_nan(excel_info["testcase_folderid"]):
+        raise Exception(f"testcase_folderid is empty")
+    if is_nan(excel_info["testrun_trackerid"]):
+        raise Exception(f"testrun_trackerid is empty")
 
     df_ptc = df_ptc[column_list]
     df_ptc = df_ptc.iloc[7:, :]
@@ -179,7 +197,7 @@ def generate_cb_case(df_ptc,testcase_list):
 
 if __name__ == '__main__':
     pass
-    Spec = r"C:\Users\victor.yang\Desktop\Work\CB\SpecTemplate\CHT_SWV_Project_FunctionName_Test Specification_Template_SC3.xlsm"
+    Spec = r"C:\PyCharmProject\CHT_SWV_Geely_GEEA2_HX11_TVV_Test Result.xlsm"
     df_SpecCB_FromCB, excel_info =  read_table_of_content(Spec)
     print(excel_info)
   #   # df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")

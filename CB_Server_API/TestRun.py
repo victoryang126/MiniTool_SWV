@@ -59,6 +59,13 @@ class TestRunModel:
             test_infomation_filed = TextFieldValue(test_information_id,"Test Information",test_information)
             self.customFields.append(test_infomation_filed)
 
+    def update_working_set(self,working_set_id,working_set_dict):
+        if working_set_id == None:
+            pass
+        else:
+            working_set_field= ChoiceFieldValue(fieldId=working_set_id, name="Working Set",values=[ChoiceOptionReference(*working_set_dict)])
+            self.customFields.append(working_set_field)
+
     def update_versions(self, versions_dict):
         """
         Args:

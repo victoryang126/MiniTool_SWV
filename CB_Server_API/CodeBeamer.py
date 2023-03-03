@@ -67,6 +67,15 @@ def get_check_resp(resp):
             raise Exception(f"unknow error code {resp.status_code} when execute url:{resp.url}::{resp.text}")
     return resp
 
+def is_nan(value):
+    if isinstance(value,float):
+        if np.isnan(value):
+            return True
+        else:
+            return False
+    else:
+        return False
+
 def measure_execution_time(function):
     def wrapper(*args, **kwargs):
         return_value = None
@@ -273,6 +282,30 @@ class CodeBeamer():
             raise Exception(
                 f"{len(field_id_list)}  {field_name} exist in related tracker, please contact Milly du to ask system engineer update config")
 
+    @func_monitor
+    def get_tracker_field_options(self,trackerId,fieldId):
+        if fieldId == None:
+            return None
+        else:
+            url = self.server + f"/trackers/{trackerId}/fields/{fieldId}"
+            resp = self.get(url)
+            print(resp.json())
+            options = resp.json()["options"]
+            return options
+    @func_monitor
+    def validate_and_return_field_option(self,defined_options,user_provide_option):
+        option_list = [option for option in defined_options if option["name"] == user_provide_option]
+        if len(option_list) == 0:
+            raise Exception(
+            f" {user_provide_option} not defiend the the CodeBeamer, please check the options in the tracker field ") # 如果没有Test Method的filed则返回None
+                # raise Exception(f"{field_name} not exist in related tracker, please contact Milly du to ask system engineer update config")
+        elif len(option_list) == 1:
+            return option_list[0]
+        else:
+            raise Exception(
+                f"{len(option_list)}  {user_provide_option} exist in related tracker, please contact Milly du to ask system engineer update config")
+
+
     """
     对case的内容分成三个函数处理，
     当没有id的时候，create
@@ -407,6 +440,8 @@ class CodeBeamer():
             AAU的TestRun ID
         """
         #
+        # working_set_id = self.check_get_field_id(testrun_trackerid, "Working Set")
+
         print("##########create_test_run_baseon_testcases")
         if True in df_cbcase["id"].isin([""]).values:
             print(df_cbcase[["name","id"]])
@@ -456,6 +491,79 @@ class CodeBeamer():
         return resp.json()["id"]
 
     @func_monitor
+    def create_test_run_baseon_testcases_workingset(self,df_cbcase,testrun_trackerid,name,test_information,release_dict,working_set_name):
+        """
+        2023/3/3 added
+        Args:
+            df_cbcase:
+            testrun_trackerid:
+            name:
+            test_information:
+            release_dict:
+            working_set: the working set name,add for smart project
+
+        Returns:
+            AAU的TestRun ID
+        """
+        #
+
+        print("##########create_test_run_baseon_testcases")
+        if True in df_cbcase["id"].isin([""]).values:
+            print(df_cbcase[["name","id"]])
+            raise Exception("create_test_run_baseon_testcases found new case which not been update to test cases tracker")
+
+
+        print(df_cbcase)
+        #抓取结果为pass和failed 的case。仅仅用这个部分上传testcase
+        df_result = df_cbcase.loc[df_cbcase["status"].isin(["PASSED","FAILED"]) , ['id', 'name']]
+        print(df_result)
+        result_list = [list(df_result.loc[x].values) for x in df_result.index]
+
+        print("##########Result list")
+        print(result_list)
+
+
+
+
+        url = self.server + f"/trackers/{testrun_trackerid}/testruns"
+        # testcases, name, tracker, test_information
+        current_time = str(datetime.date.today()).replace("-","_")
+        name = f"{name}_{current_time}"
+
+        # testcases = [TestCase_In_TestRun(id) for id in testcase_ids]
+        # testrun = TestRunModel(name = "TestRun for victor",tracker = TrackerReference(id =10574133))
+        # testrun.update_test_case(testcases)
+        # testrun.update_versions(versions_dict)
+        # testrun.update_test_information(10003, "Test")
+        # create_testrun_body = Post_TestRun_Body(testcases,testrun)
+
+        #判断Test Information 是否存在，并赋值新的id
+        testcases_in_testrun = [TestCase_In_TestRun(*x) for x in result_list]
+        # testrun_model = TestRunModel(name = name,tracker = TrackerReference(id =testrun_trackerid))
+        testrun_model = TestRunModel(tracker=TrackerReference(id=testrun_trackerid))
+        test_information_id = self.check_get_field_id(testrun_trackerid, "Test Information")
+        testrun_model.update_test_case(testcases_in_testrun)
+        testrun_model.update_versions(release_dict)
+        testrun_model.update_test_information(test_information_id, test_information)
+        #2023/3/3 added
+        if is_nan(working_set_name):
+            pass
+        else:
+            working_set_id = self.check_get_field_id(testrun_trackerid, "Working Set")
+            working_set_config_options = self.get_tracker_field_options(testrun_trackerid,working_set_id)
+            working_set_option = self.validate_and_return_field_option(working_set_config_options,working_set_name)
+            testrun_model.update_working_set(working_set_id,working_set_option)
+        create_testrun_body = Post_TestRun_Body(testcases_in_testrun,testrun_model)
+
+
+
+        request_body = to_json(create_testrun_body)
+        Debug_Logger.debug(request_body)
+        resp = self.post(url, request_body)
+        print(resp.json())
+        return resp.json()["id"]
+
+    @func_monitor
     def update_test_run_result(self,df_cbcase,testrun_id):
         print("##########update_test_run_result")
         if True in df_cbcase["id"].isin([""]).values:
@@ -490,11 +598,14 @@ class CodeBeamer():
 if __name__ == "__main__":
     pass
 
-    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@111")
-    url = 'https://codebeamer.corp.int/cb/api/v3/trackers/14988648/fields'
+    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@VY20222021")
+    url = 'https://codebeamer.corp.int/cb/api/v3/trackers/1908978/fields'
 
-    resp = Cb.get(url)
-    print(resp.json())
+    options = Cb.get_tracker_field_options(1908978,1000)
+
+    print(options)
+    option = Cb.validate_and_return_field_option(options,"GEELY_GEEA2.0_SX21")
+    print(option)
     # Cb.get_tracker_fileds(14937781)
     # Cb.get_verfies_testmethod(20451445)
     # Cb.get_verfies_testmethod(20108756)
