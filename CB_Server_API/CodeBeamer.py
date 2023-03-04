@@ -42,6 +42,7 @@ import time
 import datetime
 from urllib3.exceptions import InsecureRequestWarning
 from CB_Server_API.HandlePTCExcel import *
+
 def get_check_resp(resp):
 
     """
@@ -108,17 +109,17 @@ class CodeBeamer():
         self.login = (user,pwd)
 
     def get(self, url):
+        Debug_Logger.debug(f'get url:{url}')
         resp = requests.get(url, auth=self.login, verify=False)
-
         return get_check_resp(resp)
 
-
     def put(self, url, json):
+        Debug_Logger.debug(f'put url:{url}  \njson\n:{json}')
         resp = requests.put(url, auth=self.login, verify=False, json=json)
         return get_check_resp(resp)
 
-
     def post(self, url, json):
+        Debug_Logger.debug(f'post url:{url}  \njson\n:{json}')
         resp = requests.post(url, auth=self.login, verify=False, json=json)
         return get_check_resp(resp)
 
@@ -143,7 +144,7 @@ class CodeBeamer():
         Returns:
 
         """
-        print("#####################get release dict")
+
 
         #先通过Tracker id获取project的id
         url = self.server + f"/trackers/{testcase_trackerid}/"
@@ -168,14 +169,12 @@ class CodeBeamer():
         if release in [child["name"] for child in resp_json["itemRefs"]]:
             for child in resp_json["itemRefs"]:
                 if child["name"] == release:
-                    print(child)
                     return child
         else:
             raise  Exception("Release name is not correct")
 
     @func_monitor
     def get_testcase_infolder(self,testcase_folderid):
-        print("#####################get_testcase_infolder")
         """
 
         Returns:
@@ -189,34 +188,22 @@ class CodeBeamer():
         # 'https://codebeamer.corp.int/cb/api/v3/items/19993113/children?page=1&pageSize=25'
         url = self.server + f"/items/{testcase_folderid}/children?page=1&pageSize=500"
         resp_json = self.get(url).json()
-        print(resp_json["itemRefs"])
-
-        # df = pd.DataFrame(np.array(resp_json["itemRefs"]),columns=['id','name','type'])
-        # print(df)
         return resp_json["itemRefs"]
 
     @func_monitor
     def get_data_from_item(self,itemid):
-        print("################# get_data_from_item")
         #https://codebeamer.corp.int/cb/api/v3/items/20451445
         url = self.server + f"/items/{itemid}"
         resp = self.get(url)
-        # print(resp.json()["id"])
         return resp
 
     @func_monitor
     def get_verfies_testmethod(self,itemid,test_method_id):
-        print("################# get_verfies_testmethod")
         resp = self.get_data_from_item(itemid)
-
-        # testmethod_id = 1035 #
-
-        #遍历customFields
         testmethod_dict = {}
         customFileds = resp.json()["customFields"]
 
         for fields in customFileds:
-            # print(fields["fieldId"] == testmethod_id)
             if fields["fieldId"] == test_method_id:
                 testmethod_dict = fields
                 # {'fieldId': 1035, 'name': 'Test Method',
@@ -234,8 +221,6 @@ class CodeBeamer():
             testmethods = [testmethod['id'] for testmethod in testmethod_dict["values"]]
         #统一规则，返回Test Method的ID数组和Verifies的数组
 
-        print(testmethods)
-        print(verifies)
         return testmethods,verifies
 
     @func_monitor
@@ -255,10 +240,8 @@ class CodeBeamer():
 
         """
         # 'https://codebeamer.corp.int/cb/api/v3/trackers/14937781/fields'
-        print("#####################get_tracker_fileds")
         url = self.server + f"/trackers/{trackerid}/fields"
         resp = self.get(url)
-        print(resp.json())
         return resp.json()
 
     @func_monitor
@@ -271,13 +254,10 @@ class CodeBeamer():
             field_name:
         Returns:
         """
-        print("#####################check_get_field_id")
-        tracker_fileds = self.get_tracker_fileds(trackerid)
-        # for field in tracker_fileds:
-        #     print(field["name"], field["id"])
-        # print(1)
-        field_id_list = [field["id"] for field in tracker_fileds if field["name"] == field_name]
-        print(f"{field_name} id: {str(field_id_list)}" )
+        tracker_fields = self.get_tracker_fileds(trackerid)
+
+        field_id_list = [field["id"] for field in tracker_fields if field["name"] == field_name]
+        Debug_Logger.debug(f"field_name {field_name} fieldId: {str(field_id_list)}" )
         if len(field_id_list) == 0:
             return None # 如果没有Test Method的filed则返回None
             # raise Exception(f"{field_name} not exist in related tracker, please contact Milly du to ask system engineer update config")
@@ -294,7 +274,6 @@ class CodeBeamer():
         else:
             url = self.server + f"/trackers/{trackerId}/fields/{fieldId}"
             resp = self.get(url)
-            print(resp.json())
             options = resp.json()["options"]
             return options
     @func_monitor
@@ -335,7 +314,6 @@ class CodeBeamer():
         # 'https://codebeamer.corp.int/cb/api/v3/trackers/10574131/items?parentItemId=19993113'
 
         url = self.server + f"/trackers/{testcase_trackerid}/items?parentItemId={testcase_folderid}"
-        print("##############create_newcase_tocb " + pandas_series["name"])
 
 
 
@@ -346,8 +324,6 @@ class CodeBeamer():
         request_body = to_json(test_case_body)
         Debug_Logger.debug(request_body)
         resp = self.post(url,request_body)
-        # print(resp.json())
-        Debug_Logger.info(resp.json())
         return resp
 
     @func_monitor
@@ -363,7 +339,6 @@ class CodeBeamer():
 
         """
         # put 'https://codebeamer.corp.int/cb/api/v3/items/19758493'
-        print("##############update_cb_testcase " + pandas_series["name"])
         itemid = pandas_series['id']
         test_case_body = Post_TestCase_Body(pandas_series["name"])
         test_case_body.update_verifies(pandas_series["Verifies"])
@@ -389,7 +364,6 @@ class CodeBeamer():
 
         """
         # put 'https://codebeamer.corp.int/cb/api/v3/items/19758493'
-        print("##############delete_cb_testcase " + pandas_series["name"])
         itemid = pandas_series['id']
         url = self.server + f"/items/{itemid}"
         test_case_body = Post_TestCase_Body(pandas_series["name"])
@@ -409,17 +383,7 @@ class CodeBeamer():
 
     @func_monitor
     def upload_testcases(self,df_cbcase,testcase_trackerid,testcase_folderid,release_dict):
-        # Spec = r"C:\Users\victor.yang\Desktop\Work\CB\SpecTemplate\CHT_SWV_Project_FunctionName_Test Specification_Template_SC3.xlsm"
-        #
-        # df_ptc, excel_info = read_table_of_content(Spec)
-        # testcase_dict_list = Cb.get_testcase_infolder(excel_info["TestCaseFolderID"])
-        # df_ptc = generate_cb_case(df_ptc, testcase_dict_list)
-        # # excel_info["Result_Summary"]= df_ptc.iloc[0, 4]
-        # # excel_info["TestRunTrackerID"] = df_ptc.iloc[1, 4]
-        # # excel_info["TestCaseTrackerID"] = df_ptc.iloc[2, 4]
-        # # excel_info["TestCaseFolderID"] = df_ptc.iloc[3, 4]
-        # # excel_info["Release"] = df_ptc.iloc[4, 4]
-        # release_dict = Cb.get_release(excel_info["TestCaseTrackerID"], excel_info["Release"])
+
         test_method_id = self.check_get_field_id(testcase_trackerid, "Test Method")
         for indx in df_cbcase.index:
             if df_cbcase.loc[indx, "id"] == "":
@@ -447,35 +411,25 @@ class CodeBeamer():
         #
         # working_set_id = self.check_get_field_id(testrun_trackerid, "Working Set")
 
-        print("##########create_test_run_baseon_testcases")
         if True in df_cbcase["id"].isin([""]).values:
-            print(df_cbcase[["name","id"]])
+            Monitor_Logger.info(df_cbcase[["name","id"]])
+            Debug_Logger.debug("Case Not been updated in to CB")
+            Debug_Logger.debug(df_cbcase[["name","id"]])
             raise Exception("create_test_run_baseon_testcases found new case which not been update to test cases tracker")
 
 
-        print(df_cbcase)
         #抓取结果为pass和failed 的case。仅仅用这个部分上传testcase
         df_result = df_cbcase.loc[df_cbcase["status"].isin(["PASSED","FAILED"]) , ['id', 'name']]
-        print(df_result)
+        Debug_Logger.debug(f"df_result {df_result}")
         result_list = [list(df_result.loc[x].values) for x in df_result.index]
 
-        print("##########Result list")
-        print(result_list)
 
-
-
-
+        Debug_Logger.debug(f"result_list {result_list}")
         url = self.server + f"/trackers/{testrun_trackerid}/testruns"
-        # testcases, name, tracker, test_information
         current_time = str(datetime.date.today()).replace("-","_")
         name = f"{name}_{current_time}"
 
-        # testcases = [TestCase_In_TestRun(id) for id in testcase_ids]
-        # testrun = TestRunModel(name = "TestRun for victor",tracker = TrackerReference(id =10574133))
-        # testrun.update_test_case(testcases)
-        # testrun.update_versions(versions_dict)
-        # testrun.update_test_information(10003, "Test")
-        # create_testrun_body = Post_TestRun_Body(testcases,testrun)
+
 
         #判断Test Information 是否存在，并赋值新的id
         testcases_in_testrun = [TestCase_In_TestRun(*x) for x in result_list]
@@ -492,7 +446,6 @@ class CodeBeamer():
         request_body = to_json(create_testrun_body)
         Debug_Logger.debug(request_body)
         resp = self.post(url, request_body)
-        print(resp.json())
         return resp.json()["id"]
 
     @func_monitor
@@ -512,20 +465,20 @@ class CodeBeamer():
         """
         #
 
-        print("##########create_test_run_baseon_testcases")
         if True in df_cbcase["id"].isin([""]).values:
-            print(df_cbcase[["name","id"]])
+            Monitor_Logger.info(df_cbcase[["name", "id"]])
+            Debug_Logger.debug("Case Not been updated in to CB")
+            Debug_Logger.debug(df_cbcase[["name", "id"]])
             raise Exception("create_test_run_baseon_testcases found new case which not been update to test cases tracker")
 
 
-        print(df_cbcase)
         #抓取结果为pass和failed 的case。仅仅用这个部分上传testcase
+        Monitor_Logger.info("get the case which have filled the test result pass or filled")
+        Debug_Logger.debug("get the case which have filled the test result pass or filled")
         df_result = df_cbcase.loc[df_cbcase["status"].isin(["PASSED","FAILED"]) , ['id', 'name']]
-        print(df_result)
+        Debug_Logger.debug(f"df_result {df_result}")
         result_list = [list(df_result.loc[x].values) for x in df_result.index]
-
-        print("##########Result list")
-        print(result_list)
+        Debug_Logger.debug(f"result_list {result_list}")
 
 
 
@@ -559,7 +512,6 @@ class CodeBeamer():
         request_body = to_json(create_testrun_body)
         Debug_Logger.debug(request_body)
         resp = self.post(url, request_body)
-        print(resp.json())
         return resp.json()["id"]
 
 
@@ -608,12 +560,10 @@ class CodeBeamer():
         request_body = to_json(restart_testRun)
         Debug_Logger.debug(request_body)
         resp = self.put(url, request_body)
-        print(resp.json())
         return resp.json()["id"]
 
     @func_monitor
     def update_test_run_result(self,df_cbcase,testrun_id):
-        print("##########update_test_run_result")
         if True in df_cbcase["id"].isin([""]).values:
             raise Exception("update_test_run_result testcases found new case which not been update to test cases tracker")
 
@@ -633,13 +583,12 @@ class CodeBeamer():
 
         request_body = to_json(update_testrun_body)
         Debug_Logger.debug(request_body)
-        # print(put_test_run)
         # url - X
         # 'PUT' \
         # 'https://codebeamer.corp.int/cb/api/v3/testruns/20165626' \
         url = self.server + f"/testruns/{testrun_id}"
         resp = self.put(url,request_body)
-        print(resp.json())
+
 
 
 

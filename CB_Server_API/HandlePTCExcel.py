@@ -1,13 +1,16 @@
 import pandas as pd
 import os
 import numpy as np
+from CommonFunction.LogCFG import *
 
 import re
 
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
 def get_cb_id_fromdf(x, df):
 
     if x.strip() in df.index:
-        print(x.strip(),df.loc[x.strip(), "id"])
+        Monitor_Logger.debug(f'test case name :{x.strip()},id: {df.loc[x.strip(), "id"]}')
         return df.loc[x.strip(), "id"]
     else:
         return ""
@@ -70,7 +73,7 @@ def convert_id_inexcel_to_cbid_and_nonecbid(cellvalue, cbid_flag):
         else:
             return []
 
-
+@func_monitor
 def read_table_of_content(ptc_excel):
     """
     读取Test specification 的TableOfContent
@@ -83,7 +86,7 @@ def read_table_of_content(ptc_excel):
     # pd.set_option('display.max_columns', None)
     # pd.set_option('display.max_rows', None)
     # pd.set_option('max_colwidth', 200)
-    print("read_table_of_content Spec:" + ptc_excel)
+
     df_ptc = pd.read_excel(ptc_excel, "Table Of Contents", dtype='str')
 
     # 读取模块名字
@@ -96,7 +99,6 @@ def read_table_of_content(ptc_excel):
     excel_info = {}
 
     excel_info["test_information"]= df_ptc.iloc[0, 4]
-
     excel_info["testrun_trackerid"] = df_config.iloc[24, 3]
     excel_info["testcase_trackerid"] = df_config.iloc[21, 3]
     excel_info["testcase_folderid"] = df_config.iloc[22, 3]
@@ -129,21 +131,23 @@ def read_table_of_content(ptc_excel):
     df_ptc["Test Method"] = df_ptc["Test Method"].apply(convert_id_inexcel_to_cbid_and_nonecbid, cbid_flag=True)
     df_ptc["status"] =  df_ptc["status"].apply(convert_ptc_result_to_cb_result)
     df_ptc["Incident ID"] = df_ptc["Incident ID"].apply(convert_id_inexcel_to_cbid_and_nonecbid, cbid_flag=True)
-    # print(df_ptc)
 
     #检查是否有case名称重复
     df_case_duplicated = df_ptc.duplicated(subset=['name'])
     if True in df_case_duplicated.values:
-        print(df_ptc.loc[df_case_duplicated]["name"])
+        Monitor_Logger.info("Same Case")
+        Monitor_Logger.info(df_ptc.loc[df_case_duplicated]["name"])
+        Debug_Logger.debug("Same Case")
+        Debug_Logger.debug(df_ptc.loc[df_case_duplicated]["name"])
         raise Exception("Duplicated test case name, Please check table of content sheet")
-    print(df_ptc[["name","Verifies"]])
+
     return df_ptc, excel_info
 
 
 
 
 
-
+@func_monitor
 def generate_cb_case(df_ptc,testcase_list):
     """
 
@@ -161,36 +165,34 @@ def generate_cb_case(df_ptc,testcase_list):
         "id" 根据名称匹配cb文件夹下面case 的id
 
     """
-    pd.set_option('display.max_rows', None)
-    print("##################generate_cb_case ")
     if len(testcase_list) == 0: #如果casefodlder下面没有case表示是新的数据全部重新上传即可
         df_ptc["id"] = ""
-        print("NONE CASE in CB")
+        Monitor_Logger.info("NONE CASE in CB")
         return df_ptc
     else:
         # 将testcase字典的list转换为df，
-        print("Update case")
+        Monitor_Logger.info("Update case")
         casevalue_list = [list(x.values())[0:-1] for x in testcase_list]
-        # print(casevalue_list)
+        Debug_Logger.debug(f"casevalue_list: {casevalue_list}")
         df_testcase = pd.DataFrame(np.array(casevalue_list),columns=['id','name'])
         df_testcase.set_index("name",inplace=True,drop= False)
-        # print(df_testcase)
+        Monitor_Logger.info("get the test case id by the name")
+        Debug_Logger.debug("get the test case id by the name")
         df_ptc["id"] = df_ptc["name"].apply(get_cb_id_fromdf,df = df_testcase) # 根据testase的df获取同样名字的id
 
         # 查找不在df_ptc 里面的case,对不在里面的case Status设置成Obsolete
         obsolte_case_list = [x for x in df_testcase.index if x not in df_ptc["name"].values]
+        Debug_Logger.debug(f"obsolte_case_list: {obsolte_case_list}")
         columns = ["id", "name", "status", "Verifies", "Incident ID", "Test Method"]
         empty_list = ["" for x in columns]
         for obsolte_case in obsolte_case_list:
             df_obsolete = pd.DataFrame([empty_list],columns = columns)
-            # print(df_obsolete)
             df_obsolete.iloc[0,0] = df_testcase.loc[obsolte_case,"id"]
             df_obsolete.iloc[0,1] = obsolte_case
             df_obsolete.iloc[0,2] = "Obsolete"
             df_ptc = pd.concat([df_ptc,df_obsolete])
 
         df_ptc.reset_index(inplace=True,drop=True)
-        # print(df_ptc)
         return df_ptc
 
 

@@ -87,8 +87,8 @@ class CB_Tool_Widget(QWidget):
         super().__init__()
         self.__ui = Ui_CBTool()
         self.__ui.setupUi(self)
-        # self.server = CodeBeamer(self.__server,"UserName","Password")
-        self.server = CodeBeamer(self.__server, "victor.yang", "Mate40@VY20222021")
+        self.server = CodeBeamer(self.__server,"UserName","Password")
+        # self.server = CodeBeamer(self.__server, "victor.yang", "MTTT")
 
         ##########定义相关属性########################
 
@@ -146,7 +146,7 @@ class CB_Tool_Widget(QWidget):
             self.__ui.TestRun_Result.setPalette(WhiteColor)
             self.__ui.TestRun_Status.setPalette(WhiteColor)
     # def check_testrun_trackername(self):
-    #     # print(cls.TestRun_TrackerName == np.nan,cls.TestRun_TrackerName)
+    #     # generate_cb_case(cls.TestRun_TrackerName == np.nan,cls.TestRun_TrackerName)
     #     print("test")
     #     if isinstance(self.testrun_trackerid,str):
     #         self.__ui.LE_TestRunTrackerID.setText(self.testrun_trackerid)
@@ -198,7 +198,7 @@ class CB_Tool_Widget(QWidget):
     @pyqtSlot()
     def on_checkBox_Lock_clicked(self):
         #将LE_Server的属性设置是否只读，默认是只读的
-        print(self.__ui.checkBox_Lock.isChecked())
+        # print(self.__ui.checkBox_Lock.isChecked())
         if self.__ui.checkBox_Lock.isChecked():
             self.__ui.LE_Server.setReadOnly(True)
         else:
@@ -299,7 +299,7 @@ class CB_Tool_Widget(QWidget):
         for file in filenames:
             self.__ui.textBrowser_PTC_Excels.append(file + ";")
             self.ptc_excels.append(file)
-        print(self.ptc_excels)
+        Monitor_Logger.info(f"self.ptc_excels {self.ptc_excels}")
 
     @pyqtSlot()
     def on_BT_Upload_TestCases_clicked(self):
