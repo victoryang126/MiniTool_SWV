@@ -4,9 +4,7 @@ import re
 from string import Template
 from DCS_Module import HandlerContent as HC
 
-
-
-script_header_1 = """
+SCRIPT_HEADER_1 = """
 // ******************************************************************************************
 // **************************Veoneer Electronics document************************************
 // ******************************************************************************************
@@ -16,7 +14,7 @@ script_header_1 = """
 // *******************************************************
 // Test case ID:"""
 
-script_header_2 = """
+SCRIPT_HEADER_2 = """
 // *******************************************************
 // Full Automation: Yes
 // *******************************************************
@@ -35,7 +33,7 @@ CommonInformation();
 // *******************************************************
 """
 
-script_header_3 ="""
+SCRIPT_HEADER_3 = """
 // *******************************************************
                // Define/Re-Define parameters
 // *******************************************************
@@ -44,9 +42,9 @@ script_header_3 ="""
                // Test Steps
 // *******************************************************
 """
-test_begin = "if(CheckTestEnvironment())\n{\n"
+TEST_BEGIN = "if(CheckTestEnvironment())\n{\n"
 
-test_end = """
+TEST_END = """
 }
 else 	
 {
@@ -65,11 +63,11 @@ var tst : TestStatus  = ExtractTestStatus(RESULT.ResultName);
 RESULT.TestVerdict(tst);
 """
 
-fault_loop_start = """
+FAULT_LOOP_START = """
     for(var Fault in GBB_DCS_Fault)
     {
-      
-       
+
+
         RESULT.InsertComment("###########################################################################################################################")
         RESULT.InsertComment("Test the " + Fault + "  Fault of " + Sensor )
         G_StepNumber = 0
@@ -78,7 +76,7 @@ fault_loop_start = """
         {
 """
 
-fault_loop_end = """
+FAULT_LOOP_END = """
         }
 
     }
@@ -198,7 +196,7 @@ def GetDCSModule(ExcelDir, ObjectType,Ts):
     script_content = []
     variables_define = "var Sensor = \"" + test_object + "\";\n"
     variables_define += "var Sensor_Obj = " + test_object + ";\n"
-    script_content.append(script_header_1 + case_id +"\n" + script_header_2 + variables_define +  script_header_3 + test_begin)
+    script_content.append(SCRIPT_HEADER_1 + case_id + "\n" + SCRIPT_HEADER_2 + variables_define + SCRIPT_HEADER_3 + TEST_BEGIN)
 
     # print(df_temp["PostCondition"])
     step = 0 # 用来定义步骤
@@ -277,7 +275,7 @@ def GetDCSModule(ExcelDir, ObjectType,Ts):
 
 
 
-    script_content.append(test_end)
+    script_content.append(TEST_END)
     with open(Ts, 'w', encoding='UTF-8') as f:
         f.writelines(script_content)
         f.write("\n")
@@ -341,7 +339,7 @@ def GetDCSModule_Fault(ExcelDir, ObjectType,Ts):
     variables_define += "var Sensor_Obj = " + test_object + ";\n"
 
     # variables_define
-    script_content.append(script_header_1 + case_id +"\n" + script_header_2 + variables_define +  script_header_3 + test_begin + fault_loop_start)
+    script_content.append(SCRIPT_HEADER_1 + case_id + "\n" + SCRIPT_HEADER_2 + variables_define + SCRIPT_HEADER_3 + TEST_BEGIN + FAULT_LOOP_START)
 
     # print(df_temp["PostCondition"])
     step = 0 # 用来定义步骤
@@ -483,8 +481,8 @@ def GetDCSModule_Fault(ExcelDir, ObjectType,Ts):
 
 
 
-    script_content.append(fault_loop_end)
-    script_content.append(test_end)
+    script_content.append(FAULT_LOOP_END)
+    script_content.append(TEST_END)
 
     with open(Ts, 'w', encoding='UTF-8') as f:
         f.writelines(script_content)

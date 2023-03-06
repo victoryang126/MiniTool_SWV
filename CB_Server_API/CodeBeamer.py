@@ -54,13 +54,6 @@ def get_check_resp(resp):
     """
     #####Note 后面考虑对异常的数据回复，根据curl和json数据dump 到本地作为时候分析的数据
     if resp.status_code != 200:
-        # print(resp.text)
-        # print(resp.json())
-        # print(dir(resp))
-        # print(resp.headers)
-        # print(resp.request)
-        # # print(resp.raise_for_status())
-        # print(resp.content())
         if resp.status_code == 401:
             raise Exception(f"Access denied code 401 when execute url::{resp.url} ::{resp.text}")
         elif resp.status_code == 400:
@@ -101,8 +94,6 @@ def measure_execution_time(function):
 
 
 class CodeBeamer():
-
-
     def __init__(self,server,user,pwd ):
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         self.server = server
@@ -595,14 +586,46 @@ class CodeBeamer():
 if __name__ == "__main__":
     pass
 
-    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","Mate40@22")
-    url = 'https://codebeamer.corp.int/cb/api/v3/trackers/1908978/fields'
+    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","TTT")
+    url = 'https://codebeamer.corp.int/cb/api/v3/items/26932821'
 
-    options = Cb.get_tracker_field_options(1908978,1000)
-
-    print(options)
-    option = Cb.validate_and_return_field_option(options,"GEELY_GEEA2.0_SX21")
-    print(option)
+    # options = Cb.get_tracker_field_options(1908978,1000)
+    json = {
+"name":"TTA",
+  "status": {
+    "id": 7,
+    "name": "In progress",
+    "type": "ChoiceOptionReference"
+  },
+  "customFields": [
+    {
+      "fieldId": 1000,
+      "name": "Working Set",
+      "values": [
+        {
+          "id": 4,
+          "name": "GEELY_GEEA2.0_G733P_FS11-A2",
+          "type": "ChoiceOptionReference"
+        }
+      ],
+      "type": "ChoiceFieldValue"
+    },
+    {
+      "fieldId": 10003,
+      "name": "Test Information",
+      "value": "ARIA4.11",
+      "type": "TextFieldValue"
+    }
+  ],
+  "versions": [
+    {
+      "id": 21468139,
+      "name": "Release_P31.11_Geely_HC11",
+      "type": "TrackerItemReference"
+    }
+  ]
+}
+    Cb.put(url,json)
     # Cb.get_tracker_fileds(14937781)
     # Cb.get_verfies_testmethod(20451445)
     # Cb.get_verfies_testmethod(20108756)
