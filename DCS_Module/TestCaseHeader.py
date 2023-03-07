@@ -59,7 +59,7 @@ RESULT.TestVerdict(tst);
 """
 
 FAULT_LOOP_START = """
-    for(var Fault in GBB_DCS_Fault)
+    for(var SensorFault in GBB_DCS_Fault)
     {
 
 
@@ -67,7 +67,7 @@ FAULT_LOOP_START = """
         RESULT.InsertComment("Test the " + Fault + "  Fault of " + Sensor )
         G_StepNumber = 0
         RESULT.InsertComment("###########################################################################################################################")
-        if(Sensor_Obj[Fault] != undefined && Sensor_Obj[Fault] != "undefined" && Fault != "CFG")
+        if(Sensor[SensorFault] != undefined && Sensor[SensorFault] != "undefined" && SensorFault != "CFG" && SensorFault != "CrossC")
         {
 """
 

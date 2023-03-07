@@ -79,7 +79,9 @@ class Policy:
             if re.match("^\d+$",arg):
                 pass
                 # args[indx] = int(arg) #如果是数字字符串 不处理
-            elif re.match("^SENSOR$",arg,re.I): #如果改参数的对象名称为Sensor,则也不处理
+            elif re.match("^SENSOR。*?",arg,re.I): #如果改参数的对象名称为Sensor,则也不处理
+                pass
+            elif re.search("\.",arg,re.I):  # 如果是带.号
                 pass
             elif re.match("^LogPath$", arg, re.I):  # 如果改参数的对象名称为Sensor,则也不处理
                 pass
@@ -250,17 +252,34 @@ class ScriptEngine:
             scripts.append(f"\n{self.ts_step.tabs()}var Expect_Fault_Info = SetSuffixToFaultInfo(\"NONE\");")
             scripts.append(f"\n{self.ts_step.tabs()}CompareResultsDefine(Ret,Expect_Fault_Info[1],Expect_Fault_Info[0])")
         else:
-            pass #TBD
+            if regCompare.is_equal("DTC",value):
+                scripts.append(
+                    f"\n{self.ts_step.tabs()}var Ret = ActualResults();")
+                scripts.append(f"\n{self.ts_step.tabs()}var FaultInfo_Array = BB_Get_FaultInfo_Array(SensorFaults);")
+                scripts.append(f"\n{self.ts_step.tabs()}var Expect_Fault_Info = SetSuffixToFaultInfo(FaultInfo_Array.toString()) ;")
+                scripts.append(
+                    f"\n{self.ts_step.tabs()}CompareResultsDefine(Ret,Expect_Fault_Info[1],Expect_Fault_Info[0])")
+            else:#先调用里面的函数，然后再调用其他代码
+                self.generate_action_cell(value)
+                scripts.append(
+                    f"\n{self.ts_step.tabs()}var Ret = ActualResults();")
+                scripts.append(
+                    f"\n{self.ts_step.tabs()}var FaultInfo_Array = BB_Get_FaultInfo_Array(SensorFaults);")
+                scripts.append(
+                    f"\n{self.ts_step.tabs()}var Expect_Fault_Info = SetSuffixToFaultInfo(FaultInfo_Array.toString()) ;")
+                scripts.append(
+                    f"\n{self.ts_step.tabs()}CompareResultsDefine(Ret,Expect_Fault_Info[1],Expect_Fault_Info[0])")
+
         self.script_content.extend(scripts)
         return "".join(scripts)
 
     @func_monitor
     def generate_fault_timer_deinition(self):
-        if re.match("^Fault$", self.matrix.case_type) and (regCompare.is_equal(self.ts_step.flag, "Qualify") or regCompare.is_equal(self.ts_step.flag, "DisQualify")):
+        if re.match("^Fault$", self.matrix.case_type) and (regCompare.is_equal(self.ts_step_flag.flag, "Qualify") or regCompare.is_equal(self.ts_step_flag.flag, "DisQualify")):
             fault_timer = []
-            fault_timer.append(f"{self.ts_step.tabs()}var DiagTime = int(Sensor_Obj[Fault + \"{self.ts_step.flag}\"][0]) *1.5;\n")
-            fault_timer.append(f"{self.ts_step.tabs()}var HighRange = int(Sensor_Obj[Fault + \"{self.ts_step.flag}\"][0]) *1.5;\n")
-            fault_timer.append(f"{self.ts_step.tabs()}var LowRange = int(Sensor_Obj[Fault + \"\"{self.ts_step.flag}\"][0]) *1.5;\n")
+            fault_timer.append(f"{self.ts_step.tabs()}var DiagTime = int(Sensor[Fault + \"{self.ts_step_flag.flag}\"][0]) *1.5;\n")
+            fault_timer.append(f"{self.ts_step.tabs()}var HighRange = int(Sensor[Fault + \"{self.ts_step_flag.flag}\"][0]) *1.5;\n")
+            fault_timer.append(f"{self.ts_step.tabs()}var LowRange = int(Sensor[Fault + \"{self.ts_step_flag.flag}\"][0]) *1.5;\n")
             self.script_content.extend(fault_timer)
             return "".join(fault_timer)
         else:
@@ -292,11 +311,11 @@ class ScriptEngine:
         actions = self.matrix.case_col_config.action_list
         results = self.matrix.case_col_config.result_list
 
-        if regCompare.is_equal(self.matrix.case_type,"Status") or regCompare.is_equal(self.matrix.case_type,"Fault"):
+        if regCompare.is_equal(self.matrix.case_type,"Normal") or regCompare.is_equal(self.matrix.case_type,"Fault"):
             for sensor in self.matrix.sensor_list:
                 self.ts_step = TSStep()
                 self.ts_step_flag = TSStep_Flag()
-                variables_define = "var Sensor = " + sensor + ";\n"
+                variables_define = f"var Sensor = {sensor};\nvar SensorFaults = new Array()"
                 self.script_content = []
                 self.script_content.append(
                     SCRIPT_HEADER_1  + "\n" + SCRIPT_HEADER_2 + variables_define + SCRIPT_HEADER_3 + TEST_BEGIN)
@@ -333,8 +352,8 @@ class ScriptEngine:
 
 
 if __name__ == "__main__":
-    excel = r"C:\Users\victor.yang\Desktop\Work\CHT_SYV_Geely_GEAA2_HX11_DCS_Test Specification.xlsm"
-    sheet = "DCS_NormalStatus"
+    excel = r"C:\Users\victor.yang\Desktop\Work\CHT_SWV_SAIC_ZP22_DCS_Test Specification.xlsm"
+    sheet = "DCS_Fault"
     testSpec = TestSpec(excel, sheet)
     testSpec.update_matrixs()
     scritp_enginer = ScriptEngine(ts_matrix=testSpec.matrixs[0])

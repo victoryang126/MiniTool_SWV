@@ -90,15 +90,15 @@ class FileUtil:
                 raise Exception(folder + " is not a folder but a flle")
 
 
-    def dumps_object_to_js_parameter(self,test_object,js_parameter,file,mode = "a"):
+    def dumps_object_to_js_parameter(self,test_object,js_parameter,file,mode = "w"):
         with open(file, mode, encoding='UTF-8') as f:
             f.write(js_parameter)
             json.dump(test_object, f, indent=4)
             f.write(";\n")
 
-    def dumps_object_to_js_parameter(self,test_object,js_parameter,directory,file_name,mode):
+    def dumps_object_to_js_parameter(self,test_object,js_parameter,directory,file_name,mode = 'w'):
         file = os.path.join(directory,file_name)
-        with open(file, 'a', encoding='UTF-8') as f:
+        with open(file, mode = mode, encoding='UTF-8') as f:
             f.write(js_parameter)
             json.dump(test_object, f, indent=4)
             f.write(";\n")
