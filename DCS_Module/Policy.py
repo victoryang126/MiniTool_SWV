@@ -16,7 +16,7 @@ class TSStep_Flag:
 
 @dataclass
 class TSStep:
-    step:int = 1
+    step:int = 0
     sub_step:int = 0
     deepth:int = 1
 
@@ -112,11 +112,11 @@ class Policy:
 
 
 class ScriptEngine:
-    def __init__(self,policy:Policy = Policy(),ts_matrix:TSMatrix = TSMatrix(),ts_step:TSStep = TSStep(),script_content = []):
+    def __init__(self,policy:Policy = Policy(),ts_matrix:TSMatrix = TSMatrix(),ts_step:TSStep = TSStep()):
         self.policy = policy
         self.matrix = ts_matrix
         self.ts_step = ts_step
-        self.script_content = script_content
+        self.script_content = []
 
 
     @property
@@ -159,13 +159,13 @@ class ScriptEngine:
 
     @func_monitor
     def generate_step(self):
-        step = f"{self.ts_step.tabs()}//{self.ts_step.step}.{self.ts_step.sub_step};\n"
-        step += f"{self.ts_step.tabs()}//-----------------------------TEST STEP------------------------------//\n"
         if self.ts_step_flag.step:
             self.ts_step.step +=1
             self.ts_step.sub_step = 0
         else:
             self.ts_step.sub_step += 1
+        step = f"{self.ts_step.tabs()}//{self.ts_step.step}.{self.ts_step.sub_step};\n"
+        step += f"{self.ts_step.tabs()}//-----------------------------TEST STEP------------------------------//\n"
         self.script_content.append(step)
         return step
 
@@ -194,7 +194,7 @@ class ScriptEngine:
     @func_monitor
     def generate_stop_Log(self):
         if self.ts_step_flag.stop_log:
-            stoplog_action = f"\n\n{self.ts_step.tabs()}StopLog();\n\n"
+            stoplog_action = f"\n\n{self.ts_step.tabs()}StopToLog();\n\n"
             self.script_content.append(stoplog_action)
             return stoplog_action
         else:
@@ -204,7 +204,7 @@ class ScriptEngine:
     def generate_action_cell(self,value):
         scripts = []
         if value != "undefined":
-            func_list = value.split("->")  # 获取function list
+            func_list = value.split("\n")  # 获取function list
             # 然后遍历函数列表
             for func in func_list:
                 # 通过（ 去区分函数和参数
@@ -248,7 +248,7 @@ class ScriptEngine:
     def generate_dtc_cell(self,value):
         scripts = []
         if re.match("^NONE$", value, re.I):
-            scripts.append(f"\n{self.ts_step.tabs()}var Ret = ActualResults();\n{self.ts_step.tabs()}Thread.Sleep(8000);")
+            scripts.append(f"\n{self.ts_step.tabs()}Thread.Sleep(8000);\n{self.ts_step.tabs()}var Ret = ActualResults();")
             scripts.append(f"\n{self.ts_step.tabs()}var Expect_Fault_Info = SetSuffixToFaultInfo(\"NONE\");")
             scripts.append(f"\n{self.ts_step.tabs()}CompareResultsDefine(Ret,Expect_Fault_Info[1],Expect_Fault_Info[0])")
         else:
@@ -333,10 +333,11 @@ class ScriptEngine:
                     if regCompare.is_equal(support,"No"):
                         continue # 如果改步骤不支持，则跳过继续
                     self.script_content.append("\n" * 2)
-                    self.generate_start_Log(script_name)
+
 
                     self.generate_fault_timer_deinition()
                     self.generate_step()
+                    self.generate_start_Log(script_name)
                     self.generate_comment(df.loc[index,"Comment"])
                     self.generate_actions_results(actions,df,index)
                     self.generate_actions_results(results, df, index)
@@ -353,11 +354,32 @@ class ScriptEngine:
 
 if __name__ == "__main__":
     excel = r"C:\Users\victor.yang\Desktop\Work\CHT_SWV_SAIC_ZP22_DCS_Test Specification.xlsm"
-    sheet = "DCS_Fault"
-    testSpec = TestSpec(excel, sheet)
+    sheet = "DCS_NormalStatus"
+    testSpec = TestSpec(excel = excel, sheet = sheet)
+    # print(testSpec.matrixs)
     testSpec.update_matrixs()
+    # print(testSpec.matrixs[0])
+    # print(testSpec.sheet)
+    config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
     scritp_enginer = ScriptEngine(ts_matrix=testSpec.matrixs[0])
-    func_mapping =  Func_Mapping(excel,"Function_Mapping")
+
+    func_mapping =  Func_Mapping(config,"Function_Mapping")
     scritp_enginer.func_mapping = func_mapping.get_func_mapping()
     # scritp_enginer.generate_func_cell("Set","HighRange")
-    scritp_enginer.generate_scripts(r"C:\Users\victor.yang\Desktop\Work")
+    scritp_enginer.generate_scripts(r"C:\Users\victor.yang\Desktop\Work\Scripts\DCS")
+
+
+    print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
+    excel = r"C:\Users\victor.yang\Desktop\Work\CHT_SWV_SAIC_ZP22_DCS_Test Specification.xlsm"
+    sheet = "DCS_Fault"
+    testSpec = TestSpec(excel = excel, sheet = sheet)
+    # print(testSpec2.matrixs[0])
+    testSpec.update_matrixs()
+    print(testSpec.sheet,len(testSpec.matrixs))
+    config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
+    print(testSpec.matrixs[0])
+    scritp_enginer = ScriptEngine(ts_matrix=testSpec.matrixs[0])
+    func_mapping = Func_Mapping(config, "Function_Mapping")
+    scritp_enginer.func_mapping = func_mapping.get_func_mapping()
+    # scritp_enginer.generate_func_cell("Set","HighRange")
+    scritp_enginer.generate_scripts(r"C:\Users\victor.yang\Desktop\Work\Scripts\DCS")

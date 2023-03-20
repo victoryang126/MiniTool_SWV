@@ -17,6 +17,7 @@ def DealQualiyOrQualifyTime(df) -> pd.DataFrame:
         NONE
     """
     for col in df:
+        Debug_Logger.debug(col)
         if col.find("Qualify") >= 0:
             # df[col] = df[col].apply(lambda x: x.split(","))
             df[col] = df[col].str.split(",")
@@ -76,7 +77,8 @@ class DCS_Config:
     def faults(self):
         return self._faults
 
-    def get_df_dcs_config(self):
+    @func_monitor
+    def get_df_dcs_config(self,outdir):
         self.dcs_config = {}
         header_row = 9
         header_col = 12
@@ -96,9 +98,9 @@ class DCS_Config:
         # print(HeaderDict)
         # 2.********** 根据Header字典的内容循环处理信息，每个sensor的相关属性
         # dcs_row_start	dcs_row_end	NormalCol	StatusColStart	StatusColEnd	FaultColStart	FaultColEnd
-
+        fileUtil.init_file(outdir, f"{self.sheet}.ts")
         for indx in df_header_config.index:
-
+            Debug_Logger.debug(indx)
             # 获取头部每行数据的信息，然后用来抓取
             # 根据头部信息抓取对应行的数据段
             dcs_row_start = df_header_config.loc[indx, 'RowStart']
@@ -121,9 +123,11 @@ class DCS_Config:
             DealQualiyOrQualifyTime(df_temp)
 
             dcs_config = df_temp.to_dict(orient="index")
-
             self.dcs_config.update(dcs_config)
 
+        for key in self.dcs_config:
+            fileUtil.dumps_object_to_js_parameter(self.dcs_config[key], f"var {key} =", outdir, f"{self.sheet}.ts",
+                                                  mode='a')
 
     def refresh(self):
         self.get_df_dcs_config()
@@ -137,7 +141,7 @@ class Case_Col_Config:
     result_list:List[Any]= field(default_factory=list)
 
 class TSMatrix:
-    def __init__(self,df:pd.DataFrame = None,case_start = None,case_name= None ,case_policy= None,case_type = None,case_col_config = Case_Col_Config()):
+    def __init__(self,df:pd.DataFrame = None,case_start = None,case_name= None ,case_policy= None,case_type = None,case_col_config:Case_Col_Config = Case_Col_Config()):
         self.df_matrix =df
         # print(self.df_matrix)
         # self.case_pre_start = case_pre_start
@@ -196,7 +200,56 @@ class DID_Config():
         self.excel = excel
         self.sheet = sheet
 
+    @func_monitor
     def generate_did_config(self,outdir):
+            df = pd.read_excel(self.excel, self.sheet, dtype=str, header=0)
+            df.fillna("undefined", inplace=True)
+            df["Interpretation"] = df["Interpretation"].apply(lambda x:x.split("\n"))
+            for indx in df.index:
+                if df.loc[indx,"Interpretation"]=="undefined":
+                    continue
+                elif isinstance(df.loc[indx,"Interpretation"],list):
+                    values = df.loc[indx,"Interpretation"]
+                    if values[0] == "[VALUE_DEFINITION]":
+                        values.pop(0) # 删除[VALUE_DEFINITION]
+                        values = [re.sub("\s","",x) for x in values] # 去除空格
+                        temps = [temp.split(":") for temp in values]
+                        temp1 = dict(temps)
+                        # print([[temp[1],temp[0]] for temp in temps])
+                        for i,temp in enumerate(temps) :
+                            temps[i].reverse()
+                        temp2 = dict(temps)
+                        # print(temp2)
+                        # df.loc[indx,"Interpretation"] = []
+                        df.loc[indx, "Interpretation"].clear()
+                        df.loc[indx, "Interpretation"].append(temp1)
+                        df.loc[indx, "Interpretation"].append(temp2)
+                    else:
+                        pass
+                else:
+                    continue
+            df["DID"] = df["DID"].apply(lambda x:re.sub("0x|\s","",x))
+            df_length = df[["DID","Length"]]
+            df_length.drop_duplicates(inplace = True,keep = "first")
+            df_length.set_index("DID",inplace=True,drop=True)
+            did_config = df_length.to_dict(orient="index")
+
+            #
+            df_group = df.groupby("DID", as_index=False, sort=False)
+            for did,group in df_group:
+                group.drop(["DID",'Length'],inplace = True,axis = 1)
+                group.set_index("Parameter",drop=True,inplace=True)
+
+                did_config[did].update(group.to_dict(orient="index"))
+
+            fileUtil.dumps_object_to_js_parameter(did_config,f"var GBB_{self.sheet} =",outdir,f"{self.sheet}.ts")
+
+class Singal_Config():
+    def __init__(self, excel=None,sheet = None):
+        self.excel = excel
+        self.sheet = sheet
+
+    def generate_signal_config(self,outdir):
             df = pd.read_excel(self.excel, self.sheet, dtype=str, header=0)
             df.fillna("undefined", inplace=True)
             df["Interpretation"] = df["Interpretation"].apply(lambda x:x.split("\n"))
@@ -224,58 +277,35 @@ class DID_Config():
 
                 else:
                     continue
-            df["DID"] = df["DID"].apply(lambda x:re.sub("0x|\s","",x))
-            # print(df.head(4))
-            # DID
-            # parameter
-            # Length
-            # StartBit
-            # BitSize
-            # Endianness
-            # DataType
-            # DataTranslationCategory
-            # Interpretation
-            # Scaling
-            # Unit
-            # 获取DID length的字典
-            df_length = df[["DID","Length"]]
-            df_length.drop_duplicates(inplace = True,keep = "first")
-            df_length.set_index("DID",inplace=True,drop=True)
-            did_config = df_length.to_dict(orient="index")
 
-            #
-            df_group = df.groupby("DID", as_index=False, sort=False)
-            for did,group in df_group:
-                group.drop(["DID",'Length'],inplace = True,axis = 1)
-                group.set_index("Parameter",drop=True,inplace=True)
-
-                did_config[did].update(group.to_dict(orient="index"))
-
-            fileUtil.dumps_object_to_js_parameter(did_config,f"var {self.sheet} =",outdir,f"{self.sheet}.ts")
-
+            df.drop(['Description'], axis=1,inplace=True)
+            df.set_index("Signal",inplace=True,drop=True)
+            signal_config = df.to_dict(orient="index")
+            fileUtil.dumps_object_to_js_parameter(signal_config,f"var GBB_{self.sheet} =",outdir,f"{self.sheet}.ts")
 
 
 
 class TestSpec:
 
-    def __init__(self,excel = None,sheet = None,matrixs =[]):
+    def __init__(self,excel = None,sheet = None,matrixs:List[Any] =None):
         self.excel = excel
         self.sheet = sheet
         self.matrixs = matrixs
+        # print(matrixs)
+        # print(self.matrixs)
 
     def update_matrixs(self):
         """
         遍历Sheet去寻找TestCase区域
         Returns:
         """
+        if self.matrixs == None:
+            self.matrixs = []
         df = pd.read_excel(self.excel, self.sheet, dtype=str)
         Debug_Logger.debug(df)
         case_pre_start = 0
         case_start = 0
         case_end = 0
-
-
-
         for indx in df.index:
             if df.loc[indx, "CaseIndex"] == "CasePreStart":
                 if case_pre_start != 0:
@@ -318,9 +348,20 @@ class TestExcel:
 
 if __name__ == "__main__":
     excel = r"C:\Users\victor.yang\Desktop\Work\CHT_SWV_SAIC_ZP22_DCS_Test Specification.xlsm"
+    config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
     sheet = "DCS_NormalStatus"
-    did_config = DID_Config(excel,"DCS_internal_DID")
+
+    did_config = DID_Config(config,"DCS_internal_DID")
     did_config.generate_did_config(r"C:\Users\victor.yang\Desktop\Work")
+
+    customer_did_config =  DID_Config(config,"DCS_Customer_DID")
+    customer_did_config.generate_did_config(r"C:\Users\victor.yang\Desktop\Work")
+    #
+    signal_config = Singal_Config(config, "DCS_Signal")
+    signal_config.generate_signal_config(r"C:\Users\victor.yang\Desktop\Work")
+    #
+    dcs_config = DCS_Config(config,"DCS_Config")
+    dcs_config.get_df_dcs_config(r"C:\Users\victor.yang\Desktop\Work")
     # testSpec.update_matrixs()
     # print(testSpec.matrixs)
     # test_excel = TestExcel(excel)

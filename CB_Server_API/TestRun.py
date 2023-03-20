@@ -135,26 +135,31 @@ class Put_TestRun_Body:
     parentResultPropagation:bool=True
 
 if __name__ == "__main__":
-    versions_dict =  {
-      "id": 5240610,
-      "name": "CHERY_T26&M1E_Release P10",
-      "type": "TrackerItemReference"
-    }
-    testcase_ids = [21867362, 21867350]
-    test_status = ["PASSED","PASSED"]
-    incidents = [[25333086,26022438],[]]
-    # testcases = [TestCase_In_TestRun(id) for id in testcase_ids]
-    # testrun = TestRunModel(name = "TestRun for victor",tracker = TrackerReference(id =10574133))
-    # testrun.update_test_case(testcases)
-    # testrun.update_versions(versions_dict)
-    # testrun.update_test_information(10003, "Test")
-    # create_testrun_body = Post_TestRun_Body(testcases,testrun)
+    trun = TestRunModel()
+    trun.update_test_information(1,"A")
 
-    testcaseRferences = []
-    for indx,id in enumerate(testcase_ids):
-        testcaseRference = TestCaseReference(testCaseReference = TestCase_In_TestRun(id),result = test_status[indx])
-        testcaseRference.update_incidents(incidents[indx])
-        testcaseRferences.append(testcaseRference)
-
-    update_testrun_body = Put_TestRun_Body(updateRequestModels = testcaseRferences)
-    print(to_json(update_testrun_body))
+    trun2 =TestRunModel()
+    print(trun2.customFields)
+    # versions_dict =  {
+    #   "id": 5240610,
+    #   "name": "CHERY_T26&M1E_Release P10",
+    #   "type": "TrackerItemReference"
+    # }
+    # testcase_ids = [21867362, 21867350]
+    # test_status = ["PASSED","PASSED"]
+    # incidents = [[25333086,26022438],[]]
+    # # testcases = [TestCase_In_TestRun(id) for id in testcase_ids]
+    # # testrun = TestRunModel(name = "TestRun for victor",tracker = TrackerReference(id =10574133))
+    # # testrun.update_test_case(testcases)
+    # # testrun.update_versions(versions_dict)
+    # # testrun.update_test_information(10003, "Test")
+    # # create_testrun_body = Post_TestRun_Body(testcases,testrun)
+    #
+    # testcaseRferences = []
+    # for indx,id in enumerate(testcase_ids):
+    #     testcaseRference = TestCaseReference(testCaseReference = TestCase_In_TestRun(id),result = test_status[indx])
+    #     testcaseRference.update_incidents(incidents[indx])
+    #     testcaseRferences.append(testcaseRference)
+    #
+    # update_testrun_body = Put_TestRun_Body(updateRequestModels = testcaseRferences)
+    # print(to_json(update_testrun_body))
