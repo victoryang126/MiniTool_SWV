@@ -4,15 +4,16 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 # def
 Func = """
+
 function BB_Check_ParameterValue(Action,ParameterValue,DataRecord,Start,Length)
 {
-	var parameterValue_List2Str = BB_InsertValue2List(ParameterValue,Length)
+	var parameterValue_List = BB_InsertValue2List(ParameterValue,Length)
 	var expectStart = 0
     while(Length>0)
     {
         var tempLength = Length > 50?50:Length
         // RESULT.InsertComment(TempLength)
-        BB_CompareIgnoreH(Action,BB_GetValueFromStirng(DataRecord,Start +3,tempLength),BB_GetValueFromStirng(parameterValue_List2Str,expectStart,tempLength));
+        BB_CompareIgnoreH(Action,BB_GetValueFromArray(DataRecord,Start,tempLength),BB_GetValueFromArray(parameterValue_List,expectStart,tempLength));
         Start = Start + tempLength
         Length = Length - tempLength
 		expectStart = expectStart + tempLength
@@ -21,15 +22,13 @@ function BB_Check_ParameterValue(Action,ParameterValue,DataRecord,Start,Length)
 
 function BB_Check_ParameterList(Action,ParameterValue_List,DataRecord,Start,Length)
 {
-	// RESULT.InsertComment(ParameterValue_List)
-
 	var expectStart = 0
-	var parameterValue_List2Str = ParameterValue_List.toString().replace(/,/gi," ");
+	var parameterValue_List = ParameterValue_List.toString().replace(/,/gi," ");
     while(Length>0)
     {
         var tempLength = Length > 50?50:Length
         // RESULT.InsertComment(tempLength)
-        BB_CompareIgnoreH(Action,BB_GetValueFromStirng(DataRecord,Start +3,tempLength),BB_GetValueFromStirng(parameterValue_List2Str,expectStart,tempLength));
+        BB_CompareIgnoreH(Action,BB_GetValueFromArray(DataRecord,Start ,tempLength),BB_GetValueFromArray(parameterValue_List,expectStart,tempLength));
         // RESULT.InsertComment(tempLength)
 		Start = Start + tempLength
         Length = Length - tempLength
@@ -38,26 +37,60 @@ function BB_Check_ParameterList(Action,ParameterValue_List,DataRecord,Start,Leng
 }
 
 
+/**
+ * change ABCD to 0xAB 0xCD
+ * @param HexString ABCD，
+ * @returns 
+ */
+function HexStringToByteFormatString(HexString)
+{
+	HexString = HexString.replace(/(0x|\s)/gi,"")
+	var hex_array = new Array();
+	if(HexString.length % 2 != 0)
+	{
+		RESULT.InterpretEqualResult("HexString length is not OK", ["0000",true],false );
+		return [0]
+	}
+	var start_pos = 0;
+	while(start_pos < HexString.length)
+	{
+		hex_array.push("0x" + HexString.slice(start_pos,start_pos + 2));
+		start_pos +=2;
+	}
+	return hex_array.toString().replace(/,/gi," ");
 
+}
+
+/**
+ * 
+ * @param ParameterValue 
+ * @param ArrLength 
+ * @returns 
+ */
 function BB_InsertValue2List(ParameterValue,ArrLength)
 {	
+	ParameterValue = HexStringToByteFormatString(ParameterValue)
 	var tempList = new Array()
 	for(var i = 0; i < ArrLength; i++)
 	{
 		tempList[i] = ParameterValue
 	}
-	return tempList.toString().replace(/,/gi," ");
+
+	var ret = tempList.toString().replace(/,/gi," ");
+	return ret.split(" ")
 }
+
 
 
 
 
 function BB_ReturnCompareResultIgnoreH(ActualData,ExpectData)
 {
-
+	ActualData = ActualData.replace(/(0x|\s)/gi,"")
+	ExpectData = ExpectData.replace(/(0x|\s)/gi,"")
 	//create a Reg that ignore the data represent by "H"
 	var L_Temp = "^" +  ExpectData.replace(/H/gi,"\\S") + "$";
-	// var L_Temp = ExpectData.replace(/H/gi,"\\S");
+	// var L_Temp = ExpectData.replace(/H/gi,"\S");
 	var L_Reg = new RegExp(L_Temp,'gi')
 	var L_Match = ActualData.match(L_Reg); //if get the match, it shall return an array which contains the matched data
 	if(L_Match == null)//Fail.Can't get the match data
@@ -85,20 +118,56 @@ function BB_CompareIgnoreH(Action,ActualResp,ExpectResp)
 
 }
 
-function BB_GetValueFromStirng(DiagValue,LowIndex,ArrLength)
+function BB_GetValueFromArray(DataRecord_Array,LowIndex,ArrLength)
 {
-    // RESULT.InsertComment(5)
 	var tempList = new Array()
-	var diagValueList = DiagValue.split(" ")
-	var j = 0;
+
 	for(var i = LowIndex; i < LowIndex + ArrLength; i++)
 	{
-		tempList[j] = diagValueList[i]
-		j++;
+		tempList.push(DataRecord_Array[i])
+
 	}
-    // RESULT.InsertComment(tempList)
 	return tempList.toString().replace(/,/gi," ");
 }
+
+// function BB_GetValueFromStirng(DiagValue,LowIndex,ArrLength)
+// {
+//     // RESULT.InsertComment(5)
+// 	var tempList = new Array()
+// 	var diagValueList = DiagValue.split(" ")
+// 	var j = 0;
+// 	for(var i = LowIndex; i < LowIndex + ArrLength; i++)
+// 	{
+// 		tempList[j] = diagValueList[i]
+// 		j++;
+// 	}
+//     // RESULT.InsertComment(tempList)
+// 	return tempList.toString().replace(/,/gi," ");
+// }
+
+
+var all_message_id_list = [
+    0x2FC,
+    0xC9,
+    0x764,
+    0x55,
+    0x221,
+    0x1C3,
+    0x60,
+    0x165,
+    0x22C,
+    0x3B4,
+    0x47D,
+    0x3B1,
+    0x1B1,
+    0x69,
+    0x16E,
+    0x354,
+    0x1B2,
+    0xFB,
+    0x368
+]
+
 """
 class Epprom_Translate:
     def __init__(self,excel):
@@ -172,7 +241,7 @@ class EDR_Config:
             Monitor_Logger.info(sheet_name)
             df = self.sheets[sheet_name]
             # df = pd.read_excel(excel, sheet_name)
-            columnslist = ["ID", "Name", "Start", "Length", "End", "Signal", "NVM_Parameter"]
+            columnslist = ["ID", "Name", "Start", "Length", "End", "Signal"]
             df = df[columnslist]
             df = df.iloc[1:]  # 剔除header 第一行
             df.fillna("", inplace=True)
@@ -223,7 +292,10 @@ class EDR_Config:
                 trans.writelines(comment)
                 comment = "\t// " + "Signal : " + ", ".join(df_trans_func.loc[i, "Signal"].split("\n")) + ";\n"
                 trans.writelines(comment)
-                comment = "\t// " + "NVM : " + ", ".join(df_trans_func.loc[i, "NVM_Parameter"].split("\n")) + ";\n"
+                templist = df_trans_func.loc[i, "Original_NVM"].split("\n") # 获取NVM的参数，
+                templist = [a.strip().replace(".", "") + "_NVM" for a in templist]
+                comment = "\t// " + "NVM : " + ", ".join(templist) + ";\n"
+                # comment = "\t// " + "NVM : " + ", ".join(df_trans_func.loc[i, "NVM_Parameter"].split("\n")) + ";\n"
                 trans.writelines(comment)
                 assign_values = df_trans_func.loc[i, "Name"].split("\n")
                 assign_values = [f"\t{x}= 0xXX;\n" for x in assign_values] # 故意设置，如果相关Tranition函数不处理，编译不过
@@ -242,28 +314,38 @@ class EDR_Config:
     @func_monitor
     def generate_params(self,parameterfile):
         df_trans_func = self.df_read_element.copy()
-        args = []
+        element_names = []
+        signals = []
+        nvm_params = []
         for i in df_trans_func.index:
-            args.extend(df_trans_func.loc[i, "Name"].split("\n"))
-            args.extend(df_trans_func.loc[i, "Signal"].split("\n"))
+            element_names.extend(df_trans_func.loc[i, "Name"].split("\n"))
+            signals.extend(df_trans_func.loc[i, "Signal"].split("\n"))
             #"NVM_Parameter后续处理
-            args.extend(df_trans_func.loc[i, "NVM_Parameter"].split("\n"))
-        args = list(set(args)) # 去重
-        args = [f"var {arg} = \"undefined\";\n" for arg in args]
+            templist = df_trans_func.loc[i, "Original_NVM"].split("\n")
+            templist = [a.strip().replace(".","") + "_NVM" for a in templist]
+            # templist = [a for a in templist]
+            nvm_params.extend(templist)
+        element_names = list(set(element_names)) # 去重
+        signals = list(set(signals))  # 去重
+        nvm_params = list(set(nvm_params))  # 去重
+
+        element_names = [a for a in element_names if a != ""]
+        signals = [a for a in signals if a != ""]
+        nvm_params = [a for a in nvm_params if a != ""]
+
+        element_names = [f"var {arg} = \"undefined\";\n" for arg in element_names]
+        signals = [f"var {arg} = \"undefined\";\n" for arg in signals]
+        nvm_params = [f"var {arg} = \"undefined\";\n" for arg in nvm_params]
         with open(parameterfile, 'w', encoding='UTF-8') as para:
             para.write(Func)
-            para.writelines(args)
+            para.write("//Element Name ;\n")
+            para.writelines(element_names)
+            para.write("//Signals Name;\n")
+            para.writelines(signals)
+            para.write("//NVM Parameters;\n")
+            para.writelines(nvm_params)
 
-    # @func_monitor
-    # def generate_nvm_excel(self,nvm_excel):
-    #     df_trans_func = self.df_read_element.copy()
-    #     args = []
-    #     for i in df_trans_func.index:
-    #         args.extend(df_trans_func.loc[i, "NVM_Parameter"].split("\n"))
-    #     args = list(set(args))  # 去重
-    #     args = [a.strip() for a in args]
-    #     df = pd.DataFrame({"NVM_Parameter" :args})
-    #     df.to_excel(nvm_excel,index = False)
+
 
     @func_monitor
     def generate_nvm_excel(self,nvm_excel,epprom:Epprom_Translate):
@@ -275,11 +357,15 @@ class EDR_Config:
         args.sort() #排列
         args = [a for a in args if a!=""]
         df = pd.DataFrame({"Original_NVM": args})
-        df["Epprom"] = "undefined"
+        df["ExpectNVM"] = "undefined"# 存储预期NVM值的参数
+        df["Epprom"] = "undefined" # 存储NVM参数名称
+
         print(df.head(5))
         for indx in df.index:
+
             nvm_param = df.loc[indx,"Original_NVM"]
             nvm_param = nvm_param.strip()
+            df.loc[indx, "ExpectNVM"] = nvm_param.replace(".","") + "_NVM"
             #先以结尾完全匹配
             df_endswith = epprom.df_edr_block.query("PARAMETER_NAME.str.endswith(@nvm_param)")
             # pattern = f"{nvm_param}\\._\\d+\\._$"
@@ -405,6 +491,9 @@ class EDR_Config:
 
 
 
+    @func_monitor
+    def generate_nvm_check(self,nvm_check,nvm_excel):
+        pass
 
 
 
@@ -412,6 +501,7 @@ if __name__ == '__main__':
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\Read_element_2023_0309.xlsx"
     signalexcel = r"C:\Users\victor.yang\Desktop\Work\EDR\Geely_HX11_Flexray_signal_record_strategy.xlsx"
     sheet_name = "GB"
+    nvm_check = "BB_EDR_Common_NVM_Check_Define.ts"
     checkfile = "BB_EDR_Common_Check_Define.ts"
     parameterfile = "BB_EDR_Parameter_Define.ts"
     transitionfile = "BB_EDR_Transition_Define.ts"
@@ -419,17 +509,17 @@ if __name__ == '__main__':
     tsfile = [checkfile, parameterfile, transitionfile]
     # generateEDRFunction(excel, tsfile)
     edr_config = EDR_Config(excel)
-    edr_config.refresh()
+    # edr_config.refresh()
     # edr_config.generate_check(checkfile)
     # edr_config.generate_params(parameterfile)
     # edr_config.generate_trans(transitionfile)
-    # edr_config.generate_nvm_excel(nvm_excel)
-
-    epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
-    epprom = Epprom_Translate(epprom_excel)
-    epprom.block_ids = [2,31]
-    epprom.get_edr_block()
-
-    edr_config.generate_nvm_excel(nvm_excel,epprom)
+    # # edr_config.generate_nvm_excel(nvm_excel)
+    #
+    # epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
+    # epprom = Epprom_Translate(epprom_excel)
+    # epprom.block_ids = [2,31]
+    # epprom.get_edr_block()
+    #
+    # edr_config.generate_nvm_excel(nvm_excel,epprom)
     # signalts = "BB_EDR_sigParameter_Define.ts"
     # generateSignalParameter(signalexcel, signalts)
