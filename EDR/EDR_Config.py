@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 from EDR.ImportModule import *
 pd.set_option('display.max_rows', None)
@@ -189,28 +191,16 @@ class Epprom_Translate:
     def block_ids(self):
         return self._block_ids
 
+    @func_monitor
     def get_edr_block(self):
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
         df = pd.read_excel(self.excel,self.sheet)
         df = df[["PARAMETER NAME","BLOCK SIGNATURE","BLOCK ID"]]
-        # df = df.loc[df["BLOCK ID"] in self.block_ids]
-        # print(df.head(5))
-        # print(df["BLOCK ID"].isin(self.block_ids))
         self.df_edr_block = df.loc[df["BLOCK ID"].isin(self.block_ids)]
         self.df_edr_block.columns = ["PARAMETER_NAME","BLOCK_SIGNATURE","BLOCK_ID"]
         self.edr_block_params = list(self.df_edr_block["PARAMETER_NAME"].values)
-        # #
-        # df["ParamterData"] = df["PARAMETER NAME"].str.split(".")
-        # # print( df["ParamterData"])
-        # df["Data_Type"] = df["ParamterData"].str[2]
-        # print(list(set(df["Data_Type"].values)))
-        # print(df.head(5))
-        # params = list(df["PARAMETER NAME"].values)
-        # a = "aEngN"
-        # b = [x for x in params if a in x]
-        # print(b)
-        # data = df["ParamterData"]
+
 class EDR_Config:
     def __init__(self,excel):
         self.excel = excel
@@ -227,13 +217,13 @@ class EDR_Config:
             df = self.sheets[sheet_name]
             # df = pd.read_excel(excel, sheet_name)
             columnslist = ["ID", "Name", "Start", "Length", "End", "Signal",
-                           "NVM_Parameter","Original_NVM"]
+                           "Type","NVM"]
             df = df[columnslist]
             df = df.iloc[1:]  # 剔除header 第一行
             df.fillna("", inplace=True)
             # 这里必须检查是否有同一个ID，如果有，要处理报错
             df.set_index("ID", inplace=True, drop=False)
-            self.df_read_element = pd.concat([ self.df_read_element, df[["Name", "Signal", "NVM_Parameter","Original_NVM","ID"]]])
+            self.df_read_element = pd.concat([ self.df_read_element, df[["Name", "Signal", "Type","NVM","ID"]]])
 
     @func_monitor
     def generate_check(self,checkfile):
@@ -292,7 +282,7 @@ class EDR_Config:
                 trans.writelines(comment)
                 comment = "\t// " + "Signal : " + ", ".join(df_trans_func.loc[i, "Signal"].split("\n")) + ";\n"
                 trans.writelines(comment)
-                templist = df_trans_func.loc[i, "Original_NVM"].split("\n") # 获取NVM的参数，
+                templist = df_trans_func.loc[i, "NVM"].split("\n") # 获取NVM的参数，
                 templist = [a.strip().replace(".", "") + "_NVM" for a in templist]
                 comment = "\t// " + "NVM : " + ", ".join(templist) + ";\n"
                 # comment = "\t// " + "NVM : " + ", ".join(df_trans_func.loc[i, "NVM_Parameter"].split("\n")) + ";\n"
@@ -321,7 +311,7 @@ class EDR_Config:
             element_names.extend(df_trans_func.loc[i, "Name"].split("\n"))
             signals.extend(df_trans_func.loc[i, "Signal"].split("\n"))
             #"NVM_Parameter后续处理
-            templist = df_trans_func.loc[i, "Original_NVM"].split("\n")
+            templist = df_trans_func.loc[i, "NVM"].split("\n")
             templist = [a.strip().replace(".","") + "_NVM" for a in templist]
             # templist = [a for a in templist]
             nvm_params.extend(templist)
@@ -337,7 +327,7 @@ class EDR_Config:
         signals = [f"var {arg} = \"undefined\";\n" for arg in signals]
         nvm_params = [f"var {arg} = \"undefined\";\n" for arg in nvm_params]
         with open(parameterfile, 'w', encoding='UTF-8') as para:
-            para.write(Func)
+            # para.write(Func)
             para.write("//Element Name ;\n")
             para.writelines(element_names)
             para.write("//Signals Name;\n")
@@ -352,24 +342,22 @@ class EDR_Config:
         df_trans_func = self.df_read_element.copy()
         args = []
         for i in df_trans_func.index:
-            args.extend(df_trans_func.loc[i, "Original_NVM"].split("\n"))
+            args.extend(df_trans_func.loc[i, "NVM"].split("\n"))
         args = list(set(args))  # 去重
         args.sort() #排列
         args = [a for a in args if a!=""]
-        df = pd.DataFrame({"Original_NVM": args})
+        df = pd.DataFrame({"NVM": args})
         df["ExpectNVM"] = "undefined"# 存储预期NVM值的参数
         df["Epprom"] = "undefined" # 存储NVM参数名称
 
-        print(df.head(5))
         for indx in df.index:
-
-            nvm_param = df.loc[indx,"Original_NVM"]
+            nvm_param = df.loc[indx,"NVM"]
             nvm_param = nvm_param.strip()
             df.loc[indx, "ExpectNVM"] = nvm_param.replace(".","") + "_NVM"
             #先以结尾完全匹配
             df_endswith = epprom.df_edr_block.query("PARAMETER_NAME.str.endswith(@nvm_param)")
             # pattern = f"{nvm_param}\\._\\d+\\._$"
-            df_endswith_mutil = epprom.df_edr_block.query(f'PARAMETER_NAME.str.contains("{nvm_param}\\._\\d_$")',engine = 'python')
+            df_endswith_mutil = epprom.df_edr_block.query(f'PARAMETER_NAME.str.contains("{nvm_param}\\._\\d+_$")',engine = 'python')
             df_contains = epprom.df_edr_block.query("PARAMETER_NAME.str.contains(@nvm_param)")
             if df_endswith.empty != True:
                 df.loc[indx,"Epprom"]=  "\n".join(df_endswith["PARAMETER_NAME"].values)
@@ -493,7 +481,82 @@ class EDR_Config:
 
     @func_monitor
     def generate_nvm_check(self,nvm_check,nvm_excel):
-        pass
+        sigle_pattern =  "(\w+)(\\._\\d_.)(\S+)"
+        mutil_pattern = "(\w+)(\\._\\d_.)(\S+)\\._(\\d+)_"
+        df = pd.read_excel(nvm_excel,"Sheet1")
+        global_nvms = []
+        block_nvms = []
+        with open(nvm_check, 'w', encoding='UTF-8') as nvm_file:
+            # pass
+            for indx in df.index:
+                # print(df.loc[indx,"Original_NVM"])
+                expect_name = df.loc[indx,"ExpectNVM"]
+                epproms = df.loc[indx,"Epprom"].split("\n")
+                block_func_name = f"function BB_Check_{expect_name}_BlockEDR(Block)\n{'{'}\n"
+                global_func_name = f"function BB_Check_{expect_name}_GlobalEDR()\n{'{'}\n"
+                if len(epproms) == 1:
+                    mt = re.match(sigle_pattern,epproms[0])
+                    if mt:
+                        groups = mt.groups()
+                        block = """{0}"""
+                        parameter_name = f"\tvar parameter_name = String.Format(\"{groups[0]}._{block}_.{groups[2]}\",Block);\n"
+                        nvm_file.write(block_func_name)
+                        nvm_file.write(parameter_name)
+                        nvm_file.write(f"\tBB_CompareParameterByName(parameter_name,{expect_name});\n")
+                        nvm_file.write("}\n\n")
+                        block_nvms.append(f"BB_Check_{expect_name}_BlockEDR(Block);\n")
+                    else:# 如果没有匹配到单个参数模式，则表示这是一个global
+                        nvm_file.write(global_func_name)
+                        parameter_name = f"\tvar parameter_name = {epproms[0]};\n"
+                        # nvm_file.write(parameter_name)
+                        nvm_file.write(f"\tBB_CompareParameterByName('{epproms[0]}',{expect_name});\n")
+                        nvm_file.write("}\n\n")
+                        global_nvms.append(f"BB_Check_{expect_name}_GlobalEDR();\n")
+                else: # 有多个NVM参数的时候
+                    params = []
+                    #循环去匹配里面的数据
+                    for epprom in epproms:
+                        mt = re.match(mutil_pattern, epprom)
+                        params.append(list(mt.groups()))
+
+                    df_temp = pd.DataFrame(np.array(params),
+                                       columns=["parent", "block", "param", "index"])
+                    Debug_Logger.debug(params)
+                    df_temp = df_temp.astype({'index': 'int32'}) #强hi在转换类型为int，然后去比较最大的index
+                    df_pivot_tb = df_temp.pivot_table(index=["param"], aggfunc=np.max)
+                    temp_dict = df_pivot_tb.to_dict(orient="index") # 通过Piovt_table 进行分组统计，找到不同类别的参数
+                    # print(temp_dict)
+                    Monitor_Logger.info(temp_dict)
+                    nvm_file.write(block_func_name)
+                    for tempkey in temp_dict:
+                        max_index = temp_dict[tempkey]["index"]
+                        parent =  temp_dict[tempkey]["parent"]
+                        forloop = f"\tfor(var i = 0; i <= {max_index}; i++)\n\t{'{'}\n"
+                        block = """{0}"""
+                        param_index = """{1}"""
+                        nvm_file.write(forloop)
+
+                        parameter_name = f"\t\tvar parameter_name = String.Format(\"{parent}._{block}_.{tempkey}._{param_index}_\",Block,i);\n"
+                        nvm_file.write(parameter_name)
+                        nvm_file.write(f"\t\tBB_CompareParameterByName(parameter_name,{expect_name});\n")
+                        nvm_file.write("\t};\n")
+
+                    nvm_file.write("}\n")
+                    block_nvms.append(f"BB_Check_{expect_name}_BlockEDR(Block);\n")
+
+            global_define = "function BB_Check_GlobalEDR()\n{\n"
+            nvm_file.writelines(global_define)
+            for func_name in global_nvms:
+                nvm_file.writelines("\t" + func_name)
+            nvm_file.writelines("}")
+            nvm_file.write("\n\n\n")
+
+            block_define = "function BB_Check_BlockEDR(Block)\n{\n"
+            nvm_file.writelines(block_define)
+            for func_name in block_nvms:
+                nvm_file.writelines("\t" + func_name)
+            nvm_file.writelines("}")
+            nvm_file.write("\n\n\n")
 
 
 
@@ -509,17 +572,20 @@ if __name__ == '__main__':
     tsfile = [checkfile, parameterfile, transitionfile]
     # generateEDRFunction(excel, tsfile)
     edr_config = EDR_Config(excel)
+
     # edr_config.refresh()
     # edr_config.generate_check(checkfile)
     # edr_config.generate_params(parameterfile)
     # edr_config.generate_trans(transitionfile)
     # # edr_config.generate_nvm_excel(nvm_excel)
-    #
+    # #
     # epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
     # epprom = Epprom_Translate(epprom_excel)
     # epprom.block_ids = [2,31]
     # epprom.get_edr_block()
-    #
+    # #
     # edr_config.generate_nvm_excel(nvm_excel,epprom)
+
+    edr_config.generate_nvm_check(nvm_check,nvm_excel)
     # signalts = "BB_EDR_sigParameter_Define.ts"
     # generateSignalParameter(signalexcel, signalts)
