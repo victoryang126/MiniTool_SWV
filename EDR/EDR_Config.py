@@ -5,172 +5,7 @@ from EDR.ImportModule import *
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 # def
-Func = """
 
-function BB_Check_ParameterValue(Action,ParameterValue,DataRecord,Start,Length)
-{
-	var parameterValue_List = BB_InsertValue2List(ParameterValue,Length)
-	var expectStart = 0
-    while(Length>0)
-    {
-        var tempLength = Length > 50?50:Length
-        // RESULT.InsertComment(TempLength)
-        BB_CompareIgnoreH(Action,BB_GetValueFromArray(DataRecord,Start,tempLength),BB_GetValueFromArray(parameterValue_List,expectStart,tempLength));
-        Start = Start + tempLength
-        Length = Length - tempLength
-		expectStart = expectStart + tempLength
-    }
-}
-
-function BB_Check_ParameterList(Action,ParameterValue_List,DataRecord,Start,Length)
-{
-	var expectStart = 0
-	var parameterValue_List = ParameterValue_List.toString().replace(/,/gi," ");
-    while(Length>0)
-    {
-        var tempLength = Length > 50?50:Length
-        // RESULT.InsertComment(tempLength)
-        BB_CompareIgnoreH(Action,BB_GetValueFromArray(DataRecord,Start ,tempLength),BB_GetValueFromArray(parameterValue_List,expectStart,tempLength));
-        // RESULT.InsertComment(tempLength)
-		Start = Start + tempLength
-        Length = Length - tempLength
-		expectStart = expectStart + tempLength
-    }
-}
-
-
-/**
- * change ABCD to 0xAB 0xCD
- * @param HexString ABCD，
- * @returns 
- */
-function HexStringToByteFormatString(HexString)
-{
-	HexString = HexString.replace(/(0x|\s)/gi,"")
-	var hex_array = new Array();
-	if(HexString.length % 2 != 0)
-	{
-		RESULT.InterpretEqualResult("HexString length is not OK", ["0000",true],false );
-		return [0]
-	}
-	var start_pos = 0;
-	while(start_pos < HexString.length)
-	{
-		hex_array.push("0x" + HexString.slice(start_pos,start_pos + 2));
-		start_pos +=2;
-	}
-	return hex_array.toString().replace(/,/gi," ");
-
-}
-
-/**
- * 
- * @param ParameterValue 
- * @param ArrLength 
- * @returns 
- */
-function BB_InsertValue2List(ParameterValue,ArrLength)
-{	
-	ParameterValue = HexStringToByteFormatString(ParameterValue)
-	var tempList = new Array()
-	for(var i = 0; i < ArrLength; i++)
-	{
-		tempList[i] = ParameterValue
-	}
-
-	var ret = tempList.toString().replace(/,/gi," ");
-	return ret.split(" ")
-}
-
-
-
-
-
-function BB_ReturnCompareResultIgnoreH(ActualData,ExpectData)
-{
-	ActualData = ActualData.replace(/(0x|\s)/gi,"")
-	ExpectData = ExpectData.replace(/(0x|\s)/gi,"")
-	//create a Reg that ignore the data represent by "H"
-	var L_Temp = "^" +  ExpectData.replace(/H/gi,"\\S") + "$";
-	// var L_Temp = ExpectData.replace(/H/gi,"\S");
-	var L_Reg = new RegExp(L_Temp,'gi')
-	var L_Match = ActualData.match(L_Reg); //if get the match, it shall return an array which contains the matched data
-	if(L_Match == null)//Fail.Can't get the match data
-	{
-		return false;
-	}
-	else //Pass
-	{
-		return true;
-	}
-}
-
-function BB_CompareIgnoreH(Action,ActualResp,ExpectResp)
-{
-
-	if(BB_ReturnCompareResultIgnoreH(ActualResp,ExpectResp))
-	{
-		RESULT.LogCustomAction(Action, ActualResp, ExpectResp, TestStatus.Passed);
-	}
-	else
-	{
-		RESULT.LogCustomAction(Action, ActualResp + "->Length->" + ActualResp.length, ExpectResp+ "->Length->" + ExpectResp.length, TestStatus.Failed);
-	}
-
-
-}
-
-function BB_GetValueFromArray(DataRecord_Array,LowIndex,ArrLength)
-{
-	var tempList = new Array()
-
-	for(var i = LowIndex; i < LowIndex + ArrLength; i++)
-	{
-		tempList.push(DataRecord_Array[i])
-
-	}
-	return tempList.toString().replace(/,/gi," ");
-}
-
-// function BB_GetValueFromStirng(DiagValue,LowIndex,ArrLength)
-// {
-//     // RESULT.InsertComment(5)
-// 	var tempList = new Array()
-// 	var diagValueList = DiagValue.split(" ")
-// 	var j = 0;
-// 	for(var i = LowIndex; i < LowIndex + ArrLength; i++)
-// 	{
-// 		tempList[j] = diagValueList[i]
-// 		j++;
-// 	}
-//     // RESULT.InsertComment(tempList)
-// 	return tempList.toString().replace(/,/gi," ");
-// }
-
-
-var all_message_id_list = [
-    0x2FC,
-    0xC9,
-    0x764,
-    0x55,
-    0x221,
-    0x1C3,
-    0x60,
-    0x165,
-    0x22C,
-    0x3B4,
-    0x47D,
-    0x3B1,
-    0x1B1,
-    0x69,
-    0x16E,
-    0x354,
-    0x1B2,
-    0xFB,
-    0x368
-]
-
-"""
 class Epprom_Translate:
     def __init__(self,excel):
         self.excel = excel
@@ -195,11 +30,19 @@ class Epprom_Translate:
     def get_edr_block(self):
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
-        df = pd.read_excel(self.excel,self.sheet)
-        df = df[["PARAMETER NAME","BLOCK SIGNATURE","BLOCK ID"]]
+        df = pd.read_excel(self.excel, self.sheet)
+        df = df[["PARAMETER NAME", "BLOCK SIGNATURE", "BLOCK ID", "READ VALUE"]]
         self.df_edr_block = df.loc[df["BLOCK ID"].isin(self.block_ids)]
-        self.df_edr_block.columns = ["PARAMETER_NAME","BLOCK_SIGNATURE","BLOCK_ID"]
+        self.df_edr_block.columns = ["PARAMETER_NAME", "BLOCK_SIGNATURE", "BLOCK_ID", "READ_VALUE"]
         self.edr_block_params = list(self.df_edr_block["PARAMETER_NAME"].values)
+
+    def generate_nvm_result(self,nvm_result):
+        df_temp = self.df_edr_block[["PARAMETER_NAME","READ_VALUE"]]
+        # df_temp.set_index("PARAMETER_NAME",inplace=True)
+        temp_result = dict(zip(df_temp["PARAMETER_NAME"].values,df_temp["READ_VALUE"].values))
+        with open(nvm_result, mode="w", encoding='UTF-8') as f:
+            json.dump(temp_result, f, indent=4)
+
 
 class EDR_Config:
     def __init__(self,excel):
@@ -340,6 +183,7 @@ class EDR_Config:
     @func_monitor
     def generate_nvm_excel(self,nvm_excel,epprom:Epprom_Translate):
         df_trans_func = self.df_read_element.copy()
+        # df_trans_func = df_trans_func.query('Type=="Element"')
         args = []
         for i in df_trans_func.index:
             args.extend(df_trans_func.loc[i, "NVM"].split("\n"))
@@ -573,18 +417,18 @@ if __name__ == '__main__':
     # generateEDRFunction(excel, tsfile)
     edr_config = EDR_Config(excel)
 
-    # edr_config.refresh()
+    edr_config.refresh()
     # edr_config.generate_check(checkfile)
     # edr_config.generate_params(parameterfile)
     # edr_config.generate_trans(transitionfile)
-    # # edr_config.generate_nvm_excel(nvm_excel)
+
     # #
-    # epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
-    # epprom = Epprom_Translate(epprom_excel)
-    # epprom.block_ids = [2,31]
-    # epprom.get_edr_block()
-    # #
-    # edr_config.generate_nvm_excel(nvm_excel,epprom)
+    epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
+    epprom = Epprom_Translate(epprom_excel)
+    epprom.block_ids = [2,31]
+    epprom.get_edr_block()
+    # # #
+    edr_config.generate_nvm_excel(nvm_excel,epprom)
 
     edr_config.generate_nvm_check(nvm_check,nvm_excel)
     # signalts = "BB_EDR_sigParameter_Define.ts"
