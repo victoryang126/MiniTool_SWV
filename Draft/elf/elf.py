@@ -2,7 +2,7 @@ from elftools.elf.elffile import ELFFile
 from elftools.dwarf import dwarf_util
 import binascii
 import struct
-
+import subprocess
 
 def get_info_from_elf(e_file):  # e_file为需要读取的elf文件
     tmp_dict = {} # 这个字典用于存放变量名和变量地址的对应关系
@@ -42,5 +42,13 @@ class EDI:
 
 if __name__ == "__main__":
     file = r"C:\Users\victor.yang\Desktop\Work\S37\AlgoVar1FixedCal_APPRISe.elf"
-    edi = EDI(file)
-    edi.get_die_by_name("A","B")
+    # edi = EDI(file)
+    # edi.get_die_by_name("A","B")
+    result = subprocess.run(['readelf','-s','-w',file],stdout=subprocess.PIPE)
+    output = result.stdout.decode('utf-8')
+    lines = output.split("\n")
+    for line in lines:
+        # print(line)
+        if "StartAddress" in line:
+            parts = line.split()
+            print(parts)

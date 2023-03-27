@@ -17,7 +17,6 @@ from Ascent_Generate_S37 import GenS37Widget
 from DTCDefine_SymFile import DTCDefine_SYMWidget
 from Diagnostic_Parameter import CANDWidget
 from VBFGenerate import VBFGenerateWidget
-
 from GenerateScript import GenerateScriptsWidget
 from CB_Server_API.CB_Tool_Widget import CB_Tool_Widget
 

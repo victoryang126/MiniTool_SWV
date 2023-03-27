@@ -20,7 +20,7 @@ class FileUtil:
     def __init__(self):
         pass
 
-    def init_file(self,file):
+    def init_file_bypath(self,file):
         """
 
         Args:
@@ -82,7 +82,7 @@ class FileUtil:
             if os.path.isfile(folder):  # 如果是文件，不是文件夹，则抛出异常
                 raise Exception(folder + " is not a folder but a flle")
 
-    def create_folder(self,folder):
+    def create_folder_bypath(self,folder):
         if not os.path.exists(folder):
             os.mkdir(folder)
         else:
@@ -90,7 +90,7 @@ class FileUtil:
                 raise Exception(folder + " is not a folder but a flle")
 
 
-    def dumps_object_to_js_parameter(self,test_object,js_parameter,file,mode = "w"):
+    def dumps_object_to_js_parameter_bypath(self,test_object,js_parameter,file,mode = "w"):
         with open(file, mode, encoding='UTF-8') as f:
             f.write(js_parameter)
             json.dump(test_object, f, indent=4)
@@ -103,11 +103,11 @@ class FileUtil:
             json.dump(test_object, f, indent=4)
             f.write(";\n")
 
-    def generate_script(self,scripts,file):
+    def generate_script_bypath(self,scripts,file):
         with open(file, "w", encoding='UTF-8') as f:
             f.write(scripts)
 
-    def generate_script(self,scripts,directory,file_name):
+    def generate_script(self,scripts=None,directory=None,file_name=None):
         file = os.path.join(directory,file_name)
         print(file)
         with open(file, "w", encoding='UTF-8') as f:
