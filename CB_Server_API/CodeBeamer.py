@@ -33,7 +33,7 @@ TestRunTrackerID
 
 """
 import numpy as np
-from CommonFunction.LogCFG import *
+from Util.LogCFG import *
 from CB_Server_API.TestRun import *
 from CB_Server_API.TestCase import *
 import pandas as pd
@@ -267,6 +267,7 @@ class CodeBeamer():
             resp = self.get(url)
             options = resp.json()["options"]
             return options
+
     @func_monitor
     def validate_and_return_field_option(self,defined_options,user_provide_option):
         option_list = [option for option in defined_options if option["name"] == user_provide_option]

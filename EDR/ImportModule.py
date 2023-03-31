@@ -10,3 +10,6 @@ from typing import List,Any,Dict
 import re
 from string import Template
 import numpy as np
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+# def

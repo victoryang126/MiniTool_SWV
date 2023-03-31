@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import numpy as np
-from CommonFunction.LogCFG import *
+from Util.LogCFG import *
 
 import re
 

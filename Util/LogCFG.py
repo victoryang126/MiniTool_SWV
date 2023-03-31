@@ -40,7 +40,8 @@ Monitor_Logger.setLevel(logging.INFO)
 
 console_handler = logging.StreamHandler()
 func_console_handler = logging.StreamHandler()
-Exception_file_handler = logging.FileHandler(filename=ExceptionFile, mode="a", encoding='utf-8')
+#victor 2023/3/37 using same file for debug and exception, as we need check the exception in the debug
+Exception_file_handler = logging.FileHandler(filename=DebugFile, mode="a", encoding='utf-8')
 Debug_file_handler = logging.FileHandler(filename=DebugFile, mode="a", encoding='utf-8')
 
 console_handler.setFormatter(console_formatter)
@@ -54,7 +55,6 @@ Exception_Logger.addHandler(console_handler)
 Monitor_Logger.addHandler(func_console_handler)
 
 Debug_Logger.addHandler(Debug_file_handler)
-
 
 def clear_log():
     with open(ExceptionFile, "w"):

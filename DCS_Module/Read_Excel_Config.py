@@ -80,20 +80,18 @@ class DCS_Config:
     @func_monitor
     def get_df_dcs_config(self,outdir):
         self.dcs_config = {}
-        header_row = 9
-        header_col = 12
         df = pd.read_excel(self.excel,self.sheet,dtype='str')
-
-        df.set_index("Abbreviation", inplace=True, drop=False)
-        df.drop(["SensorType"], inplace=True, axis=1)
-        # del df["SensorType"]
-        # print(df.head(5))
+        #获取Config
+        df.set_index("Config", inplace=True, drop=True)
         # 1.********** 获取头部配置信息字典
-        df_header_config = df.iloc[0:header_row, 0:header_col]
+        df_header_config = df.loc["ConfigStart":"ConfigEnd",]
         # 去除空白的区域 并获取头部信息的字典
         df_header_config = df_header_config[df_header_config["Abbreviation"].notnull()]
         df_header_config = df_header_config.set_index("Abbreviation")  # 将Abbreviation 设置为index
         df_header_config = df_header_config.fillna("undefined")  # 将空白区域填充为undefined
+
+        df.set_index("Abbreviation", inplace=True, drop=False)
+        Debug_Logger.debug(df_header_config)
         # 获取头部区域文件的属性，主要是读取Sensor的开始行，Status 状态获取的列，Fault状态获取的列
         # print(HeaderDict)
         # 2.********** 根据Header字典的内容循环处理信息，每个sensor的相关属性
