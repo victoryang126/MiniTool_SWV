@@ -22,46 +22,50 @@ class EDR_DID_Config:
             Monitor_Logger.info(sheet_name)
             df = self.sheets[sheet_name]
             # df = pd.read_excel(excel, sheet_name)
-            columnslist = ["ID", "Name", "Start", "Length", "End", "Signal",
-                           "Type","NVM"]
+
+            columnslist = ["ID", "NAME", "START", "LENGTH", "END", "SIGNAL",
+                           "TYPE","NVM"]
+            df.columns = strip_upper_columns(df.columns)
+            validate_columns(df.columns,columnslist,sheet_name)
             df = df[columnslist]
             df = df.iloc[1:]  # 剔除header 第一行
             df.fillna("", inplace=True)
             # 这里必须检查是否有同一个ID，如果有，要处理报错
             df.set_index("ID", inplace=True, drop=False)
-            self.df_read_element = pd.concat([ self.df_read_element, df[["Name", "Signal", "Type","NVM","ID"]]])
+            self.df_read_element = pd.concat([ self.df_read_element, df[["NAME", "SIGNAL", "TYPE","NVM","ID"]]])
 
     @func_monitor
     def generate_check(self,checkfile):
+        fileUtil.init_file_bypath(checkfile)
         for sheet_name in self.sheets:
             Monitor_Logger.info(sheet_name)
             df = self.sheets[sheet_name]
             # df = pd.read_excel(excel, sheet_name)
-            columnslist = ["ID", "Name", "Start", "Length", "End", "Signal"]
+            columnslist = ["ID", "NAME", "START", "LENGTH", "END", "SIGNAL"]
             df = df[columnslist]
             df = df.iloc[1:]  # 剔除header 第一行
             df.fillna("", inplace=True)
             # 这里必须检查是否有同一个ID，如果有，要处理报错
             df.set_index("ID", inplace=True, drop=False)
 
-            func_name = "function BB_Check_" + sheet_name + "_EDR(Type,DataRecord)\n{\n"
+            func_name = "function BB_Check_" + sheet_name + "_EDR(TYPE,DataRecord)\n{\n"
             with open(checkfile, 'a', encoding='UTF-8') as check: #写入函数名称
                 check.writelines(func_name)
             with open(checkfile, 'a', encoding='UTF-8') as check:  #根据里面的数据写入数据
                 with open(parameterfile, 'a', encoding='UTF-8') as para:
                     for i in df.index:
                         # 处理check函数部分
-                        name = df.loc[i, "Name"].replace("\n", " ")
-                        comment = f"\t//{i} : {name};\n"
+                        NAME = df.loc[i, "NAME"].replace("\n", " ")
+                        comment = f"\t//{i} : {NAME};\n"
                         check.writelines(comment)
-                        parametervalue = "\t" + "var ParameterValue = " + df.loc[i, "Name"] + ";\n"
+                        parametervalue = "\t" + "var ParameterValue = " + df.loc[i, "NAME"] + ";\n"
                         check.writelines(parametervalue)
-                        start = str(df.loc[i, "Start"])
-                        length = str(df.loc[i, "Length"])
-                        action = f"\tvar Action = \"Check \" + Type + \" Value: {name} start:{start} length:{length} \";\n"
+                        START = str(df.loc[i, "START"])
+                        LENGTH = str(df.loc[i, "LENGTH"])
+                        action = f"\tvar Action = \"Check \" + TYPE + \" Value: {NAME} START:{START} LENGTH:{LENGTH} \";\n"
                         check.writelines(action)
                         callfunc = "\t" + '''BB_Check_ParameterValue(Action, ParameterValue, DataRecord, ''' \
-                                   + start + ", " + length + ''' )''' + ";\n"
+                                   + START + ", " + LENGTH + ''' )''' + ";\n"
                         check.writelines(callfunc)
                         check.write("\n")
             with open(checkfile, 'a', encoding='UTF-8') as check:
@@ -70,8 +74,9 @@ class EDR_DID_Config:
 
     @func_monitor
     def generate_trans(self,transitionfile):
+        fileUtil.init_file_bypath(transitionfile)
         df_trans_func = self.df_read_element.copy()
-        df_trans_func["Value"] = df_trans_func["Name"].apply(lambda x: "_".join(x.split("_")[:-1]))
+        df_trans_func["Value"] = df_trans_func["NAME"].apply(lambda x: "_".join(x.split("_")[:-1]))
 
         df_trans_func = df_trans_func.pivot_table(index=['Value'], sort=False,
                                                   aggfunc=lambda x: '\n'.join(x))
@@ -84,16 +89,18 @@ class EDR_DID_Config:
                 trans.writelines(func_name)
                 comment = "\t// " + "ReqID : " + ", ".join(df_trans_func.loc[i, "ID"].split("\n")) + ";\n"
                 trans.writelines(comment)
-                comment = "\t// " + "DID Element Name : " + ", ".join(df_trans_func.loc[i, "Name"].split("\n")) + ";\n"
+                comment = "\t// " + "DID Element NAME : " + ", ".join(df_trans_func.loc[i, "NAME"].split("\n")) + ";\n"
                 trans.writelines(comment)
-                comment = "\t// " + "Signal : " + ", ".join(df_trans_func.loc[i, "Signal"].split("\n")) + ";\n"
+                comment = "\t// " + "SIGNAL : " + ", ".join(df_trans_func.loc[i, "SIGNAL"].split("\n")) + ";\n"
                 trans.writelines(comment)
                 templist = df_trans_func.loc[i, "NVM"].split("\n") # 获取NVM的参数，
                 templist = [a.strip().replace(".", "") + "_NVM" for a in templist]
                 comment = "\t// " + "NVM : " + ", ".join(templist) + ";\n"
                 # comment = "\t// " + "NVM : " + ", ".join(df_trans_func.loc[i, "NVM_Parameter"].split("\n")) + ";\n"
                 trans.writelines(comment)
-                assign_values = df_trans_func.loc[i, "Name"].split("\n")
+                nvm_assign_values = [f"\t{x}= 0xXX;\n" for x in templist]
+                trans.writelines(nvm_assign_values)
+                assign_values = df_trans_func.loc[i, "NAME"].split("\n")
                 assign_values = [f"\t{x}= 0xXX;\n" for x in assign_values] # 故意设置，如果相关Tranition函数不处理，编译不过
                 trans.writelines(assign_values)
                 trans.writelines("}")
@@ -109,13 +116,14 @@ class EDR_DID_Config:
 
     @func_monitor
     def generate_params(self,parameterfile):
+        fileUtil.init_file_bypath(parameterfile)
         df_trans_func = self.df_read_element.copy()
         element_names = []
         signals = []
         nvm_params = []
         for i in df_trans_func.index:
-            element_names.extend(df_trans_func.loc[i, "Name"].split("\n"))
-            signals.extend(df_trans_func.loc[i, "Signal"].split("\n"))
+            element_names.extend(df_trans_func.loc[i, "NAME"].split("\n"))
+            signals.extend(df_trans_func.loc[i, "SIGNAL"].split("\n"))
             #"NVM_Parameter后续处理
             templist = df_trans_func.loc[i, "NVM"].split("\n")
             templist = [a.strip().replace(".","") + "_NVM" for a in templist]
@@ -134,9 +142,9 @@ class EDR_DID_Config:
         nvm_params = [f"var {arg} = \"undefined\";\n" for arg in nvm_params]
         with open(parameterfile, 'w', encoding='UTF-8') as para:
             # para.write(Func)
-            para.write("//Element Name ;\n")
+            para.write("//Element NAME ;\n")
             para.writelines(element_names)
-            para.write("//Signals Name;\n")
+            para.write("//Signals NAME;\n")
             para.writelines(signals)
             para.write("//NVM Parameters;\n")
             para.writelines(nvm_params)
@@ -146,7 +154,7 @@ class EDR_DID_Config:
     @func_monitor
     def generate_nvm_excel(self,nvm_excel,epprom:Epprom_Translate):
         df_trans_func = self.df_read_element.copy()
-        # df_trans_func = df_trans_func.query('Type=="Element"')
+        # df_trans_func = df_trans_func.query('TYPE=="Element"')
         args = []
         for i in df_trans_func.index:
             args.extend(df_trans_func.loc[i, "NVM"].split("\n"))
@@ -231,7 +239,7 @@ class EDR_DID_Config:
                     df_pivot_tb = df_temp.pivot_table(index=["param"], aggfunc=np.max)
                     temp_dict = df_pivot_tb.to_dict(orient="index") # 通过Piovt_table 进行分组统计，找到不同类别的参数
                     # print(temp_dict)
-                    Monitor_Logger.info(temp_dict)
+                    # Monitor_Logger.info(temp_dict)
                     nvm_file.write(block_func_name)
                     for tempkey in temp_dict:
                         max_index = temp_dict[tempkey]["index"]
@@ -282,15 +290,11 @@ if __name__ == '__main__':
     edr_config.generate_check(checkfile)
     edr_config.generate_params(parameterfile)
     edr_config.generate_trans(transitionfile)
-
-    # #
     epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
     epprom = Epprom_Translate(epprom_excel)
     epprom.block_ids = [2,31]
     epprom.get_edr_block()
-
     edr_config.generate_nvm_excel(nvm_excel,epprom)
-
     edr_config.generate_nvm_check(nvm_check,nvm_excel)
     # signalts = "BB_EDR_sigParameter_Define.ts"
     # generateSignalParameter(signalexcel, signalts)

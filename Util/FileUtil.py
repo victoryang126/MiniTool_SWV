@@ -109,7 +109,6 @@ class FileUtil:
 
     def generate_script(self,scripts=None,directory=None,file_name=None):
         file = os.path.join(directory,file_name)
-        print(file)
         with open(file, "w", encoding='UTF-8') as f:
             f.write(scripts)
 

@@ -41,21 +41,21 @@ class EDR_Script_Engine:
             return "".join(values)
         elif re.search(".*DCS.*",id):
             #set the signal value
-            return f"\tSetDCSConditions(\"{signal}\",\'{value}\');\n" \
+            return f"\tSetDCSCondition(\"{signal}\",\'{value}\');\n" \
                    f"\t{signal}[\"ExpectStatus\"] = \'{value}\';\n"
         elif regCompare.is_equal("Fault",id):
             if value != "NONE":
                 values = value.split("\n")
                 faults = [fault.split(",") for fault in values]
                 validate_fault_format(signal,faults)
-                print(faults)
+                # print(faults)
                 #conver to the format in js scripts, EDR + 'ACTIVE@'
                 faults = [f"{fault[0]} + \'{fault[1]}\'" for fault in faults]
                 # print(faults)
                 _faults = ",\n\t\t\t".join(faults)
                 _scripts_line = []
                 _scripts_line.append(f"\tvar Ret = ActualResults();\n")
-                _scripts_line.append(f"\tvar var Fault_Array = [{_faults}];\n")
+                _scripts_line.append(f"\tvar Fault_Array = [{_faults}];\n")
                 _scripts_line.append(f"\tvar Expect_Fault_Info = SetSuffixToFaultInfo(Fault_Array.toString());\n")
                 _scripts_line.append(f"\tCompareResultsDefine(Ret,Expect_Fault_Info[1],Expect_Fault_Info[0]);\n")
             else:
@@ -74,22 +74,22 @@ class EDR_Script_Engine:
             df:pd.DataFrame = df_dict[variant]
             #loop the digital_cols to generate scripts
             for digtal_col in digital_cols:
-                script_file = f"{self.sheet}_{variant}_{digtal_col}.ts"
-                result_name = f"{self.sheet}_{variant}_{digtal_col}"
+                script_file = f"{self.sheet}_{variant}_{padded_number(digtal_col,3)}.ts"
+                result_name = f"{self.sheet}_{variant}_{padded_number(digtal_col,3)}"
                 script_lines = []
                 script_lines.append(SCRIPT_BEGIN)
                 script_lines.append(f"\tResultname = \'{result_name}\';\n")
                 #then loop the index to get the script_lines
                 for indx in df.index:
                     id = df.loc[indx,"ID"]
-                    frame = df.loc[indx,"Frame"]
-                    signal = df.loc[indx,"Signal"]
+                    frame = df.loc[indx,"FRAME"]
+                    signal = df.loc[indx,"SIGNAL"]
                     value = df.loc[indx,digtal_col]
                     temp = self.get_scripts_by_id(id, frame, signal, value)
                     script_lines.append(temp)
                 script_lines.append(SCRIPT_END)
                 fileUtil.generate_script("".join(script_lines),self.outdir,script_file)
-                break;
+                break
 
 
 
@@ -108,5 +108,5 @@ if __name__ == "__main__":
     edr_signal = EDR_Signal(excel, sheet)
     edr_signal.refresh(edr_fault.fault_dict)
 
-    script_engine = EDR_Script_Engine(r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\tempscripts",sheet)
+    script_engine = EDR_Script_Engine(r"C:\Users\victor.yang\Desktop\Work\Scripts\EDR",sheet)
     script_engine.generate_scripts(edr_signal.digital_cols,edr_signal.df_dict)
