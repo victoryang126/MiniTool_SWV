@@ -43,7 +43,7 @@ def validate_columns(actual_columns,expect_columns,sheet):
         if expect_col not in actual_columns:
             not_exist.append(expect_col)
     if len(not_exist) !=0:
-        raise Exception(",".join(not_exist) + f" <- this colums not exist in sheet {sheet}")
+        raise Exception(",".join(not_exist) + f" <- this columns not exist in sheet {sheet}")
 
 def strip_upper_columns(columns):
     """

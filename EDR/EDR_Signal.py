@@ -49,7 +49,7 @@ class EDR_Fault:
     def refresh(self):
         df = pd.read_excel(self.excel, self.sheet, dtype='str')
         df.columns = strip_upper_columns(df.columns)
-        validate_columns(df.columns, ["SHEET", "ID", "VARIANT", "1"])
+        validate_columns(df.columns, ["SHEET", "ID", "VARIANT", "1"],self.sheet)
         df.fillna(method='ffill', axis=1, inplace=True)
         self.fault_dict = {}
         df_group = df.groupby("SHEET")
@@ -68,7 +68,7 @@ class EDR_Signal:
     def refresh(self,fault_dict):
         df = pd.read_excel(self.excel, self.sheet, dtype='str')
         df.columns = strip_upper_columns(df.columns)
-        validate_columns(df.columns,["SIGNAL","FRAME","ID","VARIANT","1"])
+        validate_columns(df.columns,["SIGNAL","FRAME","ID","VARIANT","1"],self.sheet)
         #filger the columns, ID,Frame,Signal,Variant, and digital columns
         filter = '^(?i)(SIGNAL|VARIANT|FRAME|ID|\d+)$'
         df = df.filter(regex=filter)

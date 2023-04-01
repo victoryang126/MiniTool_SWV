@@ -29,10 +29,31 @@ class EDR_DID_Config:
             validate_columns(df.columns,columnslist,sheet_name)
             df = df[columnslist]
             df = df.iloc[1:]  # 剔除header 第一行
+            start0 = df["START"].values[0]
+            # print(start0)
+            if str(start0) != "0":
+                raise Exception("start byte of the frist element not 0 ")
             df.fillna("", inplace=True)
             # 这里必须检查是否有同一个ID，如果有，要处理报错
+            df_duplicated = df.duplicated(subset=['ID'])
+            if True in df_duplicated.values:
+                Monitor_Logger.info("Duplicated Req ID")
+                Monitor_Logger.info(df.loc[df_duplicated]["ID"])
+                Debug_Logger.debug("Duplicated Req ID")
+                Debug_Logger.debug(df.loc[df_duplicated]["ID"])
+                raise Exception("Duplicated Req ID, Please check it")
+
             df.set_index("ID", inplace=True, drop=False)
             self.df_read_element = pd.concat([ self.df_read_element, df[["NAME", "SIGNAL", "TYPE","NVM","ID"]]])
+
+        did_element_value = self.df_read_element["NAME"].values
+        #检测NAME规则例如VehSpd_GB
+        element_noks = []
+        for element in did_element_value:
+            if "_" not in element:
+                element_noks.append(element)
+        if len(element_noks) != 0:
+            raise Exception(",".join(element_noks) + " <- these DID element format is not correct")
 
     @func_monitor
     def generate_check(self,checkfile):
@@ -74,8 +95,15 @@ class EDR_DID_Config:
 
     @func_monitor
     def generate_trans(self,transitionfile):
+        """
+        用来生成transition函数
+        Args:
+            transitionfile: ts文件，用来保存函数
+        Returns:
+        """
         fileUtil.init_file_bypath(transitionfile)
         df_trans_func = self.df_read_element.copy()
+        # 根据NAME里面的DID元素的名称，去掉后面的EDR类型，然后根据这个去用透视表把可能类似的元素放在一起
         df_trans_func["Value"] = df_trans_func["NAME"].apply(lambda x: "_".join(x.split("_")[:-1]))
 
         df_trans_func = df_trans_func.pivot_table(index=['Value'], sort=False,
