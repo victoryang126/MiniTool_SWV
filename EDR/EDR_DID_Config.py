@@ -103,15 +103,18 @@ class EDR_DID_Config:
         """
         fileUtil.init_file_bypath(transitionfile)
         df_trans_func = self.df_read_element.copy()
+        # print(df_trans_func["NAME"])
         # 根据NAME里面的DID元素的名称，去掉后面的EDR类型，然后根据这个去用透视表把可能类似的元素放在一起
-        df_trans_func["Value"] = df_trans_func["NAME"].apply(lambda x: "_".join(x.split("_")[:-1]))
-
-        df_trans_func = df_trans_func.pivot_table(index=['Value'], sort=False,
-                                                  aggfunc=lambda x: '\n'.join(x))
+        # 2023/4/3 定义用id作为did元素的变量名称，方便维护，，所以去掉这边的pivot_table的处理测录，直接从Excel从上到下取生成
+        # df_trans_func["Value"] = df_trans_func["NAME"].apply(lambda x: "_".join(x.split("_")[:-1]))
+        #
+        # df_trans_func = df_trans_func.pivot_table(index=['Value'], sort=False,
+        #                                           aggfunc=lambda x: '\n'.join(x))
         func_call = []
         with open(transitionfile, 'a', encoding='UTF-8') as trans:
             trans.write("CALL(BB_EDR_Parameter_Define.ts);\n")
             for i in df_trans_func.index:
+                # print(df_trans_func.loc[i, "NAME"])
                 func_name = "function BB_" + i + "_Transition()\n{\n"
                 func_call.append("BB_" + i + "_Transition()")
                 trans.writelines(func_name)

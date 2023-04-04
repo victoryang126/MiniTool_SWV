@@ -30,8 +30,23 @@ class EDR_Script_Engine:
         self.outdir = outdir
         self.sheet = sheet
 
+
+    def generate_start_Log(self,script_name):
+        log_path = f"\tvar LogPath = LogFolder + \"{script_name}.log\";\n"
+        log_action = f"\tStartToLog(LogPath);\n\n"
+        return log_path + log_action
+
+
+
+    def generate_stop_Log(self):
+        stoplog_action = f"\n\n\tStopToLog();\n\n"
+        return stoplog_action
+
+
     def get_scripts_by_id(self,id,frame,signal,value):
+        value = value.strip()
         if re.search(".*_Signal_.*",id):
+            frame = frame.strip()
             #set signal value, and assign the value to the input parameter
             return f"\tBB_ArrSignalChange(\'{frame}\', \'{signal}\', {value});\n" \
                    f"\t{signal} = \'{value}\';\n"
@@ -79,6 +94,8 @@ class EDR_Script_Engine:
                 script_lines = []
                 script_lines.append(SCRIPT_BEGIN)
                 script_lines.append(f"\tResultname = \'{result_name}\';\n")
+                script_lines.append(f"\tG_Variant = \'{variant}\';\n")
+                script_lines.append(self.generate_start_Log(result_name))
                 #then loop the index to get the script_lines
                 for indx in df.index:
                     id = df.loc[indx,"ID"]
@@ -87,9 +104,10 @@ class EDR_Script_Engine:
                     value = df.loc[indx,digtal_col]
                     temp = self.get_scripts_by_id(id, frame, signal, value)
                     script_lines.append(temp)
+                # script_lines.append(self.generate_start_Log(result_name))
                 script_lines.append(SCRIPT_END)
                 fileUtil.generate_script("".join(script_lines),self.outdir,script_file)
-                break
+                # break
 
 
 

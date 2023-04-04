@@ -11,6 +11,7 @@ def process_signal(s):
         s:the cell value in the columns
     Returns:
     """
+    s = s.strip()
     is_signal_pattern = r'is([A-Za-z_\d]+)\(\d+\)'
     signal_pattern = r'([A-Za-z_\d]+)\(\d+\)'
     is_signal_match = re.match(is_signal_pattern,s)

@@ -204,6 +204,7 @@ if __name__ == '__main__':
     Spec = r"C:\PyCharmProject\CHT_SWV_Geely_GEEA2_HX11_TVV_Test Result.xlsm"
     df_SpecCB_FromCB, excel_info =  read_table_of_content(Spec)
     print(excel_info)
+    print(df_SpecCB_FromCB["_VerifiesNonCbRequirements"])
   #   # df_SpecCB_Generate = pd.read_excel(CB_Spec_Generate, "Export")
   #   # SpecCB_Modify = r"C:\Users\victor.yang\Desktop\Work\CB\CHT_SWV_GMW_D30_2S_DCS_Test_Result_CodeBeamer_Modify.xlsx"
   #   #
