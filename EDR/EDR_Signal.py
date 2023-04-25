@@ -42,6 +42,41 @@ def process_fault(fault_series, digital_cols, df_map):
         fault_series.loc[digital_cols] = series_match.loc[digital_cols]
     return fault_series
 
+def process_signal_config(signal_series, digital_cols, df_map):
+    """
+    this function is used  map the value of fault from fault sheet to test case sheet
+    Args:
+        signal_series: signal series
+        digital_cols: the columns that is digital
+        df_map: the dataframe get from Fault sheet
+    Returns:
+    """
+    signal = signal_series.loc["SIGNAL"]
+    variant = signal_series.loc["VARIANT"]
+    # find the fault and variant in the fault sheet data frame, and then assigna related data to it
+    if signal in df_map["SIGNAL"].values and variant in df_map["VARIANT"].values:
+        df_match = df_map.query("SIGNAL==@signal and VARIANT==@variant")
+        series_match = df_match.iloc[0]  # shall use series
+        signal_series.loc[digital_cols] = series_match.loc[digital_cols]
+    return signal_series
+
+
+class EDR_Signal_Config:
+    def __init__(self,excel,sheet):
+        self.excel = excel
+        self.sheet = sheet
+        self.signal_dict = {}
+    def refresh(self):
+        df = pd.read_excel(self.excel, self.sheet, dtype='str')
+        df.columns = strip_upper_columns(df.columns)
+        validate_columns(df.columns, ["SHEET", "SIGNAL", "VARIANT", "1"],self.sheet)
+        df.fillna(method='ffill', axis=1, inplace=True)
+        self.signal_dict = {}
+        df_group = df.groupby("SHEET")
+        for sheet, group in df_group:
+            group.drop(columns=['SHEET'], inplace=True)
+            self.signal_dict[sheet] = group
+
 class EDR_Fault:
     def __init__(self,excel,sheet):
         self.excel = excel
@@ -69,14 +104,15 @@ class EDR_Signal:
     def refresh(self,fault_dict):
         df = pd.read_excel(self.excel, self.sheet, dtype='str')
         df.columns = strip_upper_columns(df.columns)
-        validate_columns(df.columns,["SIGNAL","FRAME","ID","VARIANT","1"],self.sheet)
+        validate_columns(df.columns,["SIGNAL","FRAME","PDU","ID","VARIANT","1"],self.sheet)
         #filger the columns, ID,Frame,Signal,Variant, and digital columns
-        filter = '^(?i)(SIGNAL|VARIANT|FRAME|ID|\d+)$'
+        filter = '^(?i)(SIGNAL|VARIANT|FRAME|ID|PDU|\d+)$'
         df = df.filter(regex=filter)
         # need check if id frame,signal variant, is in the
         # strip the space in this columns
         df["ID"] = df["ID"].fillna(method='ffill')
         df["FRAME"] = df["FRAME"].fillna(method='ffill')
+        df["PDU"] = df["PDU"].fillna(method='ffill')
         df = df.query('VARIANT.notnull()')
         df["SIGNAL"] = df["SIGNAL"].apply(process_signal)
 
@@ -91,7 +127,7 @@ class EDR_Signal:
         df = df.join(df_cols_is_digital)
         # get the fault from fault sheet
         if self.sheet in fault_dict:
-            df = df.apply(process_fault,digital_cols = self.digital_cols,df_map = fault_dict[self.sheet],axis= 1)
+            df = df.apply(process_signal_config,digital_cols = self.digital_cols,df_map = fault_dict[self.sheet],axis= 1)
         # group based on Variant, using explode to tranform each variant to row
         #  such as [HEV,EP] will convert to two rows, other columns value will not changed
         df["VARIANT"] = df["VARIANT"].str.split(",")
@@ -109,10 +145,10 @@ class EDR_Signal:
 
 if __name__ == '__main__':
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\SAIC_ZP22_Signal_Record_Strategy_20230323.xlsx"
-    fault = "Fault"
-    edr_fault = EDR_Fault(excel,fault)
-    edr_fault.refresh()
+    config_sheet = "EDR_Case_Config"
+    edr_signal_config = EDR_Signal_Config(excel,config_sheet)
+    edr_signal_config.refresh()
     sheet = "EDR_General_Element"
     edr_signal = EDR_Signal(excel,sheet)
-    edr_signal.refresh(edr_fault.fault_dict)
+    edr_signal.refresh(edr_signal_config.signal_dict)
 

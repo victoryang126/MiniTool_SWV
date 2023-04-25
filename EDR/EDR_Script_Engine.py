@@ -3,6 +3,10 @@ import re
 from EDR.EDR_Signal import *
 from EDR.EDR_General_Scripts import *
 
+"""
+function used to generate scripts
+"""
+
 def get_script_name(sheet,variant,digtal_col):
     return f"{sheet}_{variant}_{digtal_col}.ts"
 
@@ -43,16 +47,30 @@ class EDR_Script_Engine:
         return stoplog_action
 
 
-    def get_scripts_by_id(self,id,frame,signal,value):
+    def get_scripts_by_id(self,id,frame,pdu,signal,value):
+        if isinstance(value,str) == False:
+            raise Exception(f"id:{id},frame: {frame},signal :{signal} have empty(NAN) value")
         value = value.strip()
         if re.search(".*_Signal_.*",id):
             frame = frame.strip()
+            value = value.strip()
+            hex_format_pattern = r"0x"
+            if re.match(hex_format_pattern,value) == None:
+                if value == "PDUDisabled":
+                    return f"\tEnabledDisabledPDU(\'{frame}\', \'{pdu}\', false);\n" \
+                           f"\t{signal} = \'PDUDisabled\';\n"
+                else:
+                    return f"\tBB_ArrSignalChange(\'{frame}\', \'{signal}\', '{value}');\n" \
+                           f"\t{signal} = \'{value}\';\n"
             #set signal value, and assign the value to the input parameter
-            return f"\tBB_ArrSignalChange(\'{frame}\', \'{signal}\', {value});\n" \
+            else:
+                return f"\tBB_ArrSignalChange(\'{frame}\', \'{signal}\', {value});\n" \
                    f"\t{signal} = \'{value}\';\n"
         elif regCompare.is_equal("FUNC",id):
             values = value.split("\n")
             values = [f"\t{value};\n" for value in values]
+            values.insert(0,f"\tCommentStep(\"{signal}\");\n")
+            values.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
             return "".join(values)
         elif re.search(".*DCS.*",id):
             #set the signal value
@@ -65,7 +83,7 @@ class EDR_Script_Engine:
                 validate_fault_format(signal,faults)
                 # print(faults)
                 #conver to the format in js scripts, EDR + 'ACTIVE@'
-                faults = [f"{fault[0]} + \'{fault[1]}\'" for fault in faults]
+                faults = [f"{fault[0]} + \'-{fault[1]}\'" for fault in faults]
                 # print(faults)
                 _faults = ",\n\t\t\t".join(faults)
                 _scripts_line = []
@@ -78,6 +96,8 @@ class EDR_Script_Engine:
                 _scripts_line.append(f"\tvar Ret = ActualResults();\n")
                 _scripts_line.append(f"\tvar Expect_Fault_Info = SetSuffixToFaultInfo(\"NONE\");")
                 _scripts_line.append(f"\tCompareResultsDefine(Ret,Expect_Fault_Info[1],Expect_Fault_Info[0]);\n")
+            _scripts_line.insert(0, f"\tCommentStep(\"Check Fault\");\n")
+            _scripts_line.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
             return "".join(_scripts_line)
         else:
             raise Exception(f"get_scripts_by_id have not handler this id value: {id}")
@@ -91,18 +111,21 @@ class EDR_Script_Engine:
             for digtal_col in digital_cols:
                 script_file = f"{self.sheet}_{variant}_{padded_number(digtal_col,3)}.ts"
                 result_name = f"{self.sheet}_{variant}_{padded_number(digtal_col,3)}"
+                case_info = f"EDR_{self.sheet}_{digtal_col}"
                 script_lines = []
                 script_lines.append(SCRIPT_BEGIN)
                 script_lines.append(f"\tResultname = \'{result_name}\';\n")
+                script_lines.append(f"\tCase_Info = \'{case_info}\';\n")
                 script_lines.append(f"\tG_Variant = \'{variant}\';\n")
                 script_lines.append(self.generate_start_Log(result_name))
                 #then loop the index to get the script_lines
                 for indx in df.index:
                     id = df.loc[indx,"ID"]
                     frame = df.loc[indx,"FRAME"]
+                    pdu = df.loc[indx,"PDU"]
                     signal = df.loc[indx,"SIGNAL"]
                     value = df.loc[indx,digtal_col]
-                    temp = self.get_scripts_by_id(id, frame, signal, value)
+                    temp = self.get_scripts_by_id(id, frame, pdu,signal, value)
                     script_lines.append(temp)
                 # script_lines.append(self.generate_start_Log(result_name))
                 script_lines.append(SCRIPT_END)
@@ -118,13 +141,29 @@ class EDR_Script_Engine:
 
 
 if __name__ == "__main__":
+    # excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\SAIC_ZP22_Signal_Record_Strategy_20230323.xlsx"
+    # fault = "Fault"
+    # edr_fault = EDR_Fault(excel, fault)
+    # edr_fault.refresh()
+    # sheet = "EDR_General_Element"
+    # edr_signal = EDR_Signal(excel, sheet)
+    # edr_signal.refresh(edr_fault.fault_dict)
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\SAIC_ZP22_Signal_Record_Strategy_20230323.xlsx"
-    fault = "Fault"
-    edr_fault = EDR_Fault(excel, fault)
-    edr_fault.refresh()
-    sheet = "EDR_General_Element"
-    edr_signal = EDR_Signal(excel, sheet)
-    edr_signal.refresh(edr_fault.fault_dict)
+    config_sheet = "EDR_Case_Config"
 
-    script_engine = EDR_Script_Engine(r"C:\Users\victor.yang\Desktop\Work\Scripts\EDR",sheet)
-    script_engine.generate_scripts(edr_signal.digital_cols,edr_signal.df_dict)
+    edr_signal_config = EDR_Signal_Config(excel, config_sheet)
+    edr_signal_config.refresh()
+
+    sheets = ["EDR_General_Element","EDR_Element_Abnormal","EDR_Config_C005","EDR_Config_C004","GB_EDR_Signal_16_isDircnIndLamp","GB_EDR_Signal_16_isVehHzrdMdSts"]
+    # sheet = "EDR_General_Element"
+    # sheet = "EDR_Config_C005"
+    # sheet = "EDR_Config_C004"
+    # sheet = "GB_EDR_Signal_16_isDircnIndLamp"
+    # sheet = "GB_EDR_Signal_16_isVehHzrdMdSts"
+    # sheet = "EDR_Element_Abnormal"
+    for sheet in sheets:
+        print(sheet)
+        edr_signal = EDR_Signal(excel, sheet)
+        edr_signal.refresh(edr_signal_config.signal_dict)
+        script_engine = EDR_Script_Engine(r"C:\Users\victor.yang\Desktop\Work\Scripts\EDRScripts",sheet)
+        script_engine.generate_scripts(edr_signal.digital_cols,edr_signal.df_dict)

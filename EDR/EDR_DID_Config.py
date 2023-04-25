@@ -1,9 +1,13 @@
 import re
 
+import numpy as np
 import pandas as pd
 from EDR.ImportModule import *
 from EDR.Epprom import Epprom_Translate
-
+from EDR.EDR_RecordElement import EDR_RecordElement
+"""
+this is used to generate 
+"""
 
 
 
@@ -189,6 +193,18 @@ class EDR_DID_Config:
         args = []
         for i in df_trans_func.index:
             args.extend(df_trans_func.loc[i, "NVM"].split("\n"))
+        # did_nvm_params = np.array(args)
+        # args.extend(edr_record.nvm_parameters)
+
+        # TODO 比较DID的NVM 参数必须在EDRNVM_Element 里面，否则剔除异常红色字体
+        # nvm_params = np.array(edr_record.nvm_parameters)
+        # mask = np.isin(did_nvm_params,nvm_params)
+        # notin_nvms = [ did_nvm_params[indx] for indx,e in enumerate(nvm_params) if e == False]
+        # if len(notin_nvms) != 0:
+        #     Exception_Logger.critical(f"this nvm paramter not defined in EDR_Record element: {notin_nvms}")
+
+
+
         args = list(set(args))  # 去重
         args.sort() #排列
         args = [a for a in args if a!=""]
@@ -225,20 +241,20 @@ class EDR_DID_Config:
 
     @func_monitor
     def generate_nvm_check(self,nvm_check,nvm_excel):
-        sigle_pattern =  "(\w+)(\\._\\d_.)(\S+)"
-        mutil_pattern = "(\w+)(\\._\\d_.)(\S+)\\._(\\d+)_"
+        sigle_pattern =  "(\w+)(\\._\\d_.)(\S+)" #单个元素的正则匹配  RstEdr_GlobalEventInfo.au32EventNbDiscarded._0_
+        mutil_pattern = "(\w+)(\\._\\d_.)(\S+)\\._(\\d+)_" #多个元素的正则匹配  RstEdr_EventDataCaptureBuffer._0_.u8PibReq._13_
         df = pd.read_excel(nvm_excel,"Sheet1")
         global_nvms = []
         block_nvms = []
         with open(nvm_check, 'w', encoding='UTF-8') as nvm_file:
             # pass
-            for indx in df.index:
+            for indx in df.index: #循环遍历 元素
                 # print(df.loc[indx,"Original_NVM"])
                 expect_name = df.loc[indx,"ExpectNVM"]
                 epproms = df.loc[indx,"Epprom"].split("\n")
                 block_func_name = f"function BB_Check_{expect_name}_BlockEDR(Block)\n{'{'}\n"
                 global_func_name = f"function BB_Check_{expect_name}_GlobalEDR()\n{'{'}\n"
-                if len(epproms) == 1:
+                if len(epproms) == 1:  # 单个参数的时候处理方式
                     mt = re.match(sigle_pattern,epproms[0])
                     if mt:
                         groups = mt.groups()
@@ -258,35 +274,48 @@ class EDR_DID_Config:
                         global_nvms.append(f"BB_Check_{expect_name}_GlobalEDR();\n")
                 else: # 有多个NVM参数的时候
                     params = []
+                    # print(epproms)
                     #循环去匹配里面的数据
                     for epprom in epproms:
                         mt = re.match(mutil_pattern, epprom)
+                        if mt == None: #如果这里没有找到，可能也是要比较多个参数，跳出循环
+                            # print(epprom,mt)
+                            break;
                         params.append(list(mt.groups()))
 
-                    df_temp = pd.DataFrame(np.array(params),
-                                       columns=["parent", "block", "param", "index"])
-                    Debug_Logger.debug(params)
-                    df_temp = df_temp.astype({'index': 'int32'}) #强hi在转换类型为int，然后去比较最大的index
-                    df_pivot_tb = df_temp.pivot_table(index=["param"], aggfunc=np.max)
-                    temp_dict = df_pivot_tb.to_dict(orient="index") # 通过Piovt_table 进行分组统计，找到不同类别的参数
-                    # print(temp_dict)
-                    # Monitor_Logger.info(temp_dict)
-                    nvm_file.write(block_func_name)
-                    for tempkey in temp_dict:
-                        max_index = temp_dict[tempkey]["index"]
-                        parent =  temp_dict[tempkey]["parent"]
-                        forloop = f"\tfor(var i = 0; i <= {max_index}; i++)\n\t{'{'}\n"
-                        block = """{0}"""
-                        param_index = """{1}"""
-                        nvm_file.write(forloop)
+                    if len(params) == 0:
+                        nvm_file.write(global_func_name)
+                        for epprom in epproms:
+                            parameter_name = f"\tvar parameter_name = {epprom};\n"
+                            # nvm_file.write(parameter_name)
+                            nvm_file.write(f"\tBB_CompareParameterByName('{epprom}',{expect_name});\n")
+                        nvm_file.write("}\n\n")
+                        global_nvms.append(f"BB_Check_{expect_name}_GlobalEDR();\n")
+                    else:
+                        df_temp = pd.DataFrame(np.array(params),
+                                           columns=["parent", "block", "param", "index"])
+                        Debug_Logger.debug(params)
+                        df_temp = df_temp.astype({'index': 'int32'}) #强hi在转换类型为int，然后去比较最大的index
+                        df_pivot_tb = df_temp.pivot_table(index=["param"], aggfunc=np.max)
+                        temp_dict = df_pivot_tb.to_dict(orient="index") # 通过Piovt_table 进行分组统计，找到不同类别的参数
+                        # print(temp_dict)
+                        # Monitor_Logger.info(temp_dict)
+                        nvm_file.write(block_func_name)
+                        for tempkey in temp_dict:
+                            max_index = temp_dict[tempkey]["index"]
+                            parent =  temp_dict[tempkey]["parent"]
+                            forloop = f"\tfor(var i = 0; i <= {max_index}; i++)\n\t{'{'}\n"
+                            block = """{0}"""
+                            param_index = """{1}"""
+                            nvm_file.write(forloop)
 
-                        parameter_name = f"\t\tvar parameter_name = String.Format(\"{parent}._{block}_.{tempkey}._{param_index}_\",Block,i);\n"
-                        nvm_file.write(parameter_name)
-                        nvm_file.write(f"\t\tBB_CompareParameterByName(parameter_name,{expect_name});\n")
-                        nvm_file.write("\t};\n")
+                            parameter_name = f"\t\tvar parameter_name = String.Format(\"{parent}._{block}_.{tempkey}._{param_index}_\",Block,i);\n"
+                            nvm_file.write(parameter_name)
+                            nvm_file.write(f"\t\tBB_CompareParameterByName(parameter_name,{expect_name});\n")
+                            nvm_file.write("\t};\n")
 
-                    nvm_file.write("}\n")
-                    block_nvms.append(f"BB_Check_{expect_name}_BlockEDR(Block);\n")
+                        nvm_file.write("}\n")
+                        block_nvms.append(f"BB_Check_{expect_name}_BlockEDR(Block);\n")
 
             global_define = "function BB_Check_GlobalEDR()\n{\n"
             nvm_file.writelines(global_define)
@@ -321,10 +350,18 @@ if __name__ == '__main__':
     edr_config.generate_check(checkfile)
     edr_config.generate_params(parameterfile)
     edr_config.generate_trans(transitionfile)
+
+    # 生成 NVM的数据
+    # excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\Record_element_list_leon.xlsx"
+    # sheet = "Elements"
+    # edr_record = EDR_RecordElement(excel, sheet)
+    # edr_record.refresh()
+
     epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
     epprom = Epprom_Translate(epprom_excel)
     epprom.block_ids = [2,31]
     epprom.get_edr_block()
+
     edr_config.generate_nvm_excel(nvm_excel,epprom)
     edr_config.generate_nvm_check(nvm_check,nvm_excel)
     # signalts = "BB_EDR_sigParameter_Define.ts"

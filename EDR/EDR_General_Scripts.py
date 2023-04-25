@@ -47,14 +47,6 @@ if(CheckTestEnvironment())                                  //Check test conditi
 
 
 SCRIPT_END = """
-    // ******************************************************************************************
-                        // Clear TTF and NVM
-    // ******************************************************************************************
-
-
-    RESULT.InsertComment('Reset CAN Communication-> ' + CAN.ReloadPeriodics())
-    EraseError();
-
 
 }
 else
