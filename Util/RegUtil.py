@@ -9,7 +9,10 @@ class RegCompare:
 
     def is_equal(self,a:str,b:str):
         pattern = "^" + a +"$"
-        return re.match(pattern,b,re.I)
+        if re.match(pattern,b,re.I):
+            return True
+        else:
+            return False
 
 
 regCompare = RegCompare()

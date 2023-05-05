@@ -18,7 +18,7 @@ class TSStep_Flag:
 class TSStep:
     step:int = 0
     sub_step:int = 0
-    deepth:int = 1
+    deepth:int = 1 # 需要添加tab的倍数
 
     def tabs(self):
         return "\t"*self.deepth
