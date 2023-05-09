@@ -143,6 +143,7 @@ class Flt_Data:
         scripts.append(f" */\n")
         scripts.append(f"function BB_Create_DTC(DTCRecord)\n{'{'}\n")
         scripts.append(f"\tDTCRecord = DTCRecord.replace(/(0x|\s)/gi,"");\n")
+        scripts.append(f"\tthis.Description = DTCRecord;\n")
         scripts.append(f"\tthis.DTCRecord = DTCRecord;\n")
         scripts.append(f"\tthis.DTCStatus = '00';\n")
         scripts.append(f"\tthis.SnapshotRecord_Flag = false;\n")

@@ -151,6 +151,7 @@ class ScriptEngine:
 
     @func_monitor
     def generate_comment(self,value):
+        value = value.replace("\n", " ")
         if self.ts_step_flag.step:
             step_comment = f"{self.ts_step.tabs()}CommentStep(\"{value} \");\n"
 
@@ -207,16 +208,26 @@ class ScriptEngine:
     def generate_func_cell(self,func,value):
         scripts = []
         if value != "undefined":
+            values = value.strip().split("\n")
             if True:  # 如果抓到了函数缩写的可能行
                 if func in self.func_mapping:  # 如果在缩写定义里面
-                    script_line = self.ts_step.tabs() + \
+                    scripts =[ self.ts_step.tabs() + \
                                   Template("${" + func + "}").safe_substitute(self.func_mapping)\
-                                  + f"({value});\n"
+                                  + f"({value1});\n" for value1 in values]
                 else:
-                    script_line = f"{self.ts_step.tabs()}{func}({value});\n "
+                    scripts = [f"{self.ts_step.tabs()}{func}({value1});\n " for value1 in values ]
             else:
-                script_line = f"{self.ts_step.tabs()}{func}({value});\n"
-            scripts.append(script_line)
+                scripts = [f"{self.ts_step.tabs()}{func}({value1});\n" for value1 in values]
+            # if True:  # 如果抓到了函数缩写的可能行
+            #     if func in self.func_mapping:  # 如果在缩写定义里面
+            #         script_line = self.ts_step.tabs() + \
+            #                       Template("${" + func + "}").safe_substitute(self.func_mapping)\
+            #                       + f"({value});\n"
+            #     else:
+            #         script_line = f"{self.ts_step.tabs()}{func}({value});\n "
+            # else:
+            #     script_line = f"{self.ts_step.tabs()}{func}({value});\n"
+            # scripts.append(script_line)
         else:
             pass
         self.script_content.extend(scripts)
@@ -315,40 +326,27 @@ class ScriptEngine:
 if __name__ == "__main__":
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\Errorandler\CHT_SWV_SAIC_ZP22_ErrorHandler_Test Specification.xlsm"
     # config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
-    sheet = "DTCStatus2"
-
-    spec_sheet = SpecSheet(excel, sheet)
-    spec_sheet.update_matrixs()
-    # excel = r"C:\Users\victor.yang\Desktop\Work\CHT_SWV_SAIC_ZP22_DCS_Test Specification.xlsm"
-    # sheet = "DCS_NormalStatus"
-    # testSpec = TestSpec(excel = excel, sheet = sheet)
-    # # print(testSpec.matrixs)
-    # testSpec.update_matrixs()
-    # # print(testSpec.matrixs[0])
-    # # print(testSpec.sheet)
-    # config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
-
+    # sheet = "DTCStatus2"
+    # sheet = "UnderVoltage_Suspend"
+    # sheet = "Suspend_Strategy_2"
+    # sheet = "DemBuffer_Value2"
+    # sheet = "OverVoltage_Suspend"
+    # sheet = "En12VoltStrMotCmddOn_Suspend"
+    # sheet = "EPTStCmdOn_Suspend"
+    # sheet = "ECUPowerMode_Suspend"
+    sheet = "ExtendedData"
+    sheets = ["DTCStatus","Suspend_Strategy","OverVoltage_Suspend","UnderVoltage_Suspend","En12VoltStrMotCmddOn_Suspend","EPTStCmdOn_Suspend",
+              "ECUPowerMode_Suspend","ExtendedData","DemBuffer_RecordLogic","DemBuffer_Value2","DemBuffer_Value"]
+    # sheets = ["ExtendedData"]
     scritp_enginer = ScriptEngine()
-
-    func_mapping =  Func_Mapping(excel,"Function_Mapping")
+    func_mapping = Func_Mapping(excel, "Function_Mapping")
     scritp_enginer.func_mapping = func_mapping.get_func_mapping()
-    # # scritp_enginer.generate_func_cell("Set","HighRange")
-    for matrix in spec_sheet.matrixs:
-        scritp_enginer.matrix = matrix
-        scritp_enginer.generate_scripts(r"C:\Users\victor.yang\Desktop\Work\Scripts\ErrorHandler")
-    #
-    #
-    # print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
-    # excel = r"C:\Users\victor.yang\Desktop\Work\CHT_SWV_SAIC_ZP22_DCS_Test Specification.xlsm"
-    # sheet = "DCS_Fault"
-    # testSpec = TestSpec(excel = excel, sheet = sheet)
-    # # print(testSpec2.matrixs[0])
-    # testSpec.update_matrixs()
-    # print(testSpec.sheet,len(testSpec.matrixs))
-    # config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
-    # print(testSpec.matrixs[0])
-    # scritp_enginer = ScriptEngine(ts_matrix=testSpec.matrixs[0])
-    # func_mapping = Func_Mapping(config, "Function_Mapping")
-    # scritp_enginer.func_mapping = func_mapping.get_func_mapping()
-    # # scritp_enginer.generate_func_cell("Set","HighRange")
-    # scritp_enginer
+
+    for sheet in sheets:
+        spec_sheet = SpecSheet(excel, sheet)
+        spec_sheet.update_matrixs()
+
+
+        for matrix in spec_sheet.matrixs:
+            scritp_enginer.matrix = matrix
+            scritp_enginer.generate_scripts(r"C:\Users\victor.yang\Desktop\Work\Scripts\ErrorHandler")

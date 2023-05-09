@@ -68,7 +68,8 @@ class EDR_Script_Engine:
                    f"\t{signal} = \'{value}\';\n"
         elif regCompare.is_equal("FUNC",id):
             values = value.split("\n")
-            values = [f"\t{value};\n" for value in values]
+            # values = [f"\t{value};\n" for value in values]
+            values = [f"\t{value[0:-1]}\n" if value.endswith("#") else f"\t{value};\n" for value in values]
             values.insert(0,f"\tCommentStep(\"{signal}\");\n")
             values.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
             return "".join(values)

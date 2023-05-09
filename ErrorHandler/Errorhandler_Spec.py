@@ -155,7 +155,8 @@ class TestExcel:
 if __name__ == "__main__":
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\Errorandler\CHT_SWV_SAIC_ZP22_ErrorHandler_Test Specification.xlsm"
     # config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
-    sheet = "DTCStatus2"
+    # sheet = "DTCStatus2"
+    sheet = "DemBuffer_RecordLogic_2"
 
     spec_sheet = SpecSheet(excel,sheet)
     spec_sheet.update_matrixs()

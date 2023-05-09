@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from dataclasses import asdict,field
 from typing import List,Any
-
+from Util.LogCFG import *
 
 @dataclass
 class File:
@@ -104,11 +104,13 @@ class FileUtil:
             f.write(";\n")
 
     def generate_script_bypath(self,scripts,file):
+        Monitor_Logger.info(file)
         with open(file, "w", encoding='UTF-8') as f:
             f.write(scripts)
 
     def generate_script(self,scripts=None,directory=None,file_name=None):
         file = os.path.join(directory,file_name)
+        Monitor_Logger.info(file)
         with open(file, "w", encoding='UTF-8') as f:
             f.write(scripts)
 

@@ -44,6 +44,10 @@ class TestCaseStatus(ChoiceOptionReference):
             self.name = "Init"
         elif self.id == 6:
             self.name = "Obsolete"
+        elif self.id ==8:
+            self.name = "RESULT_PASSED"
+        elif self.id == 9:
+            self.name = "RESULT_FAILED"
         else:
             raise Exception("No test case status for id " + str(self.id))
 
@@ -97,6 +101,24 @@ class Post_TestCase_Body:
         Returns:
         """
         self.versions.append(TrackerItemReference(**versions_dict))
+
+    def update_testcase_to_pass(self):
+        self.status = TestCaseStatus(8)
+
+    def update_testcase_to_fail(self):
+        self.status = TestCaseStatus(9)
+
+    def update_testcase_status_by_id(self,id):
+        self.status = TestCaseStatus(id)
+
+    def update_testcase_status(self,status):
+        if status == "PASSED":
+            self.update_testcase_to_pass()
+        elif status == "FAILED":
+            self.update_testcase_to_fail()
+        else:
+            raise Exception(f"update_testcase_satus function got an unexpected status")
+
 
     def delete_testcase(self):
         """

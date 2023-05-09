@@ -172,6 +172,7 @@ class CB_Tool_Widget(QWidget):
         }
         self.server.upload_testcases(**args)
 
+
     def upload_testrun(self,ptc_excel):
         df_ptc, excel_info = read_table_of_content(ptc_excel)
         testcase_dict_list = self.server.get_testcase_infolder(excel_info["testcase_folderid"])
@@ -184,6 +185,14 @@ class CB_Tool_Widget(QWidget):
         }
         self.testrunid = self.server.create_test_run_baseon_testcases_workingset(**args)
         self.server.update_test_run_result(df_cbcase, self.testrunid)
+        #2023/0509 added, 在更新完TestRun的结果以后重新去更新TestCase的结果，
+        args = {
+            "df_cbcase": df_cbcase,
+            "testcase_trackerid": self.testcase_trackerid,
+            "testcase_folderid": self.testcase_folderid,
+            "release_dict": release_dict
+        }
+        self.server.upload_testcases_status(**args)
 
 
 

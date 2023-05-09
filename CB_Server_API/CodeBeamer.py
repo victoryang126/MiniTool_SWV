@@ -215,6 +215,11 @@ class CodeBeamer():
         return testmethods,verifies
 
     @func_monitor
+    def get_test_case_status(self,itemid):
+        resp = self.get_data_from_item(itemid)
+        return resp.json()["status"]['id']
+
+    @func_monitor
     def get_tracker_fileds(self,trackerid):
         """
         用于获取Tracker 下面的filed等相关属性。类似下面元素的列表
@@ -336,6 +341,43 @@ class CodeBeamer():
         test_case_body.update_verifies(pandas_series["Verifies"])
         test_case_body.update_test_method(test_method_id,pandas_series["Test Method"])
         test_case_body.update_versions(release_dict)
+
+
+        #2023/05/09
+        #将test case的状态从服务器取出来，然后根据服务器里面的状态去更新case状态
+        #当case状态再服务器是Obsolete的时候，不用更新2，需要用默认的状态init重置testcase
+        #方便后续Run完testRun 以后更新test case status
+        test_case_status_id = self.get_test_case_status(itemid)
+        if test_case_status_id != 6:
+            test_case_body.update_testcase_status_by_id(test_case_status_id)
+
+        request_body = to_json(test_case_body)
+
+        Debug_Logger.debug(request_body)
+        url = self.server + f"/items/{itemid}"
+        resp = self.put(url, request_body)
+        return resp
+
+    @func_monitor
+    def update_cb_testcase_status(self, release_dict, pandas_series,test_method_id):
+        """
+        funtion used to update the status of test case
+        2023/05/09 added
+        Args:
+            release_dict: get_release(self,testcase_trackerid,release)
+            pandas_series: 从HandlerPTCExcel 里面的generate_cb_case 函数获取的df
+                 index为   ["id", "name", "status", "Verifies", "Incident ID", "Test Method"]
+
+        Returns:
+
+        """
+        # put 'https://codebeamer.corp.int/cb/api/v3/items/19758493'
+        itemid = pandas_series['id']
+        test_case_body = Post_TestCase_Body(pandas_series["name"])
+        test_case_body.update_verifies(pandas_series["Verifies"])
+        test_case_body.update_test_method(test_method_id,pandas_series["Test Method"])
+        test_case_body.update_versions(release_dict)
+        test_case_body.update_testcase_status(pandas_series["status"])
         request_body = to_json(test_case_body)
 
         Debug_Logger.debug(request_body)
@@ -385,6 +427,23 @@ class CodeBeamer():
                 self.delete_cb_testcase(release_dict, df_cbcase.loc[indx],test_method_id)
             else:
                 self.update_cb_testcase(release_dict, df_cbcase.loc[indx],test_method_id)
+
+    @func_monitor
+    def upload_testcases_status(self,df_cbcase,testcase_trackerid,testcase_folderid,release_dict):
+
+
+        test_method_id = self.check_get_field_id(testcase_trackerid, "Test Method")
+        # 抓取结果为pass和failed 的case。仅仅用这个部分上传testcase
+        df_result = df_cbcase.loc[df_cbcase["status"].isin(["PASSED", "FAILED"])]
+        Monitor_Logger.info(df_result)
+        for indx in df_result.index:
+            # if df_cbcase.loc[indx, "id"] == "":
+            #     pass
+            # elif df_cbcase.loc[indx, "id"] != "" and df_cbcase.loc[indx, "status"] == "Obsolete":
+            #     pass
+            #     # self.delete_cb_testcase(release_dict, df_cbcase.loc[indx],test_method_id)
+            # else: #仅当有测试结果的case才去更新
+            self.update_cb_testcase_status(release_dict, df_result.loc[indx],test_method_id)
 
     @func_monitor
     def create_test_run_baseon_testcases(self,df_cbcase,testrun_trackerid,name,test_information,release_dict):
@@ -580,6 +639,8 @@ class CodeBeamer():
         # 'https://codebeamer.corp.int/cb/api/v3/testruns/20165626' \
         url = self.server + f"/testruns/{testrun_id}"
         resp = self.put(url,request_body)
+
+
 
 
 
