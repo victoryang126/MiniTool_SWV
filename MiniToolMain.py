@@ -23,7 +23,7 @@ from CB_Server_API.CB_Tool_Widget import CB_Tool_Widget
 class MiniTool(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('MiniTool V1.17.1')
+        self.setWindowTitle('MiniTool V1.17.2')
         self.setWindowIcon(QIcon('./Images/title.ico'))
         self.setGeometry(150,150,1300,680)
 
