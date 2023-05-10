@@ -435,7 +435,7 @@ class CodeBeamer():
         test_method_id = self.check_get_field_id(testcase_trackerid, "Test Method")
         # 抓取结果为pass和failed 的case。仅仅用这个部分上传testcase
         df_result = df_cbcase.loc[df_cbcase["status"].isin(["PASSED", "FAILED"])]
-        Monitor_Logger.info(df_result)
+        # Monitor_Logger.info(df_result)
         for indx in df_result.index:
             # if df_cbcase.loc[indx, "id"] == "":
             #     pass
