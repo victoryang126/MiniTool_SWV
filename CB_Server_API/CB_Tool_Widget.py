@@ -279,6 +279,15 @@ class CB_Tool_Widget(QWidget):
             df_cbcase = generate_cb_case(df_ptc, testcase_dict_list)
             self.exract_value(excel_info)
             self.server.update_test_run_result(df_cbcase, self.testrunid)
+
+            args = {
+                "df_cbcase": df_cbcase,
+                "testcase_trackerid": self.testcase_trackerid,
+                "testcase_folderid": self.testcase_folderid,
+                "release_dict": release_dict
+            }
+            self.server.upload_testcases_status(**args)
+
             self.DoneMessage("Restart_TestRun Done")
         except Exception as err:
             self.WarningMessage(err)

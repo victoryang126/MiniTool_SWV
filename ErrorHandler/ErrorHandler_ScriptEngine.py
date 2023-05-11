@@ -164,8 +164,8 @@ class ScriptEngine:
     @func_monitor
     def generate_start_Log(self):
         if self.ts_step_flag.start_log:
-            log_path = f"{self.ts_step.tabs()}var LogPath = LogFolder + \"" \
-                       f"_\" + CaseName +\" _{self.ts_step.step}_{self.ts_step.sub_step}.log\";\n"
+            log_path = f"{self.ts_step.tabs()}var LogPath = LogFolder + " \
+                       f"CaseName + \" _{self.ts_step.step}_{self.ts_step.sub_step}.log\";\n"
             log_action = f"{self.ts_step.tabs()}StartToLog(LogPath);\n\n"
             self.script_content.append(f"{log_path}{log_action}")
             return log_path + log_action
@@ -334,10 +334,10 @@ if __name__ == "__main__":
     # sheet = "En12VoltStrMotCmddOn_Suspend"
     # sheet = "EPTStCmdOn_Suspend"
     # sheet = "ECUPowerMode_Suspend"
-    sheet = "ExtendedData"
+    # sheet = "Suspend_Strategy"
     sheets = ["DTCStatus","Suspend_Strategy","OverVoltage_Suspend","UnderVoltage_Suspend","En12VoltStrMotCmddOn_Suspend","EPTStCmdOn_Suspend",
               "ECUPowerMode_Suspend","ExtendedData","DemBuffer_RecordLogic","DemBuffer_Value2","DemBuffer_Value"]
-    # sheets = ["ExtendedData"]
+    sheets = ["Suspend_Strategy"]
     scritp_enginer = ScriptEngine()
     func_mapping = Func_Mapping(excel, "Function_Mapping")
     scritp_enginer.func_mapping = func_mapping.get_func_mapping()

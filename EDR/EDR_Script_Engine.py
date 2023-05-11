@@ -156,6 +156,7 @@ if __name__ == "__main__":
     edr_signal_config.refresh()
 
     sheets = ["EDR_General_Element","EDR_Element_Abnormal","EDR_Config_C005","EDR_Config_C004","GB_EDR_Signal_16_isDircnIndLamp","GB_EDR_Signal_16_isVehHzrdMdSts"]
+    sheets = ["Severity_level_Test"]
     # sheet = "EDR_General_Element"
     # sheet = "EDR_Config_C005"
     # sheet = "EDR_Config_C004"
