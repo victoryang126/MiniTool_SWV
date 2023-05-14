@@ -337,7 +337,7 @@ if __name__ == "__main__":
     # sheet = "Suspend_Strategy"
     sheets = ["DTCStatus","Suspend_Strategy","OverVoltage_Suspend","UnderVoltage_Suspend","En12VoltStrMotCmddOn_Suspend","EPTStCmdOn_Suspend",
               "ECUPowerMode_Suspend","ExtendedData","DemBuffer_RecordLogic","DemBuffer_Value2","DemBuffer_Value"]
-    sheets = ["Suspend_Strategy"]
+    sheets = ["DemBuffer_RecordLogic"]
     scritp_enginer = ScriptEngine()
     func_mapping = Func_Mapping(excel, "Function_Mapping")
     scritp_enginer.func_mapping = func_mapping.get_func_mapping()

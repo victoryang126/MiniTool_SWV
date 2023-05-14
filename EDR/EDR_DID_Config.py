@@ -27,7 +27,7 @@ class EDR_DID_Config:
             df = self.sheets[sheet_name]
             # df = pd.read_excel(excel, sheet_name)
 
-            columnslist = ["ID", "NAME", "START", "LENGTH", "END", "SIGNAL",
+            columnslist = ["ID", "NAME","SAMPLESIZE", "START", "LENGTH", "END", "SIGNAL",
                            "TYPE","NVM"]
             df.columns = strip_upper_columns(df.columns)
             validate_columns(df.columns,columnslist,sheet_name)
@@ -331,7 +331,38 @@ class EDR_DID_Config:
             nvm_file.writelines("}")
             nvm_file.write("\n\n\n")
 
+    def generate_did_config(self,did_config):
+        fileUtil.init_file_bypath(did_config)
+        scripts = []
+        for sheet_name in self.sheets:
+            Monitor_Logger.info(sheet_name)
+            df = self.sheets[sheet_name]
+            df = df.iloc[1:]  # 剔
+            df = df[["ID","SAMPLESIZE","START","LENGTH"]]
+            data_record_length = df["LENGTH"].astype("int32").sum()
+            scripts.append(f"function {sheet_name}_EDR_DID(Name)\n")
+            scripts.append("{\n")
+            scripts.append(f"\t this.Length = {data_record_length};\n")
+            scripts.append(f"\t this.Name = Name;\n")
+            scripts.append(f"\t this.Elements = \n")
+            scripts.append("\t{\n")
+            elements = []
+            # "GB_EDR1": newDID_Element_ByByte(0, 0, 0, 0)
+            # elements = [f"\t\'{i}\': new BB_Create_SnapshotRecord(\'{i}\')" for i in self.snapshot_recordnumbers]
+            # scripts.append(",\n".join(elements) + "\n")
+            for index in df.index:
+                id = df.loc[index,"ID"]
+                sampel_size = df.loc[index,"SAMPLESIZE"]
+                start = df.loc[index,"START"]
+                length = df.loc[index,"LENGTH"]
+                elements.append(f"\t\t\"{id}\": new DID_Element_ByByte(\"{id}\",{sampel_size},{start},{length})")
+            scripts.append(",\n".join(elements) + "\n")
+            scripts.append("\t}\n")
+            scripts.append("}\n\n")
 
+
+
+        fileUtil.generate_script_bypath("".join(scripts),did_config)
 
 if __name__ == '__main__':
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\Read_element_2023_0309.xlsx"
@@ -341,6 +372,7 @@ if __name__ == '__main__':
     checkfile = "BB_EDR_Common_Check_Define.ts"
     parameterfile = "BB_EDR_Parameter_Define.ts"
     transitionfile = "BB_EDR_Transition_Define.ts"
+    did_config = "BB_DID_Config.ts"
     nvm_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\NVM_Mapping.xlsx"
     tsfile = [checkfile, parameterfile, transitionfile]
     # generateEDRFunction(excel, tsfile)
@@ -350,19 +382,20 @@ if __name__ == '__main__':
     edr_config.generate_check(checkfile)
     edr_config.generate_params(parameterfile)
     edr_config.generate_trans(transitionfile)
+    edr_config.generate_did_config(did_config)
 
     # 生成 NVM的数据
     # excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\Record_element_list_leon.xlsx"
     # sheet = "Elements"
     # edr_record = EDR_RecordElement(excel, sheet)
     # edr_record.refresh()
-
-    epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
-    epprom = Epprom_Translate(epprom_excel)
-    epprom.block_ids = [2,31]
-    epprom.get_edr_block()
-
-    edr_config.generate_nvm_excel(nvm_excel,epprom)
-    edr_config.generate_nvm_check(nvm_check,nvm_excel)
+    #
+    # epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
+    # epprom = Epprom_Translate(epprom_excel)
+    # epprom.block_ids = [2,31]
+    # epprom.get_edr_block()
+    #
+    # edr_config.generate_nvm_excel(nvm_excel,epprom)
+    # edr_config.generate_nvm_check(nvm_check,nvm_excel)
     # signalts = "BB_EDR_sigParameter_Define.ts"
     # generateSignalParameter(signalexcel, signalts)
