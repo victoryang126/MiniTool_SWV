@@ -51,6 +51,7 @@ def process_signal_config(signal_series, digital_cols, df_map):
         df_map: the dataframe get from Fault sheet
     Returns:
     """
+    # todo 处理异常情况 如果两张表格通过signla 和Variant列不能找到对应关系，需要找到具体哪一个找不到，所以这个地方要处理一下数据
     signal = signal_series.loc["SIGNAL"]
     variant = signal_series.loc["VARIANT"]
     # find the fault and variant in the fault sheet data frame, and then assigna related data to it

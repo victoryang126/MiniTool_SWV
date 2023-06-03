@@ -189,6 +189,12 @@ class EDR_DID_Config:
     @func_monitor
     def generate_nvm_excel(self,nvm_excel,epprom:Epprom_Translate):
         df_trans_func = self.df_read_element.copy()
+
+
+        df_trans_func["TYPE"] = df_trans_func["TYPE"].str.strip()
+        # TODO if the type in NAN, shall throww exception
+        #only get the NVM from CAN,CAND,DCS,Reserved
+        df_trans_func = df_trans_func[df_trans_func["TYPE"].isin(["CAN", "CAND", "DCS", "Reserved"])]
         # df_trans_func = df_trans_func.query('TYPE=="Element"')
         args = []
         for i in df_trans_func.index:
@@ -340,6 +346,7 @@ class EDR_DID_Config:
             df = df.iloc[1:]  # 剔
             df = df[["ID","SAMPLESIZE","START","LENGTH"]]
             data_record_length = df["LENGTH"].astype("int32").sum()
+            df["SAMPLESIZE"] =  df["SAMPLESIZE"].astype("int32")
             scripts.append(f"function {sheet_name}_EDR_DID(Name)\n")
             scripts.append("{\n")
             scripts.append(f"\t this.Length = {data_record_length};\n")
@@ -364,6 +371,150 @@ class EDR_DID_Config:
 
         fileUtil.generate_script_bypath("".join(scripts),did_config)
 
+
+    @func_monitor
+    def generate_check_general(self,checkfile):
+        """
+        used to generate the general check function for the did element,
+        current,only used to generate CAND,DCS/CAND
+        Args:
+            checkfile:
+        Returns:
+        """
+        fileUtil.init_file_bypath(checkfile)
+        for sheet_name in self.sheets:
+            Monitor_Logger.info(sheet_name)
+            df = self.sheets[sheet_name]
+            # df = pd.read_excel(excel, sheet_name)
+            columnslist = ["ID", "NAME", "TYPE","START", "LENGTH", "END", "SIGNAL"]
+            columnslist = ["ID", "TYPE"]
+            df = df[columnslist]
+            df = df.iloc[1:]  # 剔除header 第一行
+            df["TYPE"] = df["TYPE"].str.strip()
+            #TODO if the type in NAN, shall throww exception
+            # print(df["TYPE"])
+            # print(df["TYPE"].isin(["CANC","CAND","DCS","Reserved"]))
+            df = df[df["TYPE"].isin(["CAN","CAND","DCS","Reserved"])]
+            if df.empty == True:
+                continue;
+
+            # 这里必须检查是否有同一个ID，如果有，要处理报错
+            df.set_index("ID", inplace=True, drop=False)
+
+            func_name = "function BB_Check_" + sheet_name + "_EDR(DID_Obj)\n{\n\tvar did_name = DID_Obj.Name;\n\n"
+            with open(checkfile, 'a', encoding='UTF-8') as check: #写入函数名称
+                check.writelines(func_name)
+            with open(checkfile, 'a', encoding='UTF-8') as check:  #根据里面的数据写入数据
+                with open(parameterfile, 'a', encoding='UTF-8') as para:
+                    for i in df.index:
+                        # 处理check函数部分
+                        comment = f"\t//{i} ;\n"
+                        check.writelines(comment)
+                        parametervalue = f"\tvar expect_element_value =  {i} ;\n"
+                        check.writelines(parametervalue)
+                        element = f"\tvar element = BB_Get_DID_Element(DID_Obj,\"{i}\");\n"
+                        check.writelines(element)
+                        callfunc = f"\tBB_Compare_Element_Values(did_name,element,expect_element_value);\n\n"
+                        check.writelines(callfunc)
+
+            with open(checkfile, 'a', encoding='UTF-8') as check:
+                check.writelines("}")
+                check.write("\n\n\n")
+
+
+
+    @func_monitor
+    def generate_nvm_check2(self,nvm_check,nvm_excel):
+        sigle_pattern =  "(\w+)(\\._\\d_.)(\S+)" #单个元素的正则匹配  RstEdr_GlobalEventInfo.au32EventNbDiscarded._0_
+        mutil_pattern = "(\w+)(\\._\\d_.)(\S+)\\._(\\d+)_" #多个元素的正则匹配  RstEdr_EventDataCaptureBuffer._0_.u8PibReq._13_
+        df = pd.read_excel(nvm_excel,"Sheet1")
+        global_nvms = []
+        block_nvms = []
+        with open(nvm_check, 'w', encoding='UTF-8') as nvm_file:
+            # pass
+            for indx in df.index: #循环遍历 元素
+                # print(df.loc[indx,"Original_NVM"])
+                expect_name = df.loc[indx,"ExpectNVM"]
+                epproms = df.loc[indx,"Epprom"].split("\n")
+                block_func_name = f"function BB_Check_{expect_name}_BlockEDR(Block)\n{'{'}\n"
+                global_func_name = f"function BB_Check_{expect_name}_GlobalEDR()\n{'{'}\n"
+                if len(epproms) == 1:  # 单个参数的时候处理方式
+                    mt = re.match(sigle_pattern,epproms[0])
+                    if mt:
+                        groups = mt.groups()
+                        block = """{0}"""
+                        parameter_name = f"\tvar parameter_name = String.Format(\"{groups[0]}._{block}_.{groups[2]}\",Block);\n"
+                        nvm_file.write(block_func_name)
+                        nvm_file.write(parameter_name)
+                        nvm_file.write(f"\tBB_CompareParameterByName(parameter_name,{expect_name});\n")
+                        nvm_file.write("}\n\n")
+                        block_nvms.append(f"BB_Check_{expect_name}_BlockEDR(Block);\n")
+                    else:# 如果没有匹配到单个参数模式，则表示这是一个global
+                        nvm_file.write(global_func_name)
+                        parameter_name = f"\tvar parameter_name = {epproms[0]};\n"
+                        # nvm_file.write(parameter_name)
+                        nvm_file.write(f"\tBB_CompareParameterByName('{epproms[0]}',{expect_name});\n")
+                        nvm_file.write("}\n\n")
+                        global_nvms.append(f"BB_Check_{expect_name}_GlobalEDR();\n")
+                else: # 有多个NVM参数的时候
+                    params = []
+                    # print(epproms)
+                    #循环去匹配里面的数据
+                    for epprom in epproms:
+                        mt = re.match(mutil_pattern, epprom)
+                        if mt == None: #如果这里没有找到，可能也是要比较多个参数，跳出循环
+                            # print(epprom,mt)
+                            break;
+                        params.append(list(mt.groups()))
+
+                    if len(params) == 0:
+                        nvm_file.write(global_func_name)
+                        for epprom in epproms:
+                            parameter_name = f"\tvar parameter_name = {epprom};\n"
+                            # nvm_file.write(parameter_name)
+                            nvm_file.write(f"\tBB_CompareParameterByName('{epprom}',{expect_name});\n")
+                        nvm_file.write("}\n\n")
+                        global_nvms.append(f"BB_Check_{expect_name}_GlobalEDR();\n")
+                    else:
+                        df_temp = pd.DataFrame(np.array(params),
+                                           columns=["parent", "block", "param", "index"])
+                        Debug_Logger.debug(params)
+                        df_temp = df_temp.astype({'index': 'int32'}) #强hi在转换类型为int，然后去比较最大的index
+                        df_pivot_tb = df_temp.pivot_table(index=["param"], aggfunc=np.max)
+                        temp_dict = df_pivot_tb.to_dict(orient="index") # 通过Piovt_table 进行分组统计，找到不同类别的参数
+                        # print(temp_dict)
+                        # Monitor_Logger.info(temp_dict)
+                        nvm_file.write(block_func_name)
+                        for tempkey in temp_dict:
+                            max_index = temp_dict[tempkey]["index"]
+                            parent =  temp_dict[tempkey]["parent"]
+                            forloop = f"\tfor(var i = 0; i <= {max_index}; i++)\n\t{'{'}\n"
+                            block = """{0}"""
+                            param_index = """{1}"""
+                            nvm_file.write(forloop)
+
+                            parameter_name = f"\t\tvar parameter_name = String.Format(\"{parent}._{block}_.{tempkey}._{param_index}_\",Block,i);\n"
+                            nvm_file.write(parameter_name)
+                            nvm_file.write(f"\t\tBB_CompareParameterByName(parameter_name,{expect_name});\n")
+                            nvm_file.write("\t};\n")
+
+                        nvm_file.write("}\n")
+                        block_nvms.append(f"BB_Check_{expect_name}_BlockEDR(Block);\n")
+
+            global_define = "function BB_Check_GlobalEDR()\n{\n"
+            nvm_file.writelines(global_define)
+            for func_name in global_nvms:
+                nvm_file.writelines("\t" + func_name)
+            nvm_file.writelines("}")
+            nvm_file.write("\n\n\n")
+
+            block_define = "function BB_Check_BlockEDR(Block)\n{\n"
+            nvm_file.writelines(block_define)
+            for func_name in block_nvms:
+                nvm_file.writelines("\t" + func_name)
+            nvm_file.writelines("}")
+            nvm_file.write("\n\n\n")
+
 if __name__ == '__main__':
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\Read_element_2023_0309.xlsx"
     signalexcel = r"C:\Users\victor.yang\Desktop\Work\EDR\Geely_HX11_Flexray_signal_record_strategy.xlsx"
@@ -373,13 +524,14 @@ if __name__ == '__main__':
     parameterfile = "BB_EDR_Parameter_Define.ts"
     transitionfile = "BB_EDR_Transition_Define.ts"
     did_config = "BB_DID_Config.ts"
-    nvm_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\NVM_Mapping.xlsx"
+    nvm_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\NVM_Mapping3.xlsx"
     tsfile = [checkfile, parameterfile, transitionfile]
     # generateEDRFunction(excel, tsfile)
     edr_config = EDR_DID_Config(excel)
 
     edr_config.refresh()
-    edr_config.generate_check(checkfile)
+    edr_config.generate_check_general(checkfile)
+    # edr_config.generate_check(checkfile)
     edr_config.generate_params(parameterfile)
     edr_config.generate_trans(transitionfile)
     edr_config.generate_did_config(did_config)
@@ -390,12 +542,12 @@ if __name__ == '__main__':
     # edr_record = EDR_RecordElement(excel, sheet)
     # edr_record.refresh()
     #
-    # epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P20.00.xlsm"
-    # epprom = Epprom_Translate(epprom_excel)
-    # epprom.block_ids = [2,31]
-    # epprom.get_edr_block()
+    epprom_excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\EEPROM_Translation_SAIC_ZP22_P30.00.xlsm"
+    epprom = Epprom_Translate(epprom_excel)
+    epprom.block_ids = [2,31]
+    epprom.get_edr_block()
     #
-    # edr_config.generate_nvm_excel(nvm_excel,epprom)
-    # edr_config.generate_nvm_check(nvm_check,nvm_excel)
+    edr_config.generate_nvm_excel(nvm_excel,epprom)
+    edr_config.generate_nvm_check(nvm_check,nvm_excel)
     # signalts = "BB_EDR_sigParameter_Define.ts"
     # generateSignalParameter(signalexcel, signalts)

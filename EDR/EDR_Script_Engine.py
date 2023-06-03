@@ -48,6 +48,8 @@ class EDR_Script_Engine:
 
 
     def get_scripts_by_id(self,id,frame,pdu,signal,value):
+        # print(signal)
+        # print(id,id=="au32EncodedActFlts[0]",regCompare.is_equal("au32EncodedActFlts[0]",id))
         if isinstance(value,str) == False:
             raise Exception(f"id:{id},frame: {frame},signal :{signal} have empty(NAN) value")
         value = value.strip()
@@ -69,7 +71,7 @@ class EDR_Script_Engine:
         elif regCompare.is_equal("FUNC",id):
             values = value.split("\n")
             # values = [f"\t{value};\n" for value in values]
-            values = [f"\t{value[0:-1]}\n" if value.endswith("#") else f"\t{value};\n" for value in values]
+            values = [f"\t{value[0:-1].strip()}\n" if value.endswith("#") else f"\t{value.strip()};\n" for value in values]
             values.insert(0,f"\tCommentStep(\"{signal}\");\n")
             values.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
             return "".join(values)
@@ -98,6 +100,49 @@ class EDR_Script_Engine:
                 _scripts_line.append(f"\tvar Expect_Fault_Info = SetSuffixToFaultInfo(\"NONE\");")
                 _scripts_line.append(f"\tCompareResultsDefine(Ret,Expect_Fault_Info[1],Expect_Fault_Info[0]);\n")
             _scripts_line.insert(0, f"\tCommentStep(\"Check Fault\");\n")
+            _scripts_line.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
+            return "".join(_scripts_line)
+        elif "au32EncodedActFlts[0]" == id:
+            _scripts_line = []
+            _scripts_line.append("\tvar Faults = new Array();\n")
+            if value != "NONE":
+                values = value.split("\n")
+                faults = [fault.split(",") for fault in values]
+                validate_fault_format(signal,faults)
+                faults = [f"{fault[0]} + \'-{fault[1]}\'" for fault in faults]
+                _faults = ",\n\t\t\t".join(faults)
+                _scripts_line.append(f"\tFaults[0] = [{_faults}];\n")
+            else:
+                _scripts_line.append(f"\tFaults[0] = [];\n")
+            _scripts_line.insert(0,f"\tCommentStep(\"{signal}\");\n")
+            _scripts_line.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
+            return "".join(_scripts_line)
+        elif "au32EncodedActFlts[1]" == id:
+            _scripts_line = []
+            if value != "NONE":
+                values = value.split("\n")
+                faults = [fault.split(",") for fault in values]
+                validate_fault_format(signal,faults)
+                faults = [f"{fault[0]} + \'-{fault[1]}\'" for fault in faults]
+                _faults = ",\n\t\t\t".join(faults)
+                _scripts_line.append(f"\tFaults[1] = [{_faults}];\n")
+            else:
+                _scripts_line.append(f"\tFaults[1] = [];\n")
+            _scripts_line.insert(0,f"\tCommentStep(\"{signal}\");\n")
+            _scripts_line.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
+            return "".join(_scripts_line)
+        elif "au32EncodedActFlts[2]" == id:
+            _scripts_line = []
+            if value != "NONE":
+                values = value.split("\n")
+                faults = [fault.split(",") for fault in values]
+                validate_fault_format(signal,faults)
+                faults = [f"{fault[0]} + \'-{fault[1]}\'" for fault in faults]
+                _faults = ",\n\t\t\t".join(faults)
+                _scripts_line.append(f"\tFaults[2] = [{_faults}];\n")
+            else:
+                _scripts_line.append(f"\tFaults[2] = [];\n")
+            _scripts_line.insert(0,f"\tCommentStep(\"{signal}\");\n")
             _scripts_line.insert(0, f"\n\t//-----------------------------TEST STEP------------------------------//;\n")
             return "".join(_scripts_line)
         else:
@@ -149,14 +194,14 @@ if __name__ == "__main__":
     # sheet = "EDR_General_Element"
     # edr_signal = EDR_Signal(excel, sheet)
     # edr_signal.refresh(edr_fault.fault_dict)
-    excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\SAIC_ZP22_Signal_Record_Strategy_20230323.xlsx"
+    excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\SC3_1S_signal_record_strategy_20230508.xlsx"
     config_sheet = "EDR_Case_Config"
 
     edr_signal_config = EDR_Signal_Config(excel, config_sheet)
     edr_signal_config.refresh()
 
     sheets = ["EDR_General_Element","EDR_Element_Abnormal","EDR_Config_C005","EDR_Config_C004","GB_EDR_Signal_16_isDircnIndLamp","GB_EDR_Signal_16_isVehHzrdMdSts"]
-    sheets = ["Severity_level_Test"]
+    sheets = ["EDR_General_Element"]
     # sheet = "EDR_General_Element"
     # sheet = "EDR_Config_C005"
     # sheet = "EDR_Config_C004"
