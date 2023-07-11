@@ -640,54 +640,163 @@ class CodeBeamer():
         url = self.server + f"/testruns/{testrun_id}"
         resp = self.put(url,request_body)
 
+    @func_monitor
+    def get_all_testcase_in_tracker(self,testcase_tracker_id):
+
+        # trackers / 60318988 / items?page = 2 & pageSize = 500
+        page = 1
+        testcases = []
+        while page:
+            # 'https://codebeamer-vne.corp.int/cb/api/v3/trackers/60318988/items?page=1&pageSize=500'
+            # :https: // codebeamer - vne.corp.int / cb / v3 / trackers / 60318988 / items?page = 1 & pageSize = 500
+            url = self.server + f"/trackers/{testcase_tracker_id}/items?page={page}&pageSize=500"
+            resp =  self.get(url)
+            # print(resp.json)
+            if len(resp.json()["itemRefs"]) == 0: # if no any item refs, means no more iems in the test case tracker,
+                break;
+            else:
+                testcases.extend([item['id'] for item in resp.json()["itemRefs"]])
+                page +=1 # check next page
+        # print(testcases)
+        return testcases
+
+    @func_monitor
+    def get_fileds_data_from_item(self,item_id):
+        url = self.server + f"/items/{item_id}/fields"
+        resp = self.get(url)
+        return resp.json()
+
+
+    @func_monitor
+    def get_latest_testrun_status_of_testcase(self,testcase_id):
+        #'https://codebeamer-vne.corp.int/cb/api/v3/items/14907920/relations'
+        url = self.server + f"/items/{testcase_id}/relations"
+        resp = self.get(url)
+        downstreamReferences = resp.json()["downstreamReferences"]
+
+        if len(downstreamReferences) == 0: # if no test runs, shall return a status None
+            return None
+        #ge the items id in the downstreamReferences
+        # "downstreamReferences": [
+        #     {
+        #         "id": 90028093,
+        #         "itemRevision": {
+        #             "id": 22286771,
+        #             "version": 2
+        #         },
+        #         "type": "DownstreamTrackerItemReference"
+        #     },
+        # ],
+        items = [item['itemRevision']['id'] for item in downstreamReferences]
+        # print(items)
+
+        testrun_ids = []
+        #check the item_id  one by one
+        for item_id in items:
+            item_data = self.get_data_from_item(item_id).json()
+            # print(item_data)
+            #only when test typeName is TestRun, and have parent, then it is the test run of the test case
+            if "parent"  in item_data and item_data["typeName"] == "Testrun":
+                result = item_data["resolutions"][0]["name"]
+                testrun_ids.append([item_id,result])
+
+        if len(testrun_ids) == 0: #can't get the data from the downstreamReferences
+            return None
+        # get the latest test run ids by using the largest test_run_id
+        sort_testrun_ids = sorted(testrun_ids,key=(lambda x:x[0]))
+        #then return the latest status
+        return sort_testrun_ids[-1][1]
+
+
+    def get_verfiess_from_data(self,data):
+        if len(data["subjects"]) == 0:  # 如果原来的case 里面就是为空的，则返回空数组
+            verifies = []
+        else:
+            verifies = [verify["id"] for verify in data["subjects"]]
+
+        return verifies
+
+    def get_release_from_data(self,data):
+        release = data["versions"]
+        if len(release) == 0:
+            # no release filled
+            return None
+        else:
+            return {"id":release[-1]["id"],"name":release[-1]["name"]}
+
+
+    def get_test_method_from_data(self,data):
+        testmethod_dict = {}
+        customFileds = data["customFields"]
+        for fields in customFileds:
+            if fields["name"] == "Test Method":
+                testmethod_dict = fields
 
 
 
+        if len(testmethod_dict.keys()) == 0:  # 如果没有testmethod的属性返回，说明为空
+            testmethods = []
+        else:
+            testmethods = [testmethod['id'] for testmethod in testmethod_dict["values"]]
+        return testmethods
 
+    @func_monitor
+    def update_testcases_status_in_tracker(self,testcase_tracker_id):
+        testcases_wo_testrun = []
+        # 1st get the test_method_id
+        test_method_id = self.check_get_field_id(testcase_tracker_id, "Test Method")
+        # get the all items in the testcase tracker
+        testcase_ids = self.get_all_testcase_in_tracker(testcase_tracker_id)
 
+        #check and update one by one
+        for itemid in testcase_ids:
+            Monitor_Logger.info(f"Update test case of {itemid}")
+            test_case_data = self.get_data_from_item(itemid).json()
+
+            if len(test_case_data["categories"]) != 0:
+                continue # means this is folder or information
+            test_case_status = test_case_data["status"]["id"]
+            if test_case_status == 6: # the case is obsolete
+                continue
+            verifies = self.get_verfiess_from_data(test_case_data)
+            test_methods = self.get_test_method_from_data(test_case_data)
+            release_dict = self.get_release_from_data(test_case_data)
+            test_runs_status = self.get_latest_testrun_status_of_testcase(itemid)
+            # print(test_runs_status)
+            test_status_id = 1 #default is init
+            if test_runs_status == None: #means not test run status
+                testcases_wo_testrun.append(itemid)
+                continue
+            elif test_runs_status == "Passed":
+                test_status_id = 8
+            elif test_runs_status == "Failed":
+                test_status_id = 9
+            else:
+                testcases_wo_testrun.append(itemid)
+                continue
+            try:
+                test_case_body = Post_TestCase_Body(test_case_data["name"])
+                test_case_body.update_verifies(verifies)
+                test_case_body.update_test_method(test_method_id, test_methods)
+                if release_dict !=None:
+                    test_case_body.update_versions(release_dict)
+                test_case_body.update_testcase_status_by_id(test_status_id)
+                request_body = to_json(test_case_body)
+
+                # Debug_Logger.debug(request_body)
+                url = self.server + f"/items/{itemid}"
+                resp = self.put(url, request_body)
+            except Exception:
+                testcases_wo_testrun.append(itemid)
+            # break
+        return testcases_wo_testrun
 if __name__ == "__main__":
     pass
 
-    Cb = CodeBeamer("https://codebeamer.corp.int/cb/api/v3","victor.yang","TTT")
-    url = 'https://codebeamer.corp.int/cb/api/v3/items/26932821'
+    Cb = CodeBeamer("https://codebeamer-vne.corp.int/cb/api/v3","victor.yang","Test")
+    # url = 'https://codebeamer.corp.int/cb/api/v3/items/26932821'
+    # Cb.get_all_testcase_in_tracker(60318988)
 
-    # options = Cb.get_tracker_field_options(1908978,1000)
-    json = {
-"name":"TTA",
-  "status": {
-    "id": 7,
-    "name": "In progress",
-    "type": "ChoiceOptionReference"
-  },
-  "customFields": [
-    {
-      "fieldId": 1000,
-      "name": "Working Set",
-      "values": [
-        {
-          "id": 4,
-          "name": "GEELY_GEEA2.0_G733P_FS11-A2",
-          "type": "ChoiceOptionReference"
-        }
-      ],
-      "type": "ChoiceFieldValue"
-    },
-    {
-      "fieldId": 10003,
-      "name": "Test Information",
-      "value": "ARIA4.11",
-      "type": "TextFieldValue"
-    }
-  ],
-  "versions": [
-    {
-      "id": 21468139,
-      "name": "Release_P31.11_Geely_HC11",
-      "type": "TrackerItemReference"
-    }
-  ]
-}
-    Cb.put(url,json)
-    # Cb.get_tracker_fileds(14937781)
-    # Cb.get_verfies_testmethod(20451445)
-    # Cb.get_verfies_testmethod(20108756)
+    # print(Cb.get_latest_testrun_status_of_testcase(30667718))
+    testcases_wo_testrun = Cb.update_testcases_status_in_tracker(60318988)
+    Monitor_Logger.exception(testcases_wo_testrun)

@@ -81,7 +81,7 @@ class CB_Tool_Widget(QWidget):
 
     #下面是API的介绍
     server_api_link = "https://codebeamer.corp.int/cb/v3/swagger/editor.spr#/Traceability"
-    server_api = "https://codebeamer.corp.int/cb/api/v3"
+    server_api = "https://codebeamer-vne.corp.int/cb/api/v3"
 
     def __init__(self):
         super().__init__()
@@ -338,6 +338,18 @@ class CB_Tool_Widget(QWidget):
             except Exception as err:
                 self.set_upload_results(f"upload testrun for {ptc_excel} failed" )
         self.DoneMessage("Upload_TestRuns Done")
+
+    @pyqtSlot()
+    def on_BT_Upload_TestCases_Status_clicked(self):
+        try:
+            testcases_wo_testrun = self.server.update_testcases_status_in_tracker(self.testcase_trackerid)
+            if len(testcases_wo_testrun) == 0:
+                self.DoneMessage("Upload_TestCases_Status successfully")
+            else:
+                Monitor_Logger.exception(testcases_wo_testrun)
+                self.WarningMessage("some test case not been updated, please check the log and update manually ")
+        except Exception as err:
+            self.WarningMessage(err)
 
 if __name__ == '__main__':
 

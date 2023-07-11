@@ -26,6 +26,45 @@
    <property name="verticalSpacing">
     <number>20</number>
    </property>
+   <item row="1" column="0">
+    <widget class="QLabel" name="Lable_TestCaseTrackerID">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>TestCaseTrackerID</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="Label_TestRun_TrackerID">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>TestRunTrackerID</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QLineEdit" name="LE_TestCase_FolderID">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>The Test Case Folder ID</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QLabel" name="Label_PTC_Excel">
      <property name="minimumSize">
@@ -44,30 +83,27 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="2">
-    <widget class="QLineEdit" name="LE_TestCaseTrackerID">
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-     <property name="placeholderText">
-      <string>The TestCase TrackerID in CodeBearmer</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="Label_TestRun_TrackerID">
+   <item row="2" column="0">
+    <widget class="QLabel" name="Lable_TestCase_FolderID">
      <property name="font">
       <font>
        <pointsize>12</pointsize>
       </font>
      </property>
      <property name="text">
-      <string>TestRunTrackerID</string>
+      <string>TestCase_FolderID</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="Lable_Release">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Release</string>
      </property>
     </widget>
    </item>
@@ -107,6 +143,21 @@
      </property>
     </widget>
    </item>
+   <item row="5" column="2">
+    <widget class="QLineEdit" name="LE_Release">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+      </font>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>the Release version in CodeBeamer</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="3">
     <widget class="QPushButton" name="BT_PTC_Excel">
      <property name="minimumSize">
@@ -125,54 +176,18 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="Lable_TestCaseTrackerID">
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>TestCaseTrackerID</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="Lable_TestCase_FolderID">
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>TestCase_FolderID</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="2">
-    <widget class="QLineEdit" name="LE_Release">
+   <item row="1" column="2">
+    <widget class="QLineEdit" name="LE_TestCaseTrackerID">
      <property name="font">
       <font>
        <pointsize>12</pointsize>
       </font>
      </property>
      <property name="readOnly">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <property name="placeholderText">
-      <string>the Release version in CodeBeamer</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="Lable_Release">
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>Release</string>
+      <string>The TestCase TrackerID in CodeBearmer</string>
      </property>
     </widget>
    </item>
@@ -190,7 +205,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="Login">
       <attribute name="title">
@@ -250,7 +265,7 @@
         </font>
        </property>
        <property name="text">
-        <string>https://codebeamer.corp.int/cb/api/v3</string>
+        <string>https://codebeamer-vne.corp.int/cb/api/v3</string>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -657,21 +672,48 @@
        </property>
       </widget>
      </widget>
-    </widget>
-   </item>
-   <item row="2" column="2">
-    <widget class="QLineEdit" name="LE_TestCase_FolderID">
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-     <property name="placeholderText">
-      <string>The Test Case Folder ID</string>
-     </property>
+     <widget class="QWidget" name="Update_TestCase_Status">
+      <attribute name="title">
+       <string>Update Test Case Stauts for Old Project</string>
+      </attribute>
+      <widget class="QPushButton" name="BT_Upload_TestCases_Status">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>40</y>
+         <width>501</width>
+         <height>28</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Upload_TestCases_Status</string>
+       </property>
+      </widget>
+      <widget class="QPlainTextEdit" name="plainTextEdit">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>110</y>
+         <width>981</width>
+         <height>291</height>
+        </rect>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+       <property name="plainText">
+        <string>This tool is for the project which run the test run in the vesion less then 1.17.3
+
+ this tool will get thet result from latest test run of the test case, then update the stauts for the test case
+
+So make sure the latest test run is last version for this test case
+
+it may take 1 hour to update the status for all test cases in the tracker as logic is get data/compare data/update data one by one
+
+Once only several test cases not been updated, please update manually</string>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </item>
   </layout>

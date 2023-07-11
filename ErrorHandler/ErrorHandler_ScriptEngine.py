@@ -324,20 +324,26 @@ class ScriptEngine:
 
 
 if __name__ == "__main__":
-    excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\Errorandler\CHT_SWV_SAIC_ZP22_ErrorHandler_Test Specification.xlsm"
-    # config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
-    # sheet = "DTCStatus2"
-    # sheet = "UnderVoltage_Suspend"
-    # sheet = "Suspend_Strategy_2"
-    # sheet = "DemBuffer_Value2"
-    # sheet = "OverVoltage_Suspend"
-    # sheet = "En12VoltStrMotCmddOn_Suspend"
-    # sheet = "EPTStCmdOn_Suspend"
-    # sheet = "ECUPowerMode_Suspend"
-    # sheet = "Suspend_Strategy"
-    sheets = ["DTCStatus","Suspend_Strategy","OverVoltage_Suspend","UnderVoltage_Suspend","En12VoltStrMotCmddOn_Suspend","EPTStCmdOn_Suspend",
-              "ECUPowerMode_Suspend","ExtendedData","DemBuffer_RecordLogic","DemBuffer_Value2","DemBuffer_Value"]
+    # excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\Errorandler\CHT_SWV_SAIC_ZP22_ErrorHandler_Test Specification.xlsm"
+    # # config = r"C:\Users\victor.yang\Desktop\Work\DCS_Config.xlsx"
+    # # sheet = "DTCStatus2"
+    # # sheet = "UnderVoltage_Suspend"
+    # # sheet = "Suspend_Strategy_2"
+    # # sheet = "DemBuffer_Value2"
+    # # sheet = "OverVoltage_Suspend"
+    # # sheet = "En12VoltStrMotCmddOn_Suspend"
+    # # sheet = "EPTStCmdOn_Suspend"
+    # # sheet = "ECUPowerMode_Suspend"
+    # # sheet = "Suspend_Strategy"
+    # sheets = ["DTCStatus","Suspend_Strategy","OverVoltage_Suspend","UnderVoltage_Suspend","En12VoltStrMotCmddOn_Suspend","EPTStCmdOn_Suspend",
+    #           "ECUPowerMode_Suspend","ExtendedData","DemBuffer_RecordLogic","DemBuffer_Value2","DemBuffer_Value"]
     # sheets = ["DemBuffer_RecordLogic"]
+    # outdir = r"C:\Users\victor.yang\Desktop\Work\Scripts\Temp"
+    excel = r"C:\Users\victor.yang\Desktop\Work\G08\CHT_SWV_HYCAN_G08_ErrorHandler_Test Specification_Linb.xlsm"
+    sheet = "Snapshot_ExtendedData"
+    outdir = r"C:\Users\victor.yang\Desktop\Work\G08"
+    sheets = ["DTCStatus","OverVoltage_Suspend","UnderVoltage_Suspend","ExtendedData",
+         "DemBuffer_RecordLogic","DemBuffer_Value2","DemBuffer_Value"]
     scritp_enginer = ScriptEngine()
     func_mapping = Func_Mapping(excel, "Function_Mapping")
     scritp_enginer.func_mapping = func_mapping.get_func_mapping()
@@ -345,8 +351,6 @@ if __name__ == "__main__":
     for sheet in sheets:
         spec_sheet = SpecSheet(excel, sheet)
         spec_sheet.update_matrixs()
-
-
         for matrix in spec_sheet.matrixs:
             scritp_enginer.matrix = matrix
-            scritp_enginer.generate_scripts(r"C:\Users\victor.yang\Desktop\Work\Scripts\ErrorHandler")
+            scritp_enginer.generate_scripts(outdir)

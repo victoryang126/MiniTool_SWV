@@ -20,7 +20,6 @@ SCRIPT_BEGIN = """
               // External Function
 // ******************************************************************************************
 CALL(BB_EDR_Common_Define.ts);
-var fso = new ActiveXObject("Scripting.FileSystemObject");
 
 // ******************************************************************************************
                // Parameter Initilize

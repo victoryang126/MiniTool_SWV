@@ -84,12 +84,15 @@ class Flt_Data:
 
         #获取did和数据长度的字典
         df_did_length =  self.df_snapshot[["DID", "Length"]]
+        print(df_did_length)
         df_did_length.drop_duplicates(inplace=True, keep="first")
         df_did_length.set_index("DID", inplace=True, drop=True)
         self.snapshot_did_datarecord_config = df_did_length.to_dict(orient="index")
         #再获取did 里面的元素
         df_snapshot_group = self.df_snapshot.groupby("DID", as_index=False, sort=False)
         for did, group in df_snapshot_group:
+            print(group)
+            #TODO 如果两个Snapshot的数据是一样，只是记录逻辑有问题，那么这块数据就有问题
             self.snapshot_did_datarecord_config[did]["Element"] = {}
             group.drop(["DID", 'Length','SnaoshotRecordNumber'], inplace=True, axis=1)
             group.set_index("Element", drop=True, inplace=True)
@@ -174,7 +177,7 @@ class Flt_Data:
     def generate_snapshot_func(self,did,value):
         set_func = f"function BB_Set_Snap_{value}()\n{'{'}\n\t\n{'}'}\n\n"
         update_func = f"function BB_Update_Snap_{value}(DTC,SnapshotRecordNumber,Data)\n{'{'}\n" \
-                      f"\tDTC.Snapshot[SnapshotRecordNumber].SnapshotDataRecord[\"{did}\"][\"{value}\"] = Data;\n"\
+                      f"\tDTC.Snapshot[SnapshotRecordNumber].SnapshotDataRecord[\"{did}\"][\"{value}\"] = [Data,\"undefined\"];\n"\
                       f"\tvar action = String.Format(\"SnapshotRecordNumber {'{0}'} Update_Snap_{value} to {'{1}'} \",SnapshotRecordNumber,Data);\n" \
                       f"\tRESULT.InterpretEqualResult(action,[\"0000\",\"AssignValue\"]);\n"\
                       f"{'}'}\n\n"
@@ -184,7 +187,7 @@ class Flt_Data:
     def generate_extend_data_func(self, value):
         set_func = f"function BB_Set_Ext_{value}()\n{'{'}\n\t\n{'}'}\n\n"
         update_func = f"function BB_Update_Ext_{value}(DTC,ExtDataRecordNumber,Data)\n{'{'}\n" \
-                      f"\tDTC.ExtData[ExtDataRecordNumber].ExtDataRecord[\"{value}\"] = Data;\n" \
+                      f"\tDTC.ExtData[ExtDataRecordNumber].ExtDataRecord[\"{value}\"] = [Data,\"undefined\"];\n" \
                       f"\tvar action = String.Format(\"ExtDataRecordNumber {'{0}'} Update_Ext_{value} to {'{1}'} \",ExtDataRecordNumber,Data);\n" \
                       f"\tRESULT.InterpretEqualResult(action,[\"0000\",\"AssignValue\"]);\n" \
                       f"{'}'}\n\n"
@@ -207,9 +210,12 @@ class Flt_Data:
 
 
 if __name__ == "__main__":
-    excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\Errorandler\CHT_SWV_SAIC_ZP22_ErrorHandler_Test Specification.xlsm"
+    # excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\Errorandler\CHT_SWV_SAIC_ZP22_ErrorHandler_Test Specification.xlsm"
+    # sheet = "Snapshot_ExtendedData"
+    # outdir = r"C:\Users\victor.yang\Desktop\Work\Scripts\Temp"
+    excel = r"C:\Users\victor.yang\Desktop\Work\G08\CHT_SWV_HYCAN_G08_ErrorHandler_Test Specification_Linb.xlsm"
     sheet = "Snapshot_ExtendedData"
-    outdir = r"C:\Users\victor.yang\Desktop\Work\Scripts\Temp"
+    outdir = r"C:\Users\victor.yang\Desktop\Work\G08"
     flt_data = Flt_Data(excel,sheet)
     flt_data.refresh()
     flt_data.generate_GBB_Snapshot_DID_Config(outdir,"GBB_Snapshot_DID_Config.ts")

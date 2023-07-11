@@ -112,6 +112,7 @@ class Post_TestCase_Body:
         self.status = TestCaseStatus(id)
 
     def update_testcase_status(self,status):
+
         if status == "PASSED":
             self.update_testcase_to_pass()
         elif status == "FAILED":

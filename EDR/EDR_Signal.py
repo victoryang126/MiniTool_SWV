@@ -11,17 +11,18 @@ def process_signal(s):
         s:the cell value in the columns
     Returns:
     """
-    s = s.strip()
-    is_signal_pattern = r'is([A-Za-z_\d]+)\(\d+\)'
-    signal_pattern = r'([A-Za-z_\d]+)\(\d+\)'
-    is_signal_match = re.match(is_signal_pattern,s)
-    signal_match = re.match(signal_pattern,s)
-    if is_signal_match:
-        return is_signal_match.group(1)
-    elif signal_match:
-        return signal_match.group(1)
-    else:
-        return s
+    if isinstance(s,str):
+        s = s.strip()
+        is_signal_pattern = r'is([A-Za-z_\d]+)\(\d+\)'
+        signal_pattern = r'([A-Za-z_\d]+)\(\d+\)'
+        is_signal_match = re.match(is_signal_pattern,s)
+        signal_match = re.match(signal_pattern,s)
+        if is_signal_match:
+            return is_signal_match.group(1)
+        elif signal_match:
+            return signal_match.group(1)
+        else:
+            return s
 
 
 def process_fault(fault_series, digital_cols, df_map):
