@@ -1,11 +1,31 @@
-from RegressionV2.ImportModule import *
+# from RegressionV2.ImportModule import *
 # class CardRegression:
+
 #
 #     def __init__(self,excel,sheet):
 #         self.excel = excel
 #         self.sheet =
 
+import pandas as pd
 
+def DealQualiyOrQualifyTime(df) -> pd.DataFrame:
+    """
+    处理Excel中的qualify和disqualify 时间
+    当前的规则是在单元格里面填写 1000, 2000 或者1000,
+    然后将单元格弄从两个元素的列表
+    Parameters:
+        df - DataFrame 包含qualify和disqualify 的数据
+    Returns:
+        df - 处理了qualifytime和disqualifytime 以后的DataFrane
+    Raises:
+        NONE
+    """
+    for col in df:
+        # Debug_Logger.debug(col)
+        if col.find("Qualify") >= 0:
+            # df[col] = df[col].apply(lambda x: x.split(","))
+            df[col] = df[col].str.split(",")
+    return df
 
 class CardRegression:
     def __init__(self,excel = None,sheet = None):
@@ -42,7 +62,7 @@ class CardRegression:
     def status(self):
         return self._status
 
-    @func_monitor
+    # @func_monitor
     def get_df_card_config(self,outdir):
         self.card_config = {}
         df = pd.read_excel(self.excel,self.sheet,dtype='str')
@@ -57,14 +77,14 @@ class CardRegression:
         df_header_config.fillna("undefined",inplace =True)  # 将空白区域填充为undefined
 
         df.set_index("Abbreviation", inplace=True, drop=False)
-        Debug_Logger.debug(df_header_config)
+        # Debug_Logger.debug(df_header_config)
         # 获取头部区域文件的属性，主要是读取Sensor的开始行，Status 状态获取的列，Fault状态获取的列
         # print(HeaderDict)
         # 2.********** 根据Header字典的内容循环处理信息，每个sensor的相关属性
         # dcs_row_start	dcs_row_end	NormalCol	StatusColStart	StatusColEnd	FaultColStart	FaultColEnd
         # fileUtil.init_file(outdir, f"{self.sheet}.ts")
         for indx in df_header_config.index:
-            Debug_Logger.debug(indx)
+            # Debug_Logger.debug(indx)
             dcs_row_start = df_header_config.loc[indx, 'RowStart']
             dcs_row_end = df_header_config.loc[indx, 'RowEnd']
             df_temp = df.loc[dcs_row_start:dcs_row_end, ]
@@ -73,7 +93,7 @@ class CardRegression:
             fault_col_start = df_header_config.loc[indx,"FaultColStart"]
             fault_col_end =df_header_config.loc[indx,"FaultColEnd"]
             faults = df_temp.loc[dcs_row_start, fault_col_start:fault_col_end].to_list()
-            Debug_Logger.debug(f"faults:{faults}")
+            # Debug_Logger.debug(f"faults:{faults}")
             fault_cycle = [500 for i in faults]
             self.faults = dict(zip(faults, fault_cycle))
 
@@ -81,7 +101,7 @@ class CardRegression:
             status_col_end = df_header_config.loc[indx, "StatusColEnd"]
             if status_col_start != "undefined":
                 self.status = df_temp.loc[dcs_row_start, status_col_start:status_col_end].to_list()
-                Debug_Logger.debug(f"status:{self.status}")
+                # Debug_Logger.debug(f"status:{self.status}")
 
             # 5.******** 对dataframe进行数据处理，重新以 该df的0行为列索引，
             df_temp = df_temp[df_temp["Config"] == "Yes"]
@@ -96,8 +116,8 @@ class CardRegression:
 
     def refresh(self):
         self.get_df_card_config()
-        Debug_Logger.debug(f"self.card_config {self.card_config}")
-        Debug_Logger.debug(f"self.faults {self._faults}")
+        # Debug_Logger.debug(f"self.card_config {self.card_config}")
+        # Debug_Logger.debug(f"self.faults {self._faults}")
 
 
 
