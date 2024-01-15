@@ -59,11 +59,11 @@ if __name__ == "__main__":
     pbct = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\PBCT_SAIC_ZP22_P20_02.xlsm"
     excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\LOP_CFG.xlsx"
     file = "BB_EDR_Parameter_Define.ts"
-    edr_pbct = EDR_PBCT(pbct)
-    lop_cfg = get_lop_cfg(excel)
+    # edr_pbct = EDR_PBCT(pbct)
+    # lop_cfg = get_lop_cfg(excel)
     # edr_pbct.generate_deploytab(lop_cfg,file)
 
-    fltmonr_Configurator =  r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\FltMonr_Configurator_SC3_P30.00.xlsm"
+    fltmonr_Configurator =  r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\FltMonr_Configurator_SAIC_ZP22_P31.00.xlsm"
     internal_flt_sheet = "Veoneer Faults"
     get_fltmonrmap(fltmonr_Configurator,internal_flt_sheet,file)
 

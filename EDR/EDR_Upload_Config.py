@@ -210,7 +210,7 @@ class EDR_Upload_Config:
 
 if __name__ == "__main__":
     pass
-    excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\ZP22_EDR_Data_Uploading_20230409V.xlsx"
+    excel = r"C:\Users\victor.yang\Desktop\Work\SAIC\EDR\CHT_SAIC_ZP22_EDR_Uploading.xlsx"
     sheet = "EDR Uploading Data"
     parameterfile = 'EDR_Upload_Parameters'
     edr_upload = EDR_Upload_Config(excel,sheet)
